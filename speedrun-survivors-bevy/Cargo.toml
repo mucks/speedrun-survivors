@@ -1,0 +1,10 @@
+[package]
+name = "speedrun-survivors-bevy"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+bevy = { version = "0.12", features = ["dynamic_linking"] }
+bevy_editor_pls = "0.6"
+rand.workspace = true
