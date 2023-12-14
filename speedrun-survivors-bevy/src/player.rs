@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::{
     animation::Animator, cursor_info::OffsetedCursorPosition, gun::GunController,
-    player_attach::PlayerAttach,
+    player_attach::PlayerAttach, sword::SwordController,
 };
 
 #[derive(Debug, Clone, Component)]
@@ -14,7 +14,14 @@ pub fn move_player(
     time: Res<Time>,
     keys: Res<Input<KeyCode>>,
     mut query: Query<(&PlayerMovement, &mut Transform, &mut Animator)>,
-    mut gun_query: Query<&mut TextureAtlasSprite, (With<GunController>, Without<PlayerMovement>)>,
+    mut gun_query: Query<
+        &mut TextureAtlasSprite,
+        (
+            With<GunController>,
+            With<SwordController>,
+            Without<PlayerMovement>,
+        ),
+    >,
     cursor_res: ResMut<OffsetedCursorPosition>,
 ) {
     for (player_movement, mut transform, mut animator) in query.iter_mut() {
