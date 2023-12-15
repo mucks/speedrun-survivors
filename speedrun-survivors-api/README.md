@@ -61,7 +61,7 @@
 
 ### TODO
 can users transfer cNFTs on their own or do they need to be minted?
-above doesnt protect pubkey starting game with some nfts and transferring them to other pubkey.. as it only checks ownership when the came concludes
+above doesn't protect pubkey starting game with some NFTs and transferring them to other pubkey... as it only checks ownership when the game concludes
 
 ### Testing certs
 ```

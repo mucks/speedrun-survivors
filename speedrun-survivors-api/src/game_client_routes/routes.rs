@@ -1,10 +1,11 @@
 use actix_web::web::Data;
 use actix_web::{post, web::Json, HttpResponse, Responder};
-use std::fmt::format;
 use std::sync::RwLock;
 
 use crate::game_client_routes::model::*;
-use crate::{is_session_expired, unixtime, Session, SessionStatus, Sessions};
+use crate::helius_rpc::test_api;
+use crate::utils::{unixtime, weak_random_base64_string};
+use crate::{Session, SessionStatus, Sessions};
 
 #[post("/nft_list")]
 async fn nft_list(req_data: Json<NftListRequest>) -> impl Responder {
@@ -28,7 +29,7 @@ async fn session_get(
     // Attempt to lock and read the database
     if let Ok(mut sessions) = state_sessions.read() {
         if let Some(entry) = sessions.data.get(&req_data.pubkey) {
-            match is_session_expired(entry, now) {
+            match entry.is_expired(now) {
                 true => {
                     response.state = SessionStateClient::Expired;
                 }
@@ -57,7 +58,7 @@ async fn session_init(
     let now = unixtime();
 
     // New entropy
-    let new_entropy = "TODO_GENERATE_32_BYTES_OF_ENTROPY".to_string(); //TODO RNG 32 bytes + base64 encode
+    let new_entropy = weak_random_base64_string(44);
 
     // Attempt to lock and update the database
     if let Ok(mut sessions) = state_sessions.write() {
@@ -66,7 +67,7 @@ async fn session_init(
             .entry(req_data.pubkey.clone())
             .and_modify(|entry| {
                 // Return if the session is not expired, otherwise overwrite the data if it timed out, or the game was never started
-                if !is_session_expired(entry, now) {
+                if !entry.is_expired(now) {
                     response.result = SessionInitResult::ErrorGameActive;
                     return;
                 }
@@ -107,6 +108,17 @@ async fn session_cancel(
     // Check the signature TODO
 
     // Delete session data from the DB TODO
+
+    //TEST helius RPC API
+    let res = test_api().await;
+    match res {
+        Ok(itm) => {
+            println!("item {itm:?}");
+        }
+        Err(e) => {
+            println!("error {e:?}");
+        }
+    }
 
     HttpResponse::Ok().json(response)
 }
@@ -185,7 +197,12 @@ async fn game_complete(
             }
 
             // Create expected signed message
-            let signed_message = format!("COMPLTE GAME {}:{}:{}", &req_data.pubkey, &req_data.entropy, &req_data.nft_list.clone().unwrap_or_default().join(""));
+            let signed_message = format!(
+                "COMPLETE GAME {}:{}:{}",
+                &req_data.pubkey,
+                &req_data.entropy,
+                &req_data.nft_list.clone().unwrap_or_default().join("")
+            );
 
             // Verify the given signature
             // TODO IMPLEMENT ME must match req_data.signature

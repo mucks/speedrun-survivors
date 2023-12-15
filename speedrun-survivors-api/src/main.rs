@@ -1,16 +1,18 @@
 mod game_client_routes;
+mod helius_rpc;
+mod utils;
 
 use actix_cors::Cors;
 use actix_web::web::Data;
-use actix_web::{get, middleware, post, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{middleware, web, App, HttpResponse, HttpServer, Responder};
 use anyhow::{bail, Result};
 use rustls::{Certificate, PrivateKey, ServerConfig};
 use rustls_pemfile::{certs, pkcs8_private_keys};
 use std::collections::HashMap;
+use std::env;
 use std::fs::File;
 use std::io::BufReader;
 use std::sync::RwLock;
-use std::time::SystemTime;
 
 #[derive(Debug, PartialEq)]
 enum SessionStatus {
@@ -25,22 +27,17 @@ struct Session {
     unixtime: u64,
 }
 
+impl Session {
+    fn is_expired(&self, now: u64) -> bool {
+        // In case of AwaitingSignature we must wait some time for the client to sign, otherwise there might be a DoS opportunity
+        (self.state == SessionStatus::AwaitingSignature && self.unixtime + 30 < now)
+            || self.unixtime + 3600 < now
+    }
+}
+
 #[derive(Default)]
 struct Sessions {
     data: HashMap<String, Session>,
-}
-
-fn is_session_expired(session: &Session, now: u64) -> bool {
-    //TODO refactor move
-    // In case of AwaitingSignature we must wait some time for the client to sign, otherwise there might be a DoS opportunity
-    (session.state == SessionStatus::AwaitingSignature && session.unixtime + 30 < now)
-        || session.unixtime + 3600 < now
-}
-
-fn unixtime() -> u64 {
-    SystemTime::now()
-        .duration_since(SystemTime::UNIX_EPOCH)
-        .map_or(0, |d| d.as_secs())
 }
 
 #[actix_web::main]
@@ -48,6 +45,8 @@ async fn main() -> Result<()> {
     env_logger::init_from_env(env_logger::Env::default().default_filter_or("info"));
 
     let conf_ssl = configure_ssl()?;
+
+    let conf_env = configure_from_env()?;
 
     let state_sessions = Data::new(RwLock::new(Sessions::default()));
 
@@ -59,8 +58,7 @@ async fn main() -> Result<()> {
             .wrap(middleware::Logger::default())
             .wrap(conf_cors)
             .app_data(Data::clone(&state_sessions))
-            .service(hello)
-            .service(echo)
+            .app_data(web::Data::new(conf_env.clone()))
             .service(game_client_routes::client_routes())
             .default_service(web::route().to(version))
     })
@@ -106,14 +104,15 @@ fn configure_cors() -> Cors {
         .max_age(3600)
 }
 
-#[get("/")]
-async fn hello() -> impl Responder {
-    HttpResponse::Ok().body("Hello world!")
+fn configure_from_env() -> Result<EnvConfig> {
+    let rpc_url = env::var("RPC_URL")?;
+
+    Ok(EnvConfig { rpc_url })
 }
 
-#[post("/echo")]
-async fn echo(req_body: String) -> impl Responder {
-    HttpResponse::Ok().body(req_body)
+#[derive(Clone)]
+pub struct EnvConfig {
+    rpc_url: String,
 }
 
 async fn version() -> impl Responder {
