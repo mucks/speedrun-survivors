@@ -1,0 +1,14 @@
+[package]
+name = "speedrun-survivors-api"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+anyhow = "1"
+actix-cors = "0.6.4"
+actix-web = { version = "4", features = ["rustls-0_21"] }
+env_logger = "0.10.0"
+log = "0.4.20"
+rustls = { version = "0.21.8" }
+rustls-pemfile = "1.0.3"
+serde = { version = "1.0.193", features = ["derive"] }

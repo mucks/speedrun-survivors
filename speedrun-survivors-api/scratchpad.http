@@ -1,0 +1,59 @@
+###
+POST https://localhost:8443/play/nft_list
+Content-Type: application/json
+
+{
+  "pubkey": "ABCDEFGHIJKLMNOP"
+}
+
+###
+###
+POST https://localhost:8443/play/session_init
+Content-Type: application/json
+
+{
+  "pubkey": "ABCDEFGHIJKLMNOP"
+}
+
+###
+###
+POST https://localhost:8443/play/session_get
+Content-Type: application/json
+
+{
+  "pubkey": "ABCDEFGHIJKLMNOP"
+}
+
+###
+###
+POST https://localhost:8443/play/session_cancel
+Content-Type: application/json
+
+{
+  "pubkey": "ABCDEFGHIJKLMNOP",
+  "signature": "ABC"
+}
+
+###
+###
+POST https://localhost:8443/play/game_start
+Content-Type: application/json
+
+{
+  "pubkey": "ABCDEFGHIJKLMNOP",
+  "entropy":  "TODO_GENERATE_32_BYTES_OF_ENTROPY",
+  "signature": "ABC"
+}
+
+###
+###
+POST https://localhost:8443/play/game_complete
+Content-Type: application/json
+
+{
+  "pubkey": "ABCDEFGHIJKLMNOP",
+  "entropy": "TODO_GENERATE_32_BYTES_OF_ENTROPY",
+  "nftList": ["a", "b"],
+  "replay": "String",
+  "signature": "String"
+}

@@ -5,7 +5,7 @@ edition = "2021"
 
 [workspace]
 resolver = "2"
-members = ["speedrun-survivors-bevy"]
+members = ["speedrun-survivors-bevy", "speedrun-survivors-api"]
 
 
 [workspace.dependencies]

@@ -2,6 +2,7 @@
 name = "speedrun-survivors-bevy"
 version.workspace = true
 edition.workspace = true
+default-run = "speedrun-survivors-bevy"
 
 [dependencies]
 anyhow.workspace = true
