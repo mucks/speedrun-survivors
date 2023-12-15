@@ -1,8 +1,11 @@
+use std::collections::HashMap;
+
 use crate::{
-    animation::{Animation, Animator},
+    animation::{self, Animation, Animator},
     bullet::Bullet,
     cursor_info::OffsetedCursorPosition,
     player::PlayerMovement,
+    player_attach,
 };
 use bevy::{prelude::*, transform::commands, window::PrimaryWindow};
 
@@ -14,6 +17,65 @@ const BULLET_SPEED: f32 = 1000.;
 pub struct GunController {
     pub shoot_timer: f32,
     pub shoot_cooldown: f32,
+}
+
+fn create_gun_anim_hashmap() -> HashMap<String, animation::Animation> {
+    let mut hash_map = HashMap::new();
+    hash_map.insert(
+        "Shoot".to_string(),
+        animation::Animation {
+            start: 1,
+            end: 5,
+            looping: false,
+            cooldown: 0.1,
+        },
+    );
+    hash_map.insert(
+        "Idle".to_string(),
+        animation::Animation {
+            start: 1,
+            end: 1,
+            looping: true,
+            cooldown: 0.1,
+        },
+    );
+    hash_map
+}
+
+pub fn spawn_gun(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+) {
+    let texture_handle = asset_server.load("gun.png");
+    let texture_atlas = TextureAtlas::from_grid(
+        texture_handle,
+        Vec2::new(9., 9.),
+        5,
+        1,
+        Some(Vec2::new(1., 1.)),
+        None,
+    );
+    let texture_atlas_handle = texture_atlases.add(texture_atlas);
+
+    commands
+        .spawn(SpriteSheetBundle {
+            texture_atlas: texture_atlas_handle,
+            transform: Transform::from_scale(Vec3::splat(5.)),
+            ..Default::default()
+        })
+        .insert(animation::Animator {
+            timer: 0.,
+            cooldown: 0.05,
+            last_animation: "Shoot".to_string(),
+            current_animation: "Shoot".to_string(),
+            animation_bank: create_gun_anim_hashmap(),
+        })
+        .insert(player_attach::PlayerAttach::new(Vec2::new(15., -5.)))
+        .insert(GunController {
+            shoot_timer: 0.,
+            shoot_cooldown: 0.1,
+        });
 }
 
 pub fn gun_controls(
@@ -39,7 +101,7 @@ pub fn gun_controls(
             return;
         };
 
-        let mut cursor_position = match cursor.read().last() {
+        let mut cursor_position = match cursor.iter().last() {
             Some(cursor_moved) => cursor_moved.position,
             None => Vec2::new(
                 cursor_res.x + primary.width() / 2.,

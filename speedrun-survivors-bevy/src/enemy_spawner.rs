@@ -20,7 +20,7 @@ pub fn create_enemy_anim_hashmap() -> HashMap<String, animation::Animation> {
         "Walk".to_string(),
         animation::Animation {
             start: 1,
-            end: 3,
+            end: 2,
             looping: true,
             cooldown: 0.1,
         },
@@ -54,11 +54,11 @@ pub fn update_spawning(
             };
 
             spawner.timer = spawner.cooldown;
-            let texture_handle = asset_server.load("player.png");
+            let texture_handle = asset_server.load("enemy.png");
             let texture_atlas = TextureAtlas::from_grid(
                 texture_handle,
-                Vec2::new(9., 10.),
-                3,
+                Vec2::new(32., 32.),
+                2,
                 1,
                 Some(Vec2::new(1., 1.)),
                 None,
