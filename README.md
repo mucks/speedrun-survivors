@@ -1,6 +1,9 @@
 ## Speedrun Survivors
 
-A game for true crypto degens. Play as Pepe and punish hordes of enemies with your mighty arsenal of weapons. If it is called Speedrun Survivors, it may make senes to make this like an area game where there are waves of enemies and one can kill them in more or less time... This could in turn affect score points (in-game gold) rewards gained per game.
+A game for true crypto degens. Play as Pepe and punish hordes of enemies with your mighty arsenal of weapons. 
+Speedrun Survivors is an area game where there are waves of enemies charging the player and the goal is to kill as many of them as fast as possible. 
+The game rewards the player with gold for excellence. 
+Gold obtained can be traded for heroes, weapons and buffs of all kinds.
 
 
 
@@ -12,9 +15,9 @@ A game for true crypto degens. Play as Pepe and punish hordes of enemies with yo
 ### Player Character
 - Pepe
 - Bonk Inu
-- could be different NFT hero characters added over time
-  - with different base stats
-  - theoretical collaboration with any NFT collection
+- will add different NFT hero characters over time
+  - each with different base stats
+  - theoretical collaboration with any existing NFT collection
 
 
 ### Character stats
@@ -30,7 +33,7 @@ A game for true crypto degens. Play as Pepe and punish hordes of enemies with yo
         - fire on click -> with rotation in 256 increments (u8)
         - this whole game is about attack spamming
             - not realistic to constantly update rotation
-        -  manuual aim main attack must be slow (cooldown) and insanely powerful (fun) if added
+        -  manual aim main attack must be slow (cooldown) and insanely powerful (fun) if added
     - BEAM rifle
     - RPG
 - Passive Attacks
@@ -47,10 +50,10 @@ A game for true crypto degens. Play as Pepe and punish hordes of enemies with yo
     - Laser beams
 
 
-### Passive Buffs
-- Invincibility on DMG
-- More XP
-- More Gold
+### Passive Buffs / DeBuffs
+- Invincibility on DMG received
+- More XP gained
+- More Gold gained
 - AoE boost
 - DMG boost
 - Cooldown boost
@@ -58,17 +61,20 @@ A game for true crypto degens. Play as Pepe and punish hordes of enemies with yo
 - Health regen boost
 - Movement speed boost
 - Magnet for gold / item Pickup
-- some "debuffs" like faster enemy spawn or more enemy spawn
-    - that way players can get higher scores if they survive it
+- Debuffs allow players to get higher scores if they survive it
+  - faster enemy spawn
+  - greater quantity of enemies spawned
 
 
 ### Undead system
-- hero gains 100% attack speed
-- set on timer of 10 - 30 sec
+- hero gains
+  - 100% attack speed
+  - 100% move speed
+- start a timer of 10 - 30 sec
 - will explode in huge blast if time runs out
 - has to either
-    - find a shrine of ressurrection in due time
-    - defeat some Death boss enemy and drain/posess their soul or whatever for a ressurrection
+    - find a shrine of resurrection in due time
+    - defeat some Death boss enemy and drain/possess their soul or whatever for a resurrection
     - this could possibly influence the look of their NFT
         - becomes more death-ish (ghoul like) looking over time? (how to do that; need upgradeable NFTs)
 
