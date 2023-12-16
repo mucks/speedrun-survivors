@@ -1,6 +1,11 @@
-use std::collections::HashMap;
-
-use bevy::{prelude::*, transform::commands};
+use crate::assets::AssetsPlugin;
+use crate::enemy::EnemyPlugin;
+use crate::enemy_spawner::SpawnEnemiesPlugin;
+use crate::hud::HudPlugin;
+use crate::menu::MenuPlugin;
+use crate::player::PlayerPlugin;
+use crate::state::{AppState, StatesPlugin};
+use bevy::prelude::*;
 use bevy_ecs_ldtk::prelude::*;
 
 mod animation;
@@ -13,35 +18,74 @@ mod player;
 mod player_attach;
 mod player_camera;
 
+mod assets;
+mod hud;
+mod menu;
+mod state;
 mod weapon;
 
 fn main() {
     App::new()
+        .add_state::<AppState>()
         .insert_resource(cursor_info::OffsetedCursorPosition { x: 0., y: 0. })
-        .insert_resource(ClearColor(Color::rgb(0.5, 0.5, 0.5)))
-        .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()))
+        .insert_resource(ClearColor(Color::rgb_u8(0, 0, 0)))
+        .add_plugins(
+            DefaultPlugins
+                .set(ImagePlugin::default_nearest())
+                .set(WindowPlugin {
+                    primary_window: Some(Window {
+                        title: "Speedrun Survivors".to_string(),
+                        // resolution: WindowResolution::new(1024.0, 768.0),
+                        ..default()
+                    }),
+                    ..default()
+                }),
+        )
         .add_plugins(LdtkPlugin)
-        .add_systems(Update, player::move_player)
-        .add_systems(Update, bullet::update_bullets)
-        .add_systems(Update, bullet::update_bullet_hits)
-        .add_systems(Update, weapon::gun::gun_controls)
-        .add_systems(Update, player_attach::attach_objects)
-        .add_systems(Update, animation::animate_sprite)
-        .add_systems(Update, enemy::update_enemies)
-        .add_systems(Update, enemy_spawner::update_spawning)
-        .add_systems(Update, weapon::sword::update_sword_hits)
-        .add_systems(Update, weapon::sword::sword_controls)
-        .add_systems(Update, player_camera::sync_player_camera)
-        .add_systems(Startup, spawn_ldtk_level)
-        .insert_resource(LevelSelection::Index(0))
-        .add_systems(Startup, player::spawn_player)
+        .add_plugins((
+            AssetsPlugin,
+            MenuPlugin,
+            StatesPlugin,
+            SpawnEnemiesPlugin,
+            EnemyPlugin,
+            PlayerPlugin,
+            HudPlugin,
+        ))
+        .add_systems(
+            Update,
+            (
+                bullet::update_bullets,
+                bullet::update_bullet_hits,
+                weapon::gun::gun_controls,
+                weapon::sword::update_sword_hits,
+                weapon::sword::sword_controls,
+                animation::animate_sprite,
+                health::update_health_bar,
+            )
+                .run_if(in_state(AppState::GameRunning)),
+        )
         // .add_systems(Startup, spawn_gun)
-        .add_systems(Startup, weapon::sword::spawn_sword)
-        .add_systems(Startup, spawn_enemy_spawner)
         .add_systems(Startup, spawn_camera)
-        .add_systems(Update, health::update_health_bar)
-        .add_systems(Update, enemy::update_enemy_hits)
+        .add_systems(
+            OnEnter(AppState::GameRunning),
+            (
+                on_enter_game_running,
+                spawn_ldtk_level,
+                weapon::sword::spawn_sword,
+            ),
+        )
+        .add_systems(OnExit(AppState::GameRunning), (on_exit_game_running,))
         .run();
+}
+
+fn on_enter_game_running(mut commands: Commands, asset_server: Res<AssetServer>) {
+    //TODO run logic when a new game starts
+    commands.insert_resource(LevelSelection::Index(0));
+}
+
+fn on_exit_game_running(mut commands: Commands, asset_server: Res<AssetServer>) {
+    //TODO run logic when game ends
+    commands.insert_resource(LevelSelection::Index(1));
 }
 
 fn spawn_ldtk_level(asset_server: Res<AssetServer>, mut commands: Commands) {
@@ -56,15 +100,6 @@ fn spawn_ldtk_level(asset_server: Res<AssetServer>, mut commands: Commands) {
         transform,
         ..Default::default()
     });
-}
-
-fn spawn_enemy_spawner(mut commands: Commands) {
-    commands
-        .spawn(TransformBundle { ..default() })
-        .insert(enemy_spawner::EnemySpawner {
-            cooldown: 1.,
-            timer: 1.,
-        });
 }
 
 fn spawn_camera(mut commands: Commands) {

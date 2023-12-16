@@ -15,6 +15,9 @@ Gold obtained can be traded for heroes, weapons and buffs of all kinds.
 ### Player Character
 - Pepe
 - Bonk Inu
+- Pudgy Penguin
+- Crypto Kitties
+- Mad Lads
 - will add different NFT hero characters over time
   - each with different base stats
   - theoretical collaboration with any existing NFT collection

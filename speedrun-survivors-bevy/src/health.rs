@@ -1,3 +1,4 @@
+use crate::state::{AppState, ForState};
 use bevy::prelude::*;
 
 const HEALTH_BAR_WIDTH: f32 = 100.0;
@@ -22,18 +23,27 @@ pub struct EmptyBar;
 
 pub fn add_health_bar(commands: &mut Commands, entity: Entity, translation: Vec3, z: f32) {
     commands
-        .spawn(SpriteBundle {
-            sprite: Sprite {
-                color: Color::RED,
-                custom_size: Some(Vec2::new(HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT)),
+        .spawn((
+            SpriteBundle {
+                sprite: Sprite {
+                    color: Color::RED,
+                    custom_size: Some(Vec2::new(HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT)),
+                    ..Default::default()
+                },
+                transform: Transform {
+                    translation: Vec3::new(
+                        translation.x + 0.,
+                        translation.y + HEALTH_BAR_OFFSET_Y,
+                        z,
+                    ),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
-            transform: Transform {
-                translation: Vec3::new(translation.x + 0., translation.y + HEALTH_BAR_OFFSET_Y, z),
-                ..Default::default()
+            ForState {
+                states: vec![AppState::GameRunning],
             },
-            ..Default::default()
-        })
+        ))
         .insert(HealthBar {
             entity,
             offset: Vec2::new(0., HEALTH_BAR_OFFSET_Y),
@@ -56,6 +66,7 @@ pub fn add_health_bar(commands: &mut Commands, entity: Entity, translation: Vec3
 }
 
 pub fn update_health_bar(
+    mut next_state: ResMut<NextState<AppState>>,
     mut healthbar_query: Query<
         (&HealthBar, &mut Sprite, &mut Transform, Entity),
         (With<HealthBar>, Without<Health>),
@@ -79,7 +90,7 @@ pub fn update_health_bar(
 
         if health_percentage <= 0.0 {
             if health.is_player {
-                panic!("Player died!")
+                next_state.set(AppState::GameOver);
             }
             commands.entity(health_bar_entity).despawn_recursive();
             commands.entity(entity_with_health).despawn_recursive();

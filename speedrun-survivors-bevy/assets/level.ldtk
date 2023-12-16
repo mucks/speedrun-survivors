@@ -78,7 +78,7 @@
 			"__cHei": 32,
 			"identifier": "Textures_16",
 			"uid": 1,
-			"relPath": "../../../../../Downloads/Textures-16.png",
+			"relPath": "atlas/tileset2.png",
 			"embedAtlas": null,
 			"pxWid": 512,
 			"pxHei": 512,

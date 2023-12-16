@@ -1,6 +1,23 @@
 use bevy::prelude::*;
 
+use crate::state::AppState;
 use crate::{health::Health, player::PlayerMovement};
+
+pub struct EnemyPlugin;
+
+impl Plugin for EnemyPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(OnEnter(AppState::GameRunning), on_enter_game_running)
+            .add_systems(OnExit(AppState::GameRunning), on_exit_game_running)
+            .add_systems(
+                Update,
+                (update_enemies, update_enemy_hits).run_if(in_state(AppState::GameRunning)),
+            );
+    }
+}
+
+fn on_enter_game_running(mut commands: Commands) {}
+fn on_exit_game_running(mut commands: Commands) {}
 
 #[derive(Component)]
 pub struct Enemy {

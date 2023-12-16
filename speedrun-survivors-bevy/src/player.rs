@@ -2,13 +2,40 @@ use std::collections::HashMap;
 
 use bevy::prelude::*;
 
+use crate::state::AppState;
 use crate::{
     animation::{self, Animator},
     cursor_info::OffsetedCursorPosition,
     health::{add_health_bar, Health},
+    player_attach,
     player_attach::PlayerAttach,
+    player_camera,
     weapon::weapon_type::WeaponType,
 };
+
+pub struct PlayerPlugin;
+
+impl Plugin for PlayerPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(
+            OnEnter(AppState::GameRunning),
+            (on_enter_game_running, spawn_player),
+        )
+        .add_systems(OnExit(AppState::GameRunning), on_exit_game_running)
+        .add_systems(
+            Update,
+            (
+                move_player,
+                player_attach::attach_objects,
+                player_camera::sync_player_camera,
+            )
+                .run_if(in_state(AppState::GameRunning)),
+        );
+    }
+}
+
+fn on_enter_game_running(mut commands: Commands) {}
+fn on_exit_game_running(mut commands: Commands) {}
 
 #[derive(Debug, Clone, Component)]
 pub struct PlayerMovement {
