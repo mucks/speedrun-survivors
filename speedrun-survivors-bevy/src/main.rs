@@ -11,7 +11,7 @@ use bevy_ecs_ldtk::prelude::*;
 use plugins::combat_text::CombatTextPlugin;
 use plugins::health::HealthPlugin;
 use plugins::status_effect::StatusEffectPlugin;
-use weapon::hammer::HammerPlugin;
+use weapon::WeaponPlugin;
 
 mod animation;
 mod cursor_info;
@@ -51,7 +51,7 @@ fn main() {
             CoinRewardsPlugin,
             HealthPlugin,
             CombatTextPlugin,
-            HammerPlugin,
+            WeaponPlugin,
             StatusEffectPlugin,
         ))
         .add_systems(
@@ -70,11 +70,7 @@ fn main() {
         .add_systems(Startup, spawn_camera)
         .add_systems(
             OnEnter(AppState::GameRunning),
-            (
-                on_enter_game_running,
-                spawn_ldtk_level,
-                weapon::sword::spawn_sword,
-            ),
+            (on_enter_game_running, spawn_ldtk_level),
         )
         .add_systems(OnExit(AppState::GameRunning), (on_exit_game_running,))
         .run();
@@ -99,7 +95,7 @@ fn spawn_ldtk_level(asset_server: Res<AssetServer>, mut commands: Commands) {
 
     commands.spawn((
         LdtkWorldBundle {
-            ldtk_handle: asset_server.load("level.ldtk"),
+            ldtk_handle: asset_server.load("level/level.ldtk"),
             transform,
             ..Default::default()
         },

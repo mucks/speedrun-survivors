@@ -12,9 +12,27 @@ use bevy::{prelude::*, window::PrimaryWindow};
 
 use self::bullet::Bullet;
 
+use super::weapon_type::WeaponType;
+
 const BULLET_LIFETIME: f32 = 10.0;
 
 const BULLET_SPEED: f32 = 1000.;
+
+pub struct GunPlugin;
+
+impl Plugin for GunPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(
+            Update,
+            (
+                bullet::update_bullets,
+                bullet::update_bullet_hits,
+                gun_controls,
+            )
+                .run_if(in_state(AppState::GameRunning)),
+        );
+    }
+}
 
 #[derive(Component)]
 pub struct GunController {
@@ -28,7 +46,7 @@ fn create_gun_anim_hashmap() -> HashMap<String, animation::Animation> {
         "Shoot".to_string(),
         animation::Animation {
             start: 1,
-            end: 5,
+            end: 2,
             looping: false,
             cooldown: 0.1,
         },
@@ -46,15 +64,15 @@ fn create_gun_anim_hashmap() -> HashMap<String, animation::Animation> {
 }
 
 pub fn spawn_gun(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+    commands: &mut Commands,
+    asset_server: &Res<AssetServer>,
+    texture_atlases: &mut ResMut<Assets<TextureAtlas>>,
 ) {
-    let texture_handle = asset_server.load("gun.png");
+    let texture_handle = asset_server.load("sprites/weapon/gun.png");
     let texture_atlas = TextureAtlas::from_grid(
         texture_handle,
-        Vec2::new(9., 9.),
-        5,
+        Vec2::new(27., 21.),
+        2,
         1,
         Some(Vec2::new(1., 1.)),
         None,
@@ -83,7 +101,8 @@ pub fn spawn_gun(
         .insert(GunController {
             shoot_timer: 0.,
             shoot_cooldown: 0.1,
-        });
+        })
+        .insert(WeaponType::Gun);
 }
 
 pub fn gun_controls(
@@ -137,7 +156,7 @@ pub fn gun_controls(
                     .spawn((
                         SpriteBundle {
                             transform: spawn_transform,
-                            texture: asset_server.load("bullet.png"),
+                            texture: asset_server.load("sprites/misc/bullet.png"),
                             ..Default::default()
                         },
                         ForState {

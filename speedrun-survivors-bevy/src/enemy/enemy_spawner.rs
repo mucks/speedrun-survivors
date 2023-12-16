@@ -91,7 +91,7 @@ pub fn update_spawning(
         };
 
         spawner.timer = spawner.cooldown;
-        let texture_handle = asset_server.load("enemy.png");
+        let texture_handle = asset_server.load("sprites/enemy/enemy-spider.png");
         let texture_atlas = TextureAtlas::from_grid(
             texture_handle,
             Vec2::new(32., 32.),

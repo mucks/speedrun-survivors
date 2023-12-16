@@ -76,7 +76,7 @@ pub fn spawn_player(
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
 ) {
     // player
-    let texture_handle = asset_server.load("pepe.png");
+    let texture_handle = asset_server.load("sprites/player/pepe.png");
     let texture_atlas = TextureAtlas::from_grid(
         texture_handle,
         Vec2::new(32., 56.),
