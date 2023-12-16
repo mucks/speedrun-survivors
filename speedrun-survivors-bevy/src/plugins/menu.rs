@@ -1,8 +1,7 @@
-use crate::assets::UiAssets;
+use crate::plugins::assets::UiAssets;
 use crate::state::{AppState, ForState};
 use bevy::app::AppExit;
 use bevy::prelude::*;
-use bevy::reflect::TypePath;
 
 #[derive(Component)]
 pub struct DrawBlinkTimer(pub Timer);
@@ -17,7 +16,7 @@ impl Plugin for MenuPlugin {
     }
 }
 
-fn setup(mut commands: Commands) {
+fn setup(mut _commands: Commands) {
     //TODO
 }
 

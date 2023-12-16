@@ -23,7 +23,7 @@ impl Plugin for SpawnEnemiesPlugin {
     }
 }
 
-fn on_enter_game_running(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn on_enter_game_running(mut commands: Commands) {
     commands
         .spawn((
             TransformBundle { ..default() },
@@ -36,7 +36,7 @@ fn on_enter_game_running(mut commands: Commands, asset_server: Res<AssetServer>)
             timer: 1.,
         }); //TODO: there should be some way to say this is for gamestate... so it auto unspawns
 }
-fn on_exit_game_running(mut commands: Commands, query: Query<(Entity, &EnemySpawner)>) {
+fn on_exit_game_running(mut _commands: Commands) {
     // The bundle will be auto deleted at is tagged ForState
 }
 

@@ -1,4 +1,4 @@
-use crate::assets::UiAssets;
+use crate::plugins::assets::UiAssets;
 use crate::plugins::coin_rewards::CoinAccumulator;
 use bevy::prelude::*;
 
@@ -23,11 +23,7 @@ fn on_enter_game_running(mut commands: Commands) {}
 
 fn on_exit_game_running(mut commands: Commands) {}
 
-fn on_update(
-    mut commands: Commands,
-    mut query: Query<&mut Text>,
-    mut coin_accumulator: Res<CoinAccumulator>,
-) {
+fn on_update(mut query: Query<&mut Text>, coin_accumulator: Res<CoinAccumulator>) {
     let mut text = query.single_mut();
     text.sections[0].value = format!("Coins: {}", coin_accumulator.total_coin);
 }

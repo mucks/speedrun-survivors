@@ -1,10 +1,10 @@
-use crate::assets::AssetsPlugin;
 use crate::enemy::EnemyPlugin;
 use crate::enemy_spawner::SpawnEnemiesPlugin;
-use crate::hud::HudPlugin;
-use crate::menu::MenuPlugin;
 use crate::player::PlayerPlugin;
+use crate::plugins::assets::AssetsPlugin;
 use crate::plugins::coin_rewards::CoinRewardsPlugin;
+use crate::plugins::hud::HudPlugin;
+use crate::plugins::menu::MenuPlugin;
 use crate::state::{AppState, ForState, StatesPlugin};
 use bevy::prelude::*;
 use bevy_ecs_ldtk::prelude::*;
@@ -19,9 +19,6 @@ mod player;
 mod player_attach;
 mod player_camera;
 
-mod assets;
-mod hud;
-mod menu;
 mod plugins;
 mod state;
 mod weapon;
@@ -81,12 +78,12 @@ fn main() {
         .run();
 }
 
-fn on_enter_game_running(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn on_enter_game_running(mut commands: Commands) {
     //TODO run logic when a new game starts
     commands.insert_resource(LevelSelection::Index(0));
 }
 
-fn on_exit_game_running(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn on_exit_game_running(mut commands: Commands) {
     //TODO run logic when game ends
     commands.insert_resource(LevelSelection::Index(1));
 }
