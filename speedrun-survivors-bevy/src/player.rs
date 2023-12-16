@@ -42,6 +42,9 @@ pub struct PlayerMovement {
     pub speed: f32,
 }
 
+#[derive(Component)]
+pub struct Player {}
+
 fn create_player_anim_hashmap() -> HashMap<String, animation::Animation> {
     let mut hash_map = HashMap::new();
     hash_map.insert(
@@ -82,7 +85,9 @@ pub fn spawn_player(
     );
     let texture_atlas_handle = texture_atlases.add(texture_atlas);
 
-    let entity = commands
+    let health_bar = add_health_bar(&mut commands, Vec3::default(), 5.);
+
+    commands
         .spawn(SpriteSheetBundle {
             texture_atlas: texture_atlas_handle,
             transform: Transform::from_scale(Vec3::splat(5.)),
@@ -95,15 +100,14 @@ pub fn spawn_player(
             current_animation: "Walk".to_string(),
             animation_bank: create_player_anim_hashmap(),
         })
+        .insert(Player {})
         .insert(PlayerMovement { speed: 100. })
         .insert(Health {
             active_health: 200.,
             max_health: 200.,
-            is_player: true,
-        })
-        .id();
-
-    add_health_bar(&mut commands, entity, Vec3::default(), 5.);
+            regen: 10.0,
+            health_bar: Some(health_bar),
+        });
 }
 
 pub fn move_player(

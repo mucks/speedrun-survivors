@@ -1,3 +1,4 @@
+use crate::player::Player;
 use crate::state::{AppState, ForState};
 use bevy::prelude::*;
 
@@ -9,19 +10,19 @@ const HEALTH_BAR_OFFSET_Y: f32 = 50.0;
 pub struct Health {
     pub active_health: f32,
     pub max_health: f32,
-    pub is_player: bool,
+    pub regen: f32,
+    pub health_bar: Option<Entity>,
 }
 
 #[derive(Component)]
 pub struct HealthBar {
-    pub entity: Entity,
     pub offset: Vec2,
 }
 
 #[derive(Component)]
 pub struct EmptyBar;
 
-pub fn add_health_bar(commands: &mut Commands, entity: Entity, translation: Vec3, z: f32) {
+pub fn add_health_bar(commands: &mut Commands, translation: Vec3, z: f32) -> Entity {
     commands
         .spawn((
             SpriteBundle {
@@ -45,7 +46,6 @@ pub fn add_health_bar(commands: &mut Commands, entity: Entity, translation: Vec3
             },
         ))
         .insert(HealthBar {
-            entity,
             offset: Vec2::new(0., HEALTH_BAR_OFFSET_Y),
         })
         .with_children(|parent| {
@@ -62,7 +62,8 @@ pub fn add_health_bar(commands: &mut Commands, entity: Entity, translation: Vec3
 
                 ..Default::default()
             });
-        });
+        })
+        .id()
 }
 
 pub fn update_health_bar(
@@ -71,34 +72,43 @@ pub fn update_health_bar(
         (&HealthBar, &mut Sprite, &mut Transform, Entity),
         (With<HealthBar>, Without<Health>),
     >,
-    mut health_query: Query<(&Health, Entity, &Transform), (With<Health>, Without<HealthBar>)>,
+    mut health_query: Query<
+        (&Health, Entity, &Transform, Option<&Player>),
+        (With<Health>, Without<HealthBar>),
+    >,
     mut commands: Commands,
 ) {
-    for (health_bar, mut sprite, mut health_bar_tr, health_bar_entity) in healthbar_query.iter_mut()
-    {
-        let Ok((health, entity_with_health, tr)) = health_query.get_mut(health_bar.entity) else {
-            continue;
-        };
-
-        health_bar_tr.translation = Vec3::new(
-            tr.translation.x + health_bar.offset.x,
-            tr.translation.y + health_bar.offset.y,
-            health_bar_tr.translation.z,
-        );
-
+    for (health, mut entity, mut transform, player) in health_query.iter_mut() {
         let health_percentage = health.active_health / health.max_health;
 
         if health_percentage <= 0.0 {
-            if health.is_player {
+            if player.is_some() {
                 next_state.set(AppState::GameOver);
             }
-            commands.entity(health_bar_entity).despawn_recursive();
-            commands.entity(entity_with_health).despawn_recursive();
+            commands.entity(entity).despawn_recursive();
         }
+        //TODO refactored that a bit; but I think we should move the healthbar into the UI.. no need to update this bar as a separate component
+        if let Some(health_bar_entity) = health.health_bar {
+            if let Ok((health_bar, mut bar_sprite, mut bar_tr, br_entity)) =
+                healthbar_query.get_mut(health_bar_entity)
+            {
+                if health_percentage <= 0.0 {
+                    commands.entity(br_entity).despawn_recursive();
+                    return;
+                }
 
-        let new_width = health_percentage * HEALTH_BAR_WIDTH; // Change 200.0 to the width of your health bar
-        if let Some(ref mut size) = sprite.custom_size {
-            size.x = new_width.clamp(0.0, HEALTH_BAR_WIDTH); // Clamp the width to ensure it doesn't go beyond the bar's boundaries
+                // Got a health bar
+                bar_tr.translation = Vec3::new(
+                    transform.translation.x + health_bar.offset.x,
+                    transform.translation.y + health_bar.offset.y,
+                    bar_tr.translation.z,
+                );
+
+                let new_width = health_percentage * HEALTH_BAR_WIDTH; // Change 200.0 to the width of your health bar
+                if let Some(ref mut size) = bar_sprite.custom_size {
+                    size.x = new_width.clamp(0.0, HEALTH_BAR_WIDTH); // Clamp the width to ensure it doesn't go beyond the bar's boundaries
+                }
+            };
         }
     }
 }

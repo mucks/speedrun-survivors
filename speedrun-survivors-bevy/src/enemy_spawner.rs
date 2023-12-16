@@ -7,7 +7,7 @@ use crate::state::{AppState, ForState};
 use crate::{
     animation::{self, Animator},
     enemy::Enemy,
-    health::{add_health_bar, Health},
+    health::Health,
 };
 
 pub struct SpawnEnemiesPlugin;
@@ -157,7 +157,8 @@ pub fn update_spawning(
             .insert(Health {
                 active_health: 2.,
                 max_health: 2.,
-                is_player: false,
+                regen: 0.0,
+                health_bar: None,
             })
             .id();
 
