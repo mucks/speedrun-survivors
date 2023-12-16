@@ -4,24 +4,75 @@ use crate::state::{AppState, ForState};
 use bevy::prelude::*;
 
 const HEALTH_BAR_WIDTH: f32 = 100.0;
-const HEALTH_BAR_HEIGHT: f32 = 20.0;
-const HEALTH_BAR_OFFSET_Y: f32 = 50.0;
+const HEALTH_BAR_HEIGHT: f32 = 10.0;
+const HEALTH_BAR_OFFSET_Y: f32 = -60.0;
+
+pub struct HealthPlugin;
+
+impl Plugin for HealthPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_event::<HealthChangeEvent>();
+        app.add_systems(
+            Update,
+            (on_health_change_event, update_health_bar).run_if(in_state(AppState::GameRunning)),
+        );
+    }
+}
 
 #[derive(Debug, Component)]
 pub struct Health {
-    pub active_health: f32,
-    pub max_health: f32,
-    pub regen: f32,
-    pub health_bar: Option<Entity>,
+    active_health: f32,
+    max_health: f32,
+    regen: f32,
+    health_bar: Option<Entity>,
+}
+
+#[derive(Debug)]
+pub enum HealthChangeTargetType {
+    Player,
+    Enemy,
+}
+
+#[derive(Debug, Event)]
+pub struct HealthChangeEvent {
+    // negative for damage, positive for healing
+    pub health_change: f32,
+    pub entity: Entity,
+    pub target_type: HealthChangeTargetType,
+}
+
+fn on_health_change_event(
+    mut health_change: EventReader<HealthChangeEvent>,
+    mut health_query: Query<&mut Health>,
+) {
+    for ev in health_change.iter() {
+        let Ok(mut health) = health_query.get_mut(ev.entity) else {
+            return;
+        };
+        health.active_health += ev.health_change;
+    }
+}
+
+impl Health {
+    pub fn new(
+        active_health: f32,
+        max_health: f32,
+        regen: f32,
+        health_bar: Option<Entity>,
+    ) -> Self {
+        Health {
+            active_health,
+            max_health,
+            regen,
+            health_bar,
+        }
+    }
 }
 
 #[derive(Component)]
 pub struct HealthBar {
     pub offset: Vec2,
 }
-
-#[derive(Component)]
-pub struct EmptyBar;
 
 pub fn add_health_bar(commands: &mut Commands, translation: Vec3, z: f32) -> Entity {
     commands

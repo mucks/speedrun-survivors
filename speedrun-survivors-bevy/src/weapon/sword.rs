@@ -1,17 +1,18 @@
 use std::collections::HashMap;
 
-use bevy::{prelude::*, window::PrimaryWindow};
+use bevy::prelude::*;
 
+use crate::plugins::health::{self, Health};
 use crate::state::{AppState, ForState};
 use crate::{
     animation::{self, Animator},
-    cursor_info::OffsetedCursorPosition,
     enemy::Enemy,
-    health::Health,
-    player_attach,
+    player::player_attach,
 };
 
 use super::weapon_type::WeaponType;
+
+const SWORD_DAMAGE: f32 = 1.;
 
 #[derive(Debug, Component)]
 pub struct SwordController {
@@ -19,6 +20,29 @@ pub struct SwordController {
     pub swing_time: f32,
     pub cooldown: f32,
     pub is_swinging: bool,
+}
+
+fn create_sword_effect_anim_hashmap() -> HashMap<String, animation::Animation> {
+    let mut hash_map = HashMap::new();
+    hash_map.insert(
+        "Idle".to_string(),
+        animation::Animation {
+            start: 1,
+            end: 1,
+            looping: true,
+            cooldown: 0.1,
+        },
+    );
+    hash_map.insert(
+        "Swing".to_string(),
+        animation::Animation {
+            start: 1,
+            end: 4,
+            looping: false,
+            cooldown: 0.1,
+        },
+    );
+    hash_map
 }
 
 fn create_sword_anim_hashmap() -> HashMap<String, animation::Animation> {
@@ -36,7 +60,7 @@ fn create_sword_anim_hashmap() -> HashMap<String, animation::Animation> {
         "Swing".to_string(),
         animation::Animation {
             start: 1,
-            end: 3,
+            end: 8,
             looping: false,
             cooldown: 0.1,
         },
@@ -53,12 +77,50 @@ pub fn spawn_sword(
     let texture_atlas = TextureAtlas::from_grid(
         texture_handle,
         Vec2::new(32., 32.),
-        3,
+        8,
         1,
         Some(Vec2::new(1., 1.)),
         None,
     );
+
+    let texture_effect_handle = asset_server.load("sword-effect.png");
+    let texture_effect_atlas = TextureAtlas::from_grid(
+        texture_effect_handle,
+        Vec2::new(32., 32.),
+        4,
+        1,
+        Some(Vec2::new(1., 1.)),
+        None,
+    );
+    let texture_atlas_effect_handle = texture_atlases.add(texture_effect_atlas);
     let texture_atlas_handle = texture_atlases.add(texture_atlas);
+
+    commands
+        .spawn((
+            SpriteSheetBundle {
+                texture_atlas: texture_atlas_effect_handle,
+                transform: Transform::from_scale(Vec3::splat(3.5)),
+                ..Default::default()
+            },
+            ForState {
+                states: vec![AppState::GameRunning],
+            },
+        ))
+        .insert(animation::Animator {
+            timer: 0.,
+            cooldown: 10.,
+            last_animation: "Idle".to_string(),
+            current_animation: "Idle".to_string(),
+            animation_bank: create_sword_effect_anim_hashmap(),
+        })
+        .insert(player_attach::PlayerAttach::new(Vec2::new(55., 10.)))
+        .insert(SwordController {
+            hitbox: 40.,
+            swing_time: 0.,
+            cooldown: 0.,
+            is_swinging: false,
+        })
+        .insert(WeaponType::Sword);
 
     commands
         .spawn((
@@ -80,7 +142,7 @@ pub fn spawn_sword(
         })
         .insert(player_attach::PlayerAttach::new(Vec2::new(25., 10.)))
         .insert(SwordController {
-            hitbox: 12.,
+            hitbox: 40.,
             swing_time: 0.,
             cooldown: 0.,
             is_swinging: false,
@@ -99,7 +161,7 @@ pub fn sword_controls(
 
         if sword_controller.swing_time > 0. {
             animator.current_animation = "Swing".to_string();
-            sword_controller.swing_time -= 0.15;
+            sword_controller.swing_time -= 0.2;
             sword_controller.is_swinging = true;
         } else {
             animator.current_animation = "Idle".to_string();
@@ -107,8 +169,8 @@ pub fn sword_controls(
         }
 
         if sword_controller.swing_time <= 0. && sword_controller.cooldown <= 0. {
-            if buttons.pressed(MouseButton::Left) {
-                sword_controller.swing_time = 3.5;
+            if buttons.just_pressed(MouseButton::Left) {
+                sword_controller.swing_time = 10.5;
                 sword_controller.cooldown = 5.;
             }
         }
@@ -120,7 +182,8 @@ pub fn update_sword_hits(
         (&Transform, Entity, &SwordController),
         (With<SwordController>, Without<Enemy>),
     >,
-    mut enemy_query: Query<(&mut Enemy, &mut Transform, &mut Health), Without<SwordController>>,
+    mut enemy_query: Query<(&mut Enemy, &mut Transform, &Health, Entity), Without<SwordController>>,
+    mut ev_health_change: EventWriter<health::HealthChangeEvent>,
 ) {
     if let Some((transform, _, sword)) = sword_query.iter().next() {
         let s = Vec2::new(transform.translation.x, transform.translation.y);
@@ -129,13 +192,17 @@ pub fn update_sword_hits(
             return;
         }
 
-        for (mut enemy, transform, mut health) in enemy_query.iter_mut() {
+        for (mut _enemy, transform, health, ent) in enemy_query.iter_mut() {
             if Vec2::distance(
                 s,
                 Vec2::new(transform.translation.x, transform.translation.y),
-            ) <= 32.
+            ) <= sword.hitbox
             {
-                health.active_health -= 1.;
+                ev_health_change.send(health::HealthChangeEvent {
+                    entity: ent,
+                    health_change: -SWORD_DAMAGE,
+                    target_type: health::HealthChangeTargetType::Enemy,
+                });
             }
         }
     }

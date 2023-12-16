@@ -3,11 +3,12 @@ use std::collections::HashMap;
 use bevy::{prelude::*, window::PrimaryWindow};
 use rand::Rng;
 
+use crate::plugins::health::Health;
+use crate::plugins::status_effect::{StatusEffect, StatusEffectController};
 use crate::state::{AppState, ForState};
 use crate::{
     animation::{self, Animator},
     enemy::Enemy,
-    health::Health,
 };
 
 pub struct SpawnEnemiesPlugin;
@@ -135,7 +136,7 @@ pub fn update_spawning(
             }
         }
 
-        let entity = commands
+        commands
             .spawn((
                 SpriteSheetBundle {
                     texture_atlas: texture_atlas_handle,
@@ -153,14 +154,12 @@ pub fn update_spawning(
                 last_animation: "Walk".to_string(),
                 current_animation: "Walk".to_string(),
             })
-            .insert(Enemy { speed: 100. })
-            .insert(Health {
-                active_health: 2.,
-                max_health: 2.,
-                regen: 0.0,
-                health_bar: None,
+            .insert(Enemy {
+                speed: 100.,
+                attack: 1.,
             })
-            .id();
+            .insert(StatusEffectController { effects: vec![] })
+            .insert(Health::new(2., 2., 0., None));
 
         //TODO lets not have healthbars for enemies as there will be hundreds and they mostly die in 1 hit probably...
         // add_health_bar(&mut commands, entity, spawn_transform.translation, 1.);

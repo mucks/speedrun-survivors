@@ -1,7 +1,10 @@
 use bevy::prelude::*;
 
+use crate::player::PlayerMovement;
+use crate::plugins::health::{self, Health};
 use crate::state::AppState;
-use crate::{health::Health, player::PlayerMovement};
+
+pub mod enemy_spawner;
 
 pub struct EnemyPlugin;
 
@@ -22,6 +25,7 @@ fn on_exit_game_running(mut commands: Commands) {}
 #[derive(Component)]
 pub struct Enemy {
     pub speed: f32,
+    pub attack: f32,
 }
 
 pub fn update_enemies(
@@ -44,29 +48,38 @@ pub fn update_enemies(
 pub struct EnemyInfo {
     pub translation: Vec2,
     pub entity: Entity,
+    pub attack: f32,
 }
 
 pub fn update_enemy_hits(
-    enemy_query: Query<(&Transform, Entity), (With<Enemy>, Without<PlayerMovement>)>,
-    mut player_query: Query<(&mut PlayerMovement, &mut Transform, &mut Health), Without<Enemy>>,
-    mut commands: Commands,
+    enemy_query: Query<(&Transform, Entity, &Enemy), (With<Enemy>, Without<PlayerMovement>)>,
+    mut player_query: Query<
+        (&mut PlayerMovement, &mut Transform, &mut Health, Entity),
+        Without<Enemy>,
+    >,
+    mut ev_health_change: EventWriter<health::HealthChangeEvent>,
 ) {
     let mut enemy_list = Vec::new();
-    for (transform, entity) in enemy_query.iter() {
+    for (transform, entity, enemy) in enemy_query.iter() {
         enemy_list.push(EnemyInfo {
             translation: Vec2::new(transform.translation.x, transform.translation.y),
             entity,
+            attack: enemy.attack,
         });
     }
 
-    for (mut player, transform, mut health) in player_query.iter_mut() {
+    for (mut _player, transform, mut health, ent) in player_query.iter_mut() {
         for enemy in enemy_list.iter() {
             if Vec2::distance(
                 enemy.translation,
                 Vec2::new(transform.translation.x, transform.translation.y),
             ) <= 36.
             {
-                health.active_health -= 1.;
+                ev_health_change.send(health::HealthChangeEvent {
+                    entity: ent,
+                    health_change: -enemy.attack,
+                    target_type: health::HealthChangeTargetType::Player,
+                });
             }
         }
     }

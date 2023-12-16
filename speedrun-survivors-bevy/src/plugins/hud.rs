@@ -4,6 +4,8 @@ use bevy::prelude::*;
 
 use crate::state::{AppState, ForState};
 
+use super::combat_text::CombatText;
+
 pub struct HudPlugin;
 
 const ITEMS_COLOR: Color = Color::rgb(0.2, 1.0, 0.2);
@@ -23,7 +25,10 @@ fn on_enter_game_running(mut commands: Commands) {}
 
 fn on_exit_game_running(mut commands: Commands) {}
 
-fn on_update(mut query: Query<&mut Text>, coin_accumulator: Res<CoinAccumulator>) {
+fn on_update(
+    mut query: Query<&mut Text, Without<CombatText>>,
+    coin_accumulator: Res<CoinAccumulator>,
+) {
     let mut text = query.single_mut();
     text.sections[0].value = format!("Coins: {}", coin_accumulator.total_coin);
 }

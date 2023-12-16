@@ -1,14 +1,16 @@
 use std::collections::HashMap;
 
+pub mod bullet;
+
 use crate::state::{AppState, ForState};
 use crate::{
-    animation::{self, Animation, Animator},
-    bullet::Bullet,
+    animation::{self, Animator},
     cursor_info::OffsetedCursorPosition,
-    player::PlayerMovement,
-    player_attach,
+    player::player_attach,
 };
-use bevy::{prelude::*, transform::commands, window::PrimaryWindow};
+use bevy::{prelude::*, window::PrimaryWindow};
+
+use self::bullet::Bullet;
 
 const BULLET_LIFETIME: f32 = 10.0;
 

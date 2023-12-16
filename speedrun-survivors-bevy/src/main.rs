@@ -1,5 +1,5 @@
+use crate::enemy::enemy_spawner::SpawnEnemiesPlugin;
 use crate::enemy::EnemyPlugin;
-use crate::enemy_spawner::SpawnEnemiesPlugin;
 use crate::player::PlayerPlugin;
 use crate::plugins::assets::AssetsPlugin;
 use crate::plugins::coin_rewards::CoinRewardsPlugin;
@@ -8,16 +8,15 @@ use crate::plugins::menu::MenuPlugin;
 use crate::state::{AppState, ForState, StatesPlugin};
 use bevy::prelude::*;
 use bevy_ecs_ldtk::prelude::*;
+use plugins::combat_text::CombatTextPlugin;
+use plugins::health::HealthPlugin;
+use plugins::status_effect::StatusEffectPlugin;
+use weapon::hammer::HammerPlugin;
 
 mod animation;
-mod bullet;
 mod cursor_info;
 mod enemy;
-mod enemy_spawner;
-mod health;
 mod player;
-mod player_attach;
-mod player_camera;
 
 mod plugins;
 mod state;
@@ -50,17 +49,20 @@ fn main() {
             PlayerPlugin,
             HudPlugin,
             CoinRewardsPlugin,
+            HealthPlugin,
+            CombatTextPlugin,
+            HammerPlugin,
+            StatusEffectPlugin,
         ))
         .add_systems(
             Update,
             (
-                bullet::update_bullets,
-                bullet::update_bullet_hits,
+                weapon::gun::bullet::update_bullets,
+                weapon::gun::bullet::update_bullet_hits,
                 weapon::gun::gun_controls,
                 weapon::sword::update_sword_hits,
                 weapon::sword::sword_controls,
                 animation::animate_sprite,
-                health::update_health_bar,
             )
                 .run_if(in_state(AppState::GameRunning)),
         )

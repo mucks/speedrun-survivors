@@ -2,16 +2,18 @@ use std::collections::HashMap;
 
 use bevy::prelude::*;
 
+use crate::plugins::health::{add_health_bar, Health};
 use crate::state::{AppState, ForState};
 use crate::{
     animation::{self, Animator},
     cursor_info::OffsetedCursorPosition,
-    health::{add_health_bar, Health},
-    player_attach,
-    player_attach::PlayerAttach,
-    player_camera,
     weapon::weapon_type::WeaponType,
 };
+
+use self::player_attach::PlayerAttach;
+
+pub mod player_attach;
+pub mod player_camera;
 
 pub struct PlayerPlugin;
 
@@ -60,7 +62,7 @@ fn create_player_anim_hashmap() -> HashMap<String, animation::Animation> {
         "Walk".to_string(),
         animation::Animation {
             start: 1,
-            end: 3,
+            end: 4,
             looping: true,
             cooldown: 0.1,
         },
@@ -74,11 +76,11 @@ pub fn spawn_player(
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
 ) {
     // player
-    let texture_handle = asset_server.load("player.png");
+    let texture_handle = asset_server.load("pepe.png");
     let texture_atlas = TextureAtlas::from_grid(
         texture_handle,
-        Vec2::new(9., 10.),
-        3,
+        Vec2::new(32., 56.),
+        4,
         1,
         Some(Vec2::new(1., 1.)),
         None,
@@ -91,7 +93,7 @@ pub fn spawn_player(
         .spawn((
             SpriteSheetBundle {
                 texture_atlas: texture_atlas_handle,
-                transform: Transform::from_scale(Vec3::splat(5.)),
+                transform: Transform::from_scale(Vec3::splat(2.)),
                 ..Default::default()
             },
             ForState {
@@ -107,12 +109,7 @@ pub fn spawn_player(
         })
         .insert(Player {})
         .insert(PlayerMovement { speed: 100. })
-        .insert(Health {
-            active_health: 200.,
-            max_health: 200.,
-            regen: 10.0,
-            health_bar: Some(health_bar),
-        });
+        .insert(Health::new(200., 200., 10.0, Some(health_bar)));
 }
 
 pub fn move_player(
