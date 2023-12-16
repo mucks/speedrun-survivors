@@ -1,4 +1,5 @@
 use crate::player::Player;
+use crate::plugins::coin_rewards::CoinAccumulated;
 use crate::state::{AppState, ForState};
 use bevy::prelude::*;
 
@@ -77,6 +78,7 @@ pub fn update_health_bar(
         (With<Health>, Without<HealthBar>),
     >,
     mut commands: Commands,
+    mut event_stream: EventWriter<CoinAccumulated>,
 ) {
     for (health, mut entity, mut transform, player) in health_query.iter_mut() {
         let health_percentage = health.active_health / health.max_health;
@@ -85,6 +87,8 @@ pub fn update_health_bar(
             if player.is_some() {
                 next_state.set(AppState::GameOver);
                 return; // Unspawn will happen due to state change
+            } else {
+                event_stream.send(CoinAccumulated { coin: 100 });
             }
             commands.entity(entity).despawn_recursive();
         }

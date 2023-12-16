@@ -4,6 +4,7 @@ use crate::enemy_spawner::SpawnEnemiesPlugin;
 use crate::hud::HudPlugin;
 use crate::menu::MenuPlugin;
 use crate::player::PlayerPlugin;
+use crate::plugins::coin_rewards::CoinRewardsPlugin;
 use crate::state::{AppState, ForState, StatesPlugin};
 use bevy::prelude::*;
 use bevy_ecs_ldtk::prelude::*;
@@ -21,6 +22,7 @@ mod player_camera;
 mod assets;
 mod hud;
 mod menu;
+mod plugins;
 mod state;
 mod weapon;
 
@@ -50,6 +52,7 @@ fn main() {
             EnemyPlugin,
             PlayerPlugin,
             HudPlugin,
+            CoinRewardsPlugin,
         ))
         .add_systems(
             Update,

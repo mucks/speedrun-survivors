@@ -1,4 +1,5 @@
 use crate::assets::UiAssets;
+use crate::plugins::coin_rewards::CoinAccumulator;
 use bevy::prelude::*;
 
 use crate::state::{AppState, ForState};
@@ -22,7 +23,14 @@ fn on_enter_game_running(mut commands: Commands) {}
 
 fn on_exit_game_running(mut commands: Commands) {}
 
-fn on_update(mut commands: Commands) {}
+fn on_update(
+    mut commands: Commands,
+    mut query: Query<&mut Text>,
+    mut coin_accumulator: Res<CoinAccumulator>,
+) {
+    let mut text = query.single_mut();
+    text.sections[0].value = format!("Coins: {}", coin_accumulator.total_coin);
+}
 
 fn spawn_layout(mut commands: Commands, assets: ResMut<UiAssets>) {
     let img_weapon = assets.weapon_axe.clone();
@@ -44,7 +52,6 @@ fn spawn_layout(mut commands: Commands, assets: ResMut<UiAssets>) {
             },
         ))
         .with_children(|parent| {
-            // spawn the key
             parent.spawn(NodeBundle {
                 style: Style {
                     flex_direction: FlexDirection::Row,
@@ -53,6 +60,23 @@ fn spawn_layout(mut commands: Commands, assets: ResMut<UiAssets>) {
                 },
                 ..Default::default()
             });
+
+            parent.spawn(
+                TextBundle::from_section(
+                    "Coins:",
+                    TextStyle {
+                        font_size: 40.0,
+                        color: Color::rgb(0.5, 0.5, 1.0),
+                        ..default()
+                    },
+                )
+                .with_style(Style {
+                    position_type: PositionType::Absolute,
+                    top: Val::Px(5.0),
+                    right: Val::Px(100.0),
+                    ..default()
+                }),
+            );
 
             parent
                 .spawn(NodeBundle {
