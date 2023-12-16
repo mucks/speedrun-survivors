@@ -5,6 +5,7 @@ use bevy::prelude::*;
 use crate::{
     animation::{self, Animator},
     cursor_info::OffsetedCursorPosition,
+    health::{add_health_bar, Health},
     player_attach::PlayerAttach,
     weapon::weapon_type::WeaponType,
 };
@@ -54,7 +55,7 @@ pub fn spawn_player(
     );
     let texture_atlas_handle = texture_atlases.add(texture_atlas);
 
-    commands
+    let entity = commands
         .spawn(SpriteSheetBundle {
             texture_atlas: texture_atlas_handle,
             transform: Transform::from_scale(Vec3::splat(5.)),
@@ -67,7 +68,15 @@ pub fn spawn_player(
             current_animation: "Walk".to_string(),
             animation_bank: create_player_anim_hashmap(),
         })
-        .insert(PlayerMovement { speed: 100. });
+        .insert(PlayerMovement { speed: 100. })
+        .insert(Health {
+            active_health: 200.,
+            max_health: 200.,
+            is_player: true,
+        })
+        .id();
+
+    add_health_bar(&mut commands, entity, Vec3::default(), 5.);
 }
 
 pub fn move_player(
@@ -97,17 +106,18 @@ pub fn move_player(
             transform.translation.x -= player_movement.speed * time.delta_seconds();
             // turn the sprite around if moving left
             transform.rotation = Quat::from_rotation_y(std::f32::consts::PI);
+
+            for (mut weapon, mut pa) in weapon_query.iter_mut() {
+                weapon.flip_x = true;
+                pa.flip_x = true;
+            }
         }
         if keys.pressed(KeyCode::D) || keys.pressed(KeyCode::E) {
             animator.current_animation = "Walk".to_string();
             transform.translation.x += player_movement.speed * time.delta_seconds();
             transform.rotation = Quat::default();
-        }
-        for (mut weapon, mut pa) in weapon_query.iter_mut() {
-            if keys.pressed(KeyCode::A) {
-                weapon.flip_x = true;
-                pa.flip_x = true;
-            } else {
+
+            for (mut weapon, mut pa) in weapon_query.iter_mut() {
                 weapon.flip_x = false;
                 pa.flip_x = false;
             }

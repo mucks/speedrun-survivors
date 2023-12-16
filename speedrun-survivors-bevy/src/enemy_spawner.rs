@@ -6,6 +6,7 @@ use rand::Rng;
 use crate::{
     animation::{self, Animator},
     enemy::Enemy,
+    health::{add_health_bar, Health},
 };
 
 #[derive(Component)]
@@ -99,7 +100,7 @@ pub fn update_spawning(
                 }
             }
 
-            commands
+            let entity = commands
                 .spawn(SpriteSheetBundle {
                     texture_atlas: texture_atlas_handle,
                     transform: spawn_transform,
@@ -112,10 +113,15 @@ pub fn update_spawning(
                     last_animation: "Walk".to_string(),
                     current_animation: "Walk".to_string(),
                 })
-                .insert(Enemy {
-                    speed: 100.,
-                    health: 1.,
-                });
+                .insert(Enemy { speed: 100. })
+                .insert(Health {
+                    active_health: 2.,
+                    max_health: 2.,
+                    is_player: false,
+                })
+                .id();
+
+            add_health_bar(&mut commands, entity, spawn_transform.translation, 1.);
         }
     }
 }

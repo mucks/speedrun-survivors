@@ -6,6 +6,7 @@ use crate::{
     animation::{self, Animator},
     cursor_info::OffsetedCursorPosition,
     enemy::Enemy,
+    health::Health,
     player_attach,
 };
 
@@ -16,6 +17,7 @@ pub struct SwordController {
     pub hitbox: f32,
     pub swing_time: f32,
     pub cooldown: f32,
+    pub is_swinging: bool,
 }
 
 fn create_sword_anim_hashmap() -> HashMap<String, animation::Animation> {
@@ -75,6 +77,7 @@ pub fn spawn_sword(
             hitbox: 12.,
             swing_time: 0.,
             cooldown: 0.,
+            is_swinging: false,
         })
         .insert(WeaponType::Sword);
 }
@@ -84,9 +87,6 @@ pub fn sword_controls(
     buttons: Res<Input<MouseButton>>,
 ) {
     for (mut sword_controller, mut _transform, mut animator) in sword_query.iter_mut() {
-        println!("current_animation: {}", animator.current_animation);
-        println!("swing_time: {}", sword_controller.swing_time);
-
         if sword_controller.cooldown > 0. {
             sword_controller.cooldown -= 0.1;
         }
@@ -94,8 +94,10 @@ pub fn sword_controls(
         if sword_controller.swing_time > 0. {
             animator.current_animation = "Swing".to_string();
             sword_controller.swing_time -= 0.15;
+            sword_controller.is_swinging = true;
         } else {
             animator.current_animation = "Idle".to_string();
+            sword_controller.is_swinging = false;
         }
 
         if sword_controller.swing_time <= 0. && sword_controller.cooldown <= 0. {
@@ -108,18 +110,26 @@ pub fn sword_controls(
 }
 
 pub fn update_sword_hits(
-    sword_query: Query<(&Transform, Entity), (With<SwordController>, Without<Enemy>)>,
-    mut enemy_query: Query<(&mut Enemy, &mut Transform), Without<SwordController>>,
+    sword_query: Query<
+        (&Transform, Entity, &SwordController),
+        (With<SwordController>, Without<Enemy>),
+    >,
+    mut enemy_query: Query<(&mut Enemy, &mut Transform, &mut Health), Without<SwordController>>,
 ) {
-    if let Some(sword) = sword_query.iter().next() {
-        let s = Vec2::new(sword.0.translation.x, sword.0.translation.y);
-        for (mut enemy, transform) in enemy_query.iter_mut() {
+    if let Some((transform, _, sword)) = sword_query.iter().next() {
+        let s = Vec2::new(transform.translation.x, transform.translation.y);
+
+        if !sword.is_swinging {
+            return;
+        }
+
+        for (mut enemy, transform, mut health) in enemy_query.iter_mut() {
             if Vec2::distance(
                 s,
                 Vec2::new(transform.translation.x, transform.translation.y),
             ) <= 32.
             {
-                enemy.health -= 1.;
+                health.active_health -= 1.;
             }
         }
     }

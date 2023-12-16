@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::enemy::Enemy;
+use crate::{enemy::Enemy, health::Health};
 
 #[derive(Component)]
 pub struct Bullet {
@@ -31,7 +31,7 @@ pub struct BulletInfo {
 
 pub fn update_bullet_hits(
     bullet_query: Query<(&Transform, Entity), (With<Bullet>, Without<Enemy>)>,
-    mut enemy_query: Query<(&mut Enemy, &mut Transform), Without<Bullet>>,
+    mut enemy_query: Query<(&mut Enemy, &mut Transform, &mut Health), Without<Bullet>>,
     mut commands: Commands,
 ) {
     let mut bullet_list = Vec::new();
@@ -42,7 +42,7 @@ pub fn update_bullet_hits(
         });
     }
     let mut bullet_len = bullet_list.len();
-    for (mut enemy, transform) in enemy_query.iter_mut() {
+    for (mut enemy, transform, mut health) in enemy_query.iter_mut() {
         let mut i: i32 = 0;
         while i < bullet_len as i32 {
             if Vec2::distance(
@@ -50,7 +50,7 @@ pub fn update_bullet_hits(
                 Vec2::new(transform.translation.x, transform.translation.y),
             ) <= 36.
             {
-                enemy.health -= 1.;
+                health.active_health -= 1.;
 
                 commands.entity(bullet_list[i as usize].entity).despawn();
 

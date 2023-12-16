@@ -8,6 +8,7 @@ mod bullet;
 mod cursor_info;
 mod enemy;
 mod enemy_spawner;
+mod health;
 mod player;
 mod player_attach;
 mod player_camera;
@@ -38,6 +39,8 @@ fn main() {
         .add_systems(Startup, weapon::sword::spawn_sword)
         .add_systems(Startup, spawn_enemy_spawner)
         .add_systems(Startup, spawn_camera)
+        .add_systems(Update, health::update_health_bar)
+        .add_systems(Update, enemy::update_enemy_hits)
         .run();
 }
 
