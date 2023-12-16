@@ -4,6 +4,7 @@ use bevy::prelude::*;
 
 use crate::plugins::health::{add_health_bar, Health};
 use crate::state::{AppState, ForState};
+use crate::weapon::weapon_animation_effect::WeaponAnimationEffect;
 use crate::{
     animation::{self, Animator},
     cursor_info::OffsetedCursorPosition,
@@ -106,6 +107,7 @@ pub fn spawn_player(
             last_animation: "Walk".to_string(),
             current_animation: "Walk".to_string(),
             animation_bank: create_player_anim_hashmap(),
+            destroy_on_end: false,
         })
         .insert(Player {})
         .insert(PlayerMovement { speed: 100. })
@@ -118,7 +120,20 @@ pub fn move_player(
     mut query: Query<(&PlayerMovement, &mut Transform, &mut Animator)>,
     mut weapon_query: Query<
         (&mut TextureAtlasSprite, &mut PlayerAttach),
-        (With<WeaponType>, Without<PlayerMovement>),
+        (
+            With<WeaponType>,
+            Without<PlayerMovement>,
+            Without<WeaponAnimationEffect>,
+        ),
+    >,
+    // TODO: refactor this, probably better to use WeaponAttack for the effects
+    mut weapon_animation_effect_query: Query<
+        (&mut TextureAtlasSprite, &mut PlayerAttach),
+        (
+            With<WeaponAnimationEffect>,
+            Without<PlayerMovement>,
+            Without<WeaponType>,
+        ),
     >,
     cursor_res: ResMut<OffsetedCursorPosition>,
 ) {
@@ -144,6 +159,10 @@ pub fn move_player(
                 weapon.flip_x = true;
                 pa.flip_x = true;
             }
+            for (mut weapon, mut pa) in weapon_animation_effect_query.iter_mut() {
+                weapon.flip_x = true;
+                pa.flip_x = true;
+            }
         }
         if keys.pressed(KeyCode::D) || keys.pressed(KeyCode::E) {
             animator.current_animation = "Walk".to_string();
@@ -151,6 +170,10 @@ pub fn move_player(
             transform.rotation = Quat::default();
 
             for (mut weapon, mut pa) in weapon_query.iter_mut() {
+                weapon.flip_x = false;
+                pa.flip_x = false;
+            }
+            for (mut weapon, mut pa) in weapon_animation_effect_query.iter_mut() {
                 weapon.flip_x = false;
                 pa.flip_x = false;
             }

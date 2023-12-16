@@ -96,6 +96,7 @@ pub fn spawn_gun(
             last_animation: "Shoot".to_string(),
             current_animation: "Shoot".to_string(),
             animation_bank: create_gun_anim_hashmap(),
+            destroy_on_end: false,
         })
         .insert(player_attach::PlayerAttach::new(Vec2::new(15., -5.)))
         .insert(GunController {

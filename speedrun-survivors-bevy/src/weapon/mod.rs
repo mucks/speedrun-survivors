@@ -1,13 +1,12 @@
 use bevy::prelude::*;
 
-use crate::state::AppState;
-
 use self::weapon_type::WeaponType;
 
 pub mod gun;
 pub mod hammer;
 pub mod switch_weapon;
 pub mod sword;
+pub mod weapon_animation_effect;
 pub mod weapon_type;
 
 const INITIAL_WEAPON_TYPE: WeaponType = WeaponType::Sword;

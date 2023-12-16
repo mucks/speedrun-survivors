@@ -5,6 +5,7 @@ use crate::plugins::health::{self, Health};
 use crate::state::AppState;
 
 pub mod enemy_spawner;
+pub mod enemy_type;
 
 pub struct EnemyPlugin;
 

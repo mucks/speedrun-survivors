@@ -11,6 +11,8 @@ use crate::{
     enemy::Enemy,
 };
 
+use super::enemy_type::EnemyType;
+
 pub struct SpawnEnemiesPlugin;
 
 impl Plugin for SpawnEnemiesPlugin {
@@ -91,18 +93,11 @@ pub fn update_spawning(
         };
 
         spawner.timer = spawner.cooldown;
-        let texture_handle = asset_server.load("sprites/enemy/enemy-spider.png");
-        let texture_atlas = TextureAtlas::from_grid(
-            texture_handle,
-            Vec2::new(32., 32.),
-            2,
-            1,
-            Some(Vec2::new(1., 1.)),
-            None,
-        );
-        let texture_atlas_handle = texture_atlases.add(texture_atlas);
 
-        let mut spawn_transform = Transform::from_scale(Vec3::splat(5.));
+        let enemy_type = EnemyType::random();
+
+        let texture_atlas_handle = texture_atlases.add(enemy_type.texture_atlas(&asset_server));
+        let mut spawn_transform = Transform::from_scale(enemy_type.scale());
 
         let mut rng = rand::thread_rng();
 
@@ -153,13 +148,14 @@ pub fn update_spawning(
                 cooldown: 0.05,
                 last_animation: "Walk".to_string(),
                 current_animation: "Walk".to_string(),
+                destroy_on_end: false,
             })
             .insert(Enemy {
                 speed: 100.,
                 attack: 1.,
             })
             .insert(StatusEffectController { effects: vec![] })
-            .insert(Health::new(2., 2., 0., None));
+            .insert(enemy_type.health());
 
         //TODO lets not have healthbars for enemies as there will be hundreds and they mostly die in 1 hit probably...
         // add_health_bar(&mut commands, entity, spawn_transform.translation, 1.);

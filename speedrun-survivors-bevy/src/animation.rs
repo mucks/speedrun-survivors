@@ -15,6 +15,7 @@ pub struct Animator {
     pub last_animation: String,
     pub timer: f32,
     pub cooldown: f32,
+    pub destroy_on_end: bool,
 }
 impl Default for Animator {
     fn default() -> Self {
@@ -24,11 +25,16 @@ impl Default for Animator {
             cooldown: 0.1,
             last_animation: " ".to_string(),
             current_animation: "Idle".to_string(),
+            destroy_on_end: false,
         }
     }
 }
-pub fn animate_sprite(time: Res<Time>, mut query: Query<(&mut Animator, &mut TextureAtlasSprite)>) {
-    for (mut animator, mut sprite) in query.iter_mut() {
+pub fn animate_sprite(
+    time: Res<Time>,
+    mut query: Query<(&mut Animator, &mut TextureAtlasSprite, Entity)>,
+    mut commands: Commands,
+) {
+    for (mut animator, mut sprite, ent) in query.iter_mut() {
         let anim = animator.animation_bank[animator.current_animation.as_str()];
         if animator.last_animation != animator.current_animation {
             sprite.index = anim.start - 1;
@@ -45,6 +51,9 @@ pub fn animate_sprite(time: Res<Time>, mut query: Query<(&mut Animator, &mut Tex
                 sprite.index += 1;
                 if sprite.index > anim.end - 1 {
                     sprite.index = anim.end - 1;
+                    if animator.destroy_on_end {
+                        commands.entity(ent).despawn();
+                    }
                 }
             }
         }

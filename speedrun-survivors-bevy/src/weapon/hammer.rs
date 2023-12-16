@@ -53,12 +53,64 @@ pub struct HammerController {
     pub is_stomping: bool,
 }
 
+fn spawn_hammer_effect(
+    commands: &mut Commands,
+    asset_server: &Res<AssetServer>,
+    texture_atlases: &mut ResMut<Assets<TextureAtlas>>,
+    translation: Vec3,
+) {
+    let texture_handle = asset_server.load("sprites/weapon/hammer-effect.png");
+    let texture_atlas = TextureAtlas::from_grid(
+        texture_handle,
+        Vec2::new(32., 32.),
+        10,
+        1,
+        Some(Vec2::new(1., 1.)),
+        None,
+    );
+    let texture_atlas_handle = texture_atlases.add(texture_atlas);
+
+    commands
+        .spawn((
+            SpriteSheetBundle {
+                texture_atlas: texture_atlas_handle,
+                transform: Transform {
+                    translation,
+                    scale: Vec3::splat(3.5),
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
+            ForState {
+                states: vec![AppState::GameRunning],
+            },
+        ))
+        .insert(animation::Animator {
+            timer: 0.,
+            cooldown: 10.,
+            last_animation: "Stomp".to_string(),
+            current_animation: "Stomp".to_string(),
+            animation_bank: create_hammer_effect_anim_hashmap(),
+            destroy_on_end: true,
+        });
+}
+
 fn on_hammer_stomp(
     mut hammer_stomp: EventReader<HammerStomp>,
     mut enemy_query: Query<(&Transform, Entity), (With<Enemy>, Without<Player>)>,
     mut ev_status: EventWriter<StatusEffectEvent>,
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
 ) {
     for ev in hammer_stomp.iter() {
+        spawn_hammer_effect(
+            &mut commands,
+            &asset_server,
+            &mut texture_atlases,
+            ev.translation,
+        );
+
         for (transform, ent) in enemy_query.iter_mut() {
             let distance = (transform.translation - ev.translation).length();
             if distance < ev.hitbox {
@@ -78,6 +130,20 @@ fn on_hammer_stomp(
             }
         }
     }
+}
+
+fn create_hammer_effect_anim_hashmap() -> HashMap<String, animation::Animation> {
+    let mut hash_map = HashMap::new();
+    hash_map.insert(
+        "Stomp".to_string(),
+        animation::Animation {
+            start: 1,
+            end: 10,
+            looping: false,
+            cooldown: 0.1,
+        },
+    );
+    hash_map
 }
 
 fn create_hammer_anim_hashmap() -> HashMap<String, animation::Animation> {
@@ -136,6 +202,7 @@ pub fn spawn_hammer(
             last_animation: "Idle".to_string(),
             current_animation: "Idle".to_string(),
             animation_bank: create_hammer_anim_hashmap(),
+            destroy_on_end: false,
         })
         .insert(player_attach::PlayerAttach::new(Vec2::new(50., 30.)))
         .insert(HammerController {

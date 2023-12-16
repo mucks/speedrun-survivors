@@ -10,6 +10,7 @@ use crate::{
     player::player_attach,
 };
 
+use super::weapon_animation_effect::WeaponAnimationEffect;
 use super::weapon_type::WeaponType;
 
 const SWORD_DAMAGE: f32 = 1.;
@@ -37,15 +38,6 @@ pub struct SwordController {
 
 fn create_sword_effect_anim_hashmap() -> HashMap<String, animation::Animation> {
     let mut hash_map = HashMap::new();
-    hash_map.insert(
-        "Idle".to_string(),
-        animation::Animation {
-            start: 1,
-            end: 1,
-            looping: true,
-            cooldown: 0.1,
-        },
-    );
     hash_map.insert(
         "Swing".to_string(),
         animation::Animation {
@@ -81,6 +73,45 @@ fn create_sword_anim_hashmap() -> HashMap<String, animation::Animation> {
     hash_map
 }
 
+fn spawn_sword_swing_effect(
+    commands: &mut Commands,
+    asset_server: &Res<AssetServer>,
+    texture_atlases: &mut ResMut<Assets<TextureAtlas>>,
+    translation: Vec3,
+) {
+    let texture_effect_handle = asset_server.load("sprites/weapon/sword-effect.png");
+    let texture_effect_atlas = TextureAtlas::from_grid(
+        texture_effect_handle,
+        Vec2::new(32., 32.),
+        4,
+        1,
+        Some(Vec2::new(1., 1.)),
+        None,
+    );
+    let texture_atlas_effect_handle = texture_atlases.add(texture_effect_atlas);
+
+    commands
+        .spawn(SpriteSheetBundle {
+            texture_atlas: texture_atlas_effect_handle,
+            transform: Transform {
+                scale: Vec3::splat(3.5),
+                translation,
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .insert(animation::Animator {
+            timer: 0.,
+            cooldown: 10.,
+            last_animation: "Swing".to_string(),
+            current_animation: "Swing".to_string(),
+            animation_bank: create_sword_effect_anim_hashmap(),
+            destroy_on_end: true,
+        })
+        .insert(player_attach::PlayerAttach::new(Vec2::new(60., 15.)))
+        .insert(WeaponAnimationEffect::SwordSwing);
+}
+
 pub fn spawn_sword(
     commands: &mut Commands,
     asset_server: &Res<AssetServer>,
@@ -96,44 +127,7 @@ pub fn spawn_sword(
         None,
     );
 
-    let texture_effect_handle = asset_server.load("sprites/weapon/sword-effect.png");
-    let texture_effect_atlas = TextureAtlas::from_grid(
-        texture_effect_handle,
-        Vec2::new(32., 32.),
-        4,
-        1,
-        Some(Vec2::new(1., 1.)),
-        None,
-    );
-    let texture_atlas_effect_handle = texture_atlases.add(texture_effect_atlas);
     let texture_atlas_handle = texture_atlases.add(texture_atlas);
-
-    commands
-        .spawn((
-            SpriteSheetBundle {
-                texture_atlas: texture_atlas_effect_handle,
-                transform: Transform::from_scale(Vec3::splat(3.5)),
-                ..Default::default()
-            },
-            ForState {
-                states: vec![AppState::GameRunning],
-            },
-        ))
-        .insert(animation::Animator {
-            timer: 0.,
-            cooldown: 10.,
-            last_animation: "Idle".to_string(),
-            current_animation: "Idle".to_string(),
-            animation_bank: create_sword_effect_anim_hashmap(),
-        })
-        .insert(player_attach::PlayerAttach::new(Vec2::new(55., 10.)))
-        .insert(SwordController {
-            hitbox: 40.,
-            swing_time: 0.,
-            cooldown: 0.,
-            is_swinging: false,
-        })
-        .insert(WeaponType::Sword);
 
     commands
         .spawn((
@@ -152,6 +146,7 @@ pub fn spawn_sword(
             last_animation: "Idle".to_string(),
             current_animation: "Idle".to_string(),
             animation_bank: create_sword_anim_hashmap(),
+            destroy_on_end: false,
         })
         .insert(player_attach::PlayerAttach::new(Vec2::new(35., 15.)))
         .insert(SwordController {
@@ -166,13 +161,26 @@ pub fn spawn_sword(
 pub fn sword_controls(
     mut sword_query: Query<(&mut SwordController, &mut Transform, &mut Animator)>,
     buttons: Res<Input<MouseButton>>,
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
 ) {
-    for (mut sword_controller, mut _transform, mut animator) in sword_query.iter_mut() {
+    for (mut sword_controller, transform, mut animator) in sword_query.iter_mut() {
         if sword_controller.cooldown > 0. {
             sword_controller.cooldown -= 0.1;
         }
 
         if sword_controller.swing_time > 0. {
+            // this if clause is run once on swing start
+            if !sword_controller.is_swinging {
+                spawn_sword_swing_effect(
+                    &mut commands,
+                    &asset_server,
+                    &mut texture_atlases,
+                    transform.translation,
+                );
+            }
+
             animator.current_animation = "Swing".to_string();
             sword_controller.swing_time -= 0.1;
             sword_controller.is_swinging = true;
