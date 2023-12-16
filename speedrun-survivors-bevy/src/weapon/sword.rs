@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use bevy::{prelude::*, window::PrimaryWindow};
 
+use crate::state::{AppState, ForState};
 use crate::{
     animation::{self, Animator},
     cursor_info::OffsetedCursorPosition,
@@ -60,11 +61,16 @@ pub fn spawn_sword(
     let texture_atlas_handle = texture_atlases.add(texture_atlas);
 
     commands
-        .spawn(SpriteSheetBundle {
-            texture_atlas: texture_atlas_handle,
-            transform: Transform::from_scale(Vec3::splat(2.5)),
-            ..Default::default()
-        })
+        .spawn((
+            SpriteSheetBundle {
+                texture_atlas: texture_atlas_handle,
+                transform: Transform::from_scale(Vec3::splat(2.5)),
+                ..Default::default()
+            },
+            ForState {
+                states: vec![AppState::GameRunning],
+            },
+        ))
         .insert(animation::Animator {
             timer: 0.,
             cooldown: 10.,

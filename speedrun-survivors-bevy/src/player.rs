@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use bevy::prelude::*;
 
-use crate::state::AppState;
+use crate::state::{AppState, ForState};
 use crate::{
     animation::{self, Animator},
     cursor_info::OffsetedCursorPosition,
@@ -88,11 +88,16 @@ pub fn spawn_player(
     let health_bar = add_health_bar(&mut commands, Vec3::default(), 5.);
 
     commands
-        .spawn(SpriteSheetBundle {
-            texture_atlas: texture_atlas_handle,
-            transform: Transform::from_scale(Vec3::splat(5.)),
-            ..Default::default()
-        })
+        .spawn((
+            SpriteSheetBundle {
+                texture_atlas: texture_atlas_handle,
+                transform: Transform::from_scale(Vec3::splat(5.)),
+                ..Default::default()
+            },
+            ForState {
+                states: vec![AppState::GameRunning],
+            },
+        ))
         .insert(animation::Animator {
             timer: 0.,
             cooldown: 0.05,

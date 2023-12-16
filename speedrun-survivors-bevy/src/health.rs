@@ -84,6 +84,7 @@ pub fn update_health_bar(
         if health_percentage <= 0.0 {
             if player.is_some() {
                 next_state.set(AppState::GameOver);
+                return; // Unspawn will happen due to state change
             }
             commands.entity(entity).despawn_recursive();
         }

@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use crate::state::{AppState, ForState};
 use crate::{
     animation::{self, Animation, Animator},
     bullet::Bullet,
@@ -59,11 +60,16 @@ pub fn spawn_gun(
     let texture_atlas_handle = texture_atlases.add(texture_atlas);
 
     commands
-        .spawn(SpriteSheetBundle {
-            texture_atlas: texture_atlas_handle,
-            transform: Transform::from_scale(Vec3::splat(5.)),
-            ..Default::default()
-        })
+        .spawn((
+            SpriteSheetBundle {
+                texture_atlas: texture_atlas_handle,
+                transform: Transform::from_scale(Vec3::splat(5.)),
+                ..Default::default()
+            },
+            ForState {
+                states: vec![AppState::GameRunning],
+            },
+        ))
         .insert(animation::Animator {
             timer: 0.,
             cooldown: 0.05,
@@ -126,11 +132,16 @@ pub fn gun_controls(
                 spawn_transform.rotation = Quat::from_axis_angle(Vec3::new(0., 0., 1.), angle);
                 gun_controller.shoot_timer = gun_controller.shoot_cooldown;
                 commands
-                    .spawn(SpriteBundle {
-                        transform: spawn_transform,
-                        texture: asset_server.load("bullet.png"),
-                        ..Default::default()
-                    })
+                    .spawn((
+                        SpriteBundle {
+                            transform: spawn_transform,
+                            texture: asset_server.load("bullet.png"),
+                            ..Default::default()
+                        },
+                        ForState {
+                            states: vec![AppState::GameRunning],
+                        },
+                    ))
                     .insert(Bullet {
                         lifetime: BULLET_LIFETIME,
                         speed: BULLET_SPEED,

@@ -4,7 +4,7 @@ use crate::enemy_spawner::SpawnEnemiesPlugin;
 use crate::hud::HudPlugin;
 use crate::menu::MenuPlugin;
 use crate::player::PlayerPlugin;
-use crate::state::{AppState, StatesPlugin};
+use crate::state::{AppState, ForState, StatesPlugin};
 use bevy::prelude::*;
 use bevy_ecs_ldtk::prelude::*;
 
@@ -95,11 +95,16 @@ fn spawn_ldtk_level(asset_server: Res<AssetServer>, mut commands: Commands) {
     let mut transform = Transform::from_scale(Vec3::new(10., 10., 0.1));
     transform.translation = Vec3::new(-level_witdh / 2., -level_height / 2., -10.);
 
-    commands.spawn(LdtkWorldBundle {
-        ldtk_handle: asset_server.load("level.ldtk"),
-        transform,
-        ..Default::default()
-    });
+    commands.spawn((
+        LdtkWorldBundle {
+            ldtk_handle: asset_server.load("level.ldtk"),
+            transform,
+            ..Default::default()
+        },
+        ForState {
+            states: vec![AppState::GameRunning],
+        },
+    ));
 }
 
 fn spawn_camera(mut commands: Commands) {
