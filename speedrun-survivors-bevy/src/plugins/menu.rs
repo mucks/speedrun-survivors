@@ -22,7 +22,15 @@ impl Plugin for MenuPlugin {
         app.add_systems(OnEnter(AppState::SplashScreen), menu_splash_screen)
             .add_systems(OnEnter(AppState::GameCreate), menu_game_create)
             .add_systems(OnEnter(AppState::GameOver), menu_game_over)
-            .add_systems(Update, (mouse_scroll, menu_input_system, menu_blink_system))
+            .add_systems(
+                Update,
+                (
+                    mouse_scroll,
+                    on_checkbox_click,
+                    menu_input_system,
+                    menu_blink_system,
+                ),
+            )
             .add_systems(Startup, setup)
             .insert_resource(GameConfigState::default());
     }
@@ -83,18 +91,34 @@ fn menu_splash_screen(mut commands: Commands, assets: ResMut<UiAssets>) {
         });
 }
 
-// Tag component used to tag entities added on the game screen
 #[derive(Component)]
-struct OnGameScreen;
+struct CheckBox {
+    pub nft_id: String,
+    pub checked: bool,
+}
+impl CheckBox {
+    fn make_checkbox(nft_id: String) -> Self {
+        Self {
+            nft_id,
+            checked: false,
+        }
+    }
+}
+
+fn on_checkbox_click(mut query: Query<(&Interaction, &CheckBox), Changed<Interaction>>) {
+    for (interaction, checkbox) in query.iter_mut() {
+        match *interaction {
+            Interaction::Pressed => {
+                eprintln!("Checkbox clicked {}", checkbox.nft_id);
+            }
+            _ => {}
+        }
+    }
+}
 
 #[derive(Component)]
 enum MenuButtonAction {
     Play,
-    Settings,
-    SettingsDisplay,
-    SettingsSound,
-    BackToMainMenu,
-    BackToSettings,
     Quit,
 }
 
@@ -139,7 +163,7 @@ fn menu_game_create(
                     },
                     ..Default::default()
                 })
-                .with_children(|builder| wrapper_content(builder, &assets));
+                .with_children(|parent| wrapper_content(parent, &assets));
 
             // Wrapper for the footer
             parent
@@ -153,7 +177,7 @@ fn menu_game_create(
                     background_color: Color::OLIVE.into(),
                     ..Default::default()
                 })
-                .with_children(|builder| wrapper_footer(builder, &assets));
+                .with_children(|parent| wrapper_footer(parent, &assets));
         });
 }
 
@@ -318,27 +342,87 @@ fn wrapper_level_selector(parent: &mut ChildBuilder, assets: &UiAssets) {
 }
 
 fn wrapper_nft_list(parent: &mut ChildBuilder, assets: &UiAssets) {
-    let nfts_from_api_todo: Vec<&str> = vec![
-        "BonkInu's Battle Gloves (+10% Attack Speed)",
-        "Pepe's Crypto Wings (+8% Movement Speed)",
-        "MadLads Market Mayhem (+15% Damage Boost)",
-        "CryptoKitty Fever (+12% Critical Hit Chance)",
-        "BonkInu's Blockchain Brawl (+20% Token Harvesting Rate)",
-        "Pepe's Pixelated Portfolio (+5% Defense)",
-        "MadLads Moonshot Madness (+18% Dodge Chance)",
-        "CryptoKitties Wisdom Tonic (+7% Experience Gain)",
-        "BonkInu's DeFi Derby (+25% DeFi Yield)",
-        "Pepe's NFT Nexus (+10% Rarity Find)",
-        "MadLads MetaVerse Mayhem (+15% Stamina Regeneration)",
-        "CryptoKitties Caper (+10% Catnip Collection)",
-        "BonkInu's Bonanza Blitz (+12% Resource Gathering)",
-        "Pepe's Precious Tokens (+15% Gold Discovery)",
-        "MadLads Meme Minefield (+8% Energy Regeneration)",
-        "CryptoKitties Crypto Carnival (+10% Kitty Breeding Speed)",
-        "BonkInu's Bullish Battle (+20% Investment Returns)",
-        "Pepe's Profits Parade (+5% Market Influence)",
-        "MadLads Market Mingle (+15% Social Interaction Bonus)",
-        "CryptoKitties Kitty Kingdom (+10% Kingdom Prosperity)",
+    let nfts_from_api_todo: Vec<(&str, &str)> = vec![
+        (
+            "7hgJd62T7j1KarSLU7vsr9tGdKZ1Q2qUXWZsg3pVkPjb",
+            "BonkInu's Battle Gloves (+10% Attack Speed)",
+        ),
+        (
+            "2k4GvRj2zrYx9DWuT5haXxPpoQa1kp3UDWuX9gqJN9Wj",
+            "Pepe's Crypto Wings (+8% Movement Speed)",
+        ),
+        (
+            "8EHJpX2PpGqFvqBkCfz6FjWpvvDqYqLUrVpPZj5H1DPw",
+            "MadLads Market Mayhem (+15% Damage Boost)",
+        ),
+        (
+            "3gF5g6GJ2PZpVgJ8ZyUqufuB5vG2aJMr5Njh6P6J3KTm",
+            "CryptoKitty Fever (+12% Critical Hit Chance)",
+        ),
+        (
+            "4iWJVp7HPgqKYbNZDv3XYgZaQsZ9K6q8jq9hJjr3XzYo",
+            "BonkInu's Blockchain Brawl (+20% Token Harvesting Rate)",
+        ),
+        (
+            "9u2aVuRjaG69paRgE2Z1wzZV9N2UP8mXSWPjq2tV3vzv",
+            "Pepe's Pixelated Portfolio (+5% Defense)",
+        ),
+        (
+            "5rv2aSJf2zbdXjW9jFqK9vKYvr8PrwrG9FpHb5t4d9jS",
+            "MadLads Moonshot Madness (+18% Dodge Chance)",
+        ),
+        (
+            "6pJ4gRzvqNZquHZG1ZaS42GXDqCkPZyUTyHXaqgVTXfD",
+            "CryptoKitties Wisdom Tonic (+7% Experience Gain)",
+        ),
+        (
+            "1gVyaVSK87y8yvNWa8WVP8yZavGqU6W1Kv1uF2zYvVZ9",
+            "BonkInu's DeFi Derby (+25% DeFi Yield)",
+        ),
+        (
+            "2zPvTm2jaY4P4zJy2ZwJ2a8hj7JwF5eXy2D5r5wF5u7z",
+            "Pepe's NFT Nexus (+10% Rarity Find)",
+        ),
+        (
+            "8PmRJmP4rYquqGvzSj3m7yZAyqn3YqpWy2myqSguZwyo",
+            "MadLads MetaVerse Mayhem (+15% Stamina Regeneration)",
+        ),
+        (
+            "3fSvZVqW9Jyo1ZfzYbJgquB9mBvzaPjW2JgZ2y9JkzP6",
+            "CryptoKitties Caper (+10% Catnip Collection)",
+        ),
+        (
+            "4rH9ZygvGqzVT7Mz2gU1Zjy8Tn8njh4n1pW1uWZqfUtu",
+            "BonkInu's Bonanza Blitz (+12% Resource Gathering)",
+        ),
+        (
+            "9V4ZvgUwVgJ8aTzo87zvq8MfJvnYXZpJ1J3VgZYgXYc",
+            "Pepe's Precious Tokens (+15% Gold Discovery)",
+        ),
+        (
+            "5XbGQvQ1zZoXHhPKbGUQ6iZfHHzWXe7Jg9muvzqJpSV",
+            "MadLads Meme Minefield (+8% Energy Regeneration)",
+        ),
+        (
+            "1cNaZY2ZXnqw9jJcqjuaJqCzJ7G5nzqm4V4UZMgPwYX",
+            "CryptoKitties Crypto Carnival (+10% Kitty Breeding Speed)",
+        ),
+        (
+            "2RiGzny4vY3qvKXV9aR1mH8FyUJ4v89UxZ6TqGhXaE2M",
+            "BonkInu's Bullish Battle (+20% Investment Returns)",
+        ),
+        (
+            "8ZR3rX8zynWj59nvqZYgSK9ZMqPQ2v9hVnVjZAqzAVZN",
+            "Pepe's Profits Parade (+5% Market Influence)",
+        ),
+        (
+            "3J2vXV9u2JqyWZgKXY2UuZfaSWzV2JjKrWUvTqSnJyNW",
+            "MadLads Market Mingle (+15% Social Interaction Bonus)",
+        ),
+        (
+            "4u1KZJqKJZq1v3nTgrGhFm7j5jtmvZr2wZ5mVaSP2qys",
+            "CryptoKitties Kitty Kingdom (+10% Kingdom Prosperity)",
+        ),
     ];
 
     parent
@@ -397,15 +481,15 @@ fn wrapper_nft_list(parent: &mut ChildBuilder, assets: &UiAssets) {
                             AccessibilityNode(NodeBuilder::new(Role::List)),
                         ))
                         .with_children(|parent| {
-                            for text in nfts_from_api_todo {
-                                list_item_selectable(parent, assets, text);
+                            for (id, text) in nfts_from_api_todo {
+                                list_item_selectable(parent, assets, id, text);
                             }
                         });
                 });
         });
 }
 
-fn list_item_selectable(parent: &mut ChildBuilder, assets: &UiAssets, text: &str) {
+fn list_item_selectable(parent: &mut ChildBuilder, assets: &UiAssets, id: &str, text: &str) {
     parent
         .spawn(NodeBundle {
             style: Style {
@@ -432,8 +516,9 @@ fn list_item_selectable(parent: &mut ChildBuilder, assets: &UiAssets, text: &str
                     background_color: BackgroundColor(Color::INDIGO),
                     ..Default::default()
                 })
+                .insert(CheckBox::make_checkbox(id.to_string()))
                 .with_children(|parent| {
-                    spawn_nested_icon_32(parent, Color::GOLD, assets.checkbox_o.clone());
+                    spawn_nested_icon(parent, Color::GOLD, assets.checkbox_o.clone(), 28.0);
                 });
 
             parent.spawn((
@@ -470,8 +555,8 @@ fn spawn_equipment_row(parent: &mut ChildBuilder, assets: &UiAssets, slots: [u32
         });
 }
 
-fn spawn_equipment_selected_box(builder: &mut ChildBuilder, ui_img: UiImage, slot: u32) -> Entity {
-    let mut node = builder.spawn(ButtonBundle {
+fn spawn_equipment_selected_box(parent: &mut ChildBuilder, ui_img: UiImage, slot: u32) -> Entity {
+    let mut node = parent.spawn(ButtonBundle {
         style: Style {
             flex_direction: FlexDirection::Column,
             align_items: AlignItems::Center,
@@ -487,7 +572,7 @@ fn spawn_equipment_selected_box(builder: &mut ChildBuilder, ui_img: UiImage, slo
     });
 
     node.with_children(|parent| {
-        spawn_nested_icon(parent, Color::GOLD, ui_img.clone());
+        spawn_nested_icon(parent, Color::GOLD, ui_img.clone(), 56.0);
     })
     .id()
 }
@@ -579,11 +664,11 @@ fn wrapper_footer(parent: &mut ChildBuilder, assets: &UiAssets) {
 }
 
 fn spawn_hero_select_box(
-    builder: &mut ChildBuilder,
+    parent: &mut ChildBuilder,
     ui_img: UiImage,
     hero_type: &HeroType,
 ) -> Entity {
-    let mut node = builder.spawn(ButtonBundle {
+    let mut node = parent.spawn(ButtonBundle {
         style: Style {
             flex_direction: FlexDirection::Column,
             align_items: AlignItems::Center,
@@ -599,17 +684,17 @@ fn spawn_hero_select_box(
     });
 
     node.with_children(|parent| {
-        spawn_nested_icon(parent, Color::GOLD, ui_img.clone());
+        spawn_nested_icon(parent, Color::GOLD, ui_img.clone(), 56.0);
     })
     .id()
 }
 
 fn spawn_level_select_box(
-    builder: &mut ChildBuilder,
+    parent: &mut ChildBuilder,
     ui_img: UiImage,
     level_type: &Levels,
 ) -> Entity {
-    let mut node = builder.spawn(ButtonBundle {
+    let mut node = parent.spawn(ButtonBundle {
         style: Style {
             flex_direction: FlexDirection::Column,
             align_items: AlignItems::Center,
@@ -625,12 +710,17 @@ fn spawn_level_select_box(
     });
 
     node.with_children(|parent| {
-        spawn_nested_icon(parent, Color::GOLD, ui_img.clone());
+        spawn_nested_icon(parent, Color::GOLD, ui_img.clone(), 56.0);
     })
     .id()
 }
 
-fn spawn_nested_icon(parent: &mut ChildBuilder, background_color: Color, ui_img: UiImage) {
+fn spawn_nested_icon(
+    parent: &mut ChildBuilder,
+    background_color: Color,
+    ui_img: UiImage,
+    size: f32,
+) {
     parent
         .spawn(NodeBundle {
             background_color: BackgroundColor(background_color),
@@ -640,31 +730,8 @@ fn spawn_nested_icon(parent: &mut ChildBuilder, background_color: Color, ui_img:
             parent.spawn((
                 NodeBundle {
                     style: Style {
-                        width: Val::Px(56.0),
-                        height: Val::Px(56.0),
-                        ..default()
-                    },
-                    background_color: Color::WHITE.into(),
-                    ..default()
-                },
-                ui_img,
-            ));
-        });
-}
-
-//TODO can be refactored with above
-fn spawn_nested_icon_32(parent: &mut ChildBuilder, background_color: Color, ui_img: UiImage) {
-    parent
-        .spawn(NodeBundle {
-            background_color: BackgroundColor(background_color),
-            ..Default::default()
-        })
-        .with_children(|parent| {
-            parent.spawn((
-                NodeBundle {
-                    style: Style {
-                        width: Val::Px(28.0),
-                        height: Val::Px(28.0),
+                        width: Val::Px(size),
+                        height: Val::Px(size),
                         ..default()
                     },
                     background_color: Color::WHITE.into(),
