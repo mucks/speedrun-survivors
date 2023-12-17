@@ -12,14 +12,15 @@ impl Plugin for CoinRewardsPlugin {
             .add_event::<CoinAccumulated>()
             .insert_resource(CoinAccumulator {
                 total_coin: 0,
-                timer: 0.1,
+                timer: Timer::from_seconds(0.1, TimerMode::Repeating),
                 coin_rate: 1,
             });
     }
 }
 
-fn on_enter_game_running(mut commands: Commands, mut coin_accumulator: ResMut<CoinAccumulator>) {
+fn on_enter_game_running(mut coin_accumulator: ResMut<CoinAccumulator>) {
     coin_accumulator.total_coin = 0;
+    coin_accumulator.timer.reset();
 }
 fn on_exit_game_running(mut commands: Commands) {}
 
@@ -34,10 +35,9 @@ fn on_update(
     }
 
     // Issue coins based on timer
-    coin_accumulator.timer -= time.delta_seconds();
-    if coin_accumulator.timer <= 0.0 {
-        coin_accumulator.timer = 0.5;
-        coins_gained += coin_accumulator.coin_rate;
+    coin_accumulator.timer.tick(time.delta());
+    if coin_accumulator.timer.finished() {
+        coins_gained += coin_accumulator.coin_rate * coin_accumulator.timer.times_finished_this_tick() as u64;
     }
 
     // Update the total
@@ -52,6 +52,6 @@ pub struct CoinAccumulated {
 #[derive(Resource)]
 pub struct CoinAccumulator {
     pub total_coin: u64,
-    pub timer: f32,
-    pub coin_rate: u64,
+    timer: Timer,
+    coin_rate: u64,
 }

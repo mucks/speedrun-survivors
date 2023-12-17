@@ -113,13 +113,11 @@ fn on_hammer_stomp(
             ev.translation,
         );
 
-        impact_tx.send(CameraImpact {
-            strength: CameraImpactStrength::Medium,
-        });
-
+        let mut hit_count = 0;
         for (transform, ent) in enemy_query.iter_mut() {
             let distance = (transform.translation - ev.translation).length();
             if distance < ev.hitbox {
+                hit_count +=1;
                 let knockback = (transform.translation - ev.translation).normalize()
                     * ev.knockback
                     * (1. - distance / ev.hitbox);
@@ -134,6 +132,12 @@ fn on_hammer_stomp(
                     event_type: StatusEffectEventType::Apply,
                 });
             }
+        }
+
+        if hit_count > 0 {
+            impact_tx.send(CameraImpact {
+                strength: CameraImpactStrength::Medium,
+            });
         }
     }
 }
