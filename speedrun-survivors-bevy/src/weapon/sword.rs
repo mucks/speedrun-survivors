@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use bevy::prelude::*;
 use bevy::transform::commands;
 
+use crate::plugins::assets::GameAssets;
 use crate::plugins::health::{self, Health};
 use crate::plugins::menu::GameConfigState;
 use crate::state::{AppState, ForState};
@@ -103,25 +104,17 @@ fn move_sword_swing_effect(
 
 fn spawn_sword_swing_effect(
     commands: &mut Commands,
-    asset_server: &Res<AssetServer>,
-    texture_atlases: &mut ResMut<Assets<TextureAtlas>>,
+    game_assets: &Res<GameAssets>,
     translation: Vec3,
     flip_x: bool,
 ) {
-    let texture_effect_handle = asset_server.load("sprites/weapon/sword-effect.png");
-    let texture_effect_atlas = TextureAtlas::from_grid(
-        texture_effect_handle,
-        Vec2::new(32., 32.),
-        4,
-        1,
-        Some(Vec2::new(1., 1.)),
-        None,
-    );
-    let texture_atlas_effect_handle = texture_atlases.add(texture_effect_atlas);
-
     commands
         .spawn(SpriteSheetBundle {
-            texture_atlas: texture_atlas_effect_handle,
+            texture_atlas: game_assets
+                .weapon_animation_effects
+                .get(&WeaponAnimationEffect::SwordSwing)
+                .unwrap()
+                .clone(),
             transform: Transform {
                 scale: Vec3::splat(5.),
                 translation,
@@ -151,26 +144,13 @@ fn spawn_sword_swing_effect(
 
 pub fn spawn_sword(
     commands: &mut Commands,
-    asset_server: &Res<AssetServer>,
-    texture_atlases: &mut ResMut<Assets<TextureAtlas>>,
     game_config: &Res<GameConfigState>,
+    game_assets: &Res<GameAssets>,
 ) {
-    let texture_handle = asset_server.load("sprites/weapon/sword.png");
-    let texture_atlas = TextureAtlas::from_grid(
-        texture_handle,
-        Vec2::new(32., 32.),
-        8,
-        1,
-        Some(Vec2::new(1., 1.)),
-        None,
-    );
-
-    let texture_atlas_handle = texture_atlases.add(texture_atlas);
-
     commands
         .spawn((
             SpriteSheetBundle {
-                texture_atlas: texture_atlas_handle,
+                texture_atlas: game_assets.weapons.get(&WeaponType::Sword).unwrap().clone(),
                 transform: Transform::from_scale(Vec3::splat(2.5)),
                 ..Default::default()
             },
@@ -207,8 +187,7 @@ pub fn sword_controls(
     )>,
     buttons: Res<Input<MouseButton>>,
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+    game_assets: Res<GameAssets>,
 ) {
     for (mut sword_controller, transform, mut animator, ta) in sword_query.iter_mut() {
         if sword_controller.cooldown > 0. {
@@ -220,8 +199,7 @@ pub fn sword_controls(
             if !sword_controller.is_swinging {
                 spawn_sword_swing_effect(
                     &mut commands,
-                    &asset_server,
-                    &mut texture_atlases,
+                    &game_assets,
                     transform.translation,
                     ta.flip_x,
                 );

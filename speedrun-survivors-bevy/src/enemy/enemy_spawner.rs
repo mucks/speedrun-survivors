@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use bevy::{prelude::*, window::PrimaryWindow};
 use rand::Rng;
 
+use crate::plugins::assets::GameAssets;
 use crate::plugins::health::Health;
 use crate::plugins::status_effect::{StatusEffect, StatusEffectController};
 use crate::state::{AppState, ForState};
@@ -48,14 +49,14 @@ pub struct EnemySpawner {
     pub cooldown: f32,
     pub timer: f32,
 }
-pub fn create_enemy_anim_hashmap() -> HashMap<String, animation::Animation> {
+pub fn create_enemy_anim_hashmap(walk_frames: usize) -> HashMap<String, animation::Animation> {
     let mut hash_map = HashMap::new();
 
     hash_map.insert(
         "Walk".to_string(),
         animation::Animation {
             start: 1,
-            end: 2,
+            end: walk_frames,
             looping: true,
             cooldown: 0.1,
         },
@@ -77,10 +78,9 @@ pub fn create_enemy_anim_hashmap() -> HashMap<String, animation::Animation> {
 pub fn update_spawning(
     primary_query: Query<&Window, With<PrimaryWindow>>,
     mut spawner_query: Query<&mut EnemySpawner>,
-    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
     time: Res<Time>,
-    asset_server: Res<AssetServer>,
     mut commands: Commands,
+    game_assets: Res<GameAssets>,
 ) {
     for mut spawner in spawner_query.iter_mut() {
         spawner.timer -= time.delta_seconds();
@@ -96,7 +96,7 @@ pub fn update_spawning(
 
         let enemy_type = EnemyType::random();
 
-        let texture_atlas_handle = texture_atlases.add(enemy_type.texture_atlas(&asset_server));
+        let texture_atlas_handle = game_assets.enemies.get(&enemy_type).unwrap().clone();
         let mut spawn_transform = Transform::from_scale(enemy_type.scale());
 
         let mut rng = rand::thread_rng();
@@ -143,7 +143,7 @@ pub fn update_spawning(
                 },
             ))
             .insert(Animator {
-                animation_bank: create_enemy_anim_hashmap(),
+                animation_bank: create_enemy_anim_hashmap(enemy_type.frames()),
                 timer: 0.,
                 cooldown: 0.05,
                 last_animation: "Walk".to_string(),

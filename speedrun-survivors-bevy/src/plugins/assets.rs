@@ -1,6 +1,10 @@
+use crate::enemy::enemy_type::EnemyType;
 use crate::heroes::{HeroType, Levels};
+use crate::weapon::weapon_animation_effect::{self, WeaponAnimationEffect};
 use bevy::prelude::*;
 use bevy::utils::HashMap;
+use bevy_ecs_ldtk::LdtkAsset;
+use strum::IntoEnumIterator;
 
 use crate::weapon::weapon_type::WeaponType;
 
@@ -18,6 +22,10 @@ pub struct UiAssets {
 #[derive(Resource)]
 pub struct GameAssets {
     pub heroes: HashMap<HeroType, Handle<Image>>,
+    pub level: Handle<LdtkAsset>,
+    pub weapons: HashMap<WeaponType, Handle<TextureAtlas>>,
+    pub weapon_animation_effects: HashMap<WeaponAnimationEffect, Handle<TextureAtlas>>,
+    pub enemies: HashMap<EnemyType, Handle<TextureAtlas>>,
 }
 
 pub struct AssetsPlugin;
@@ -28,7 +36,11 @@ impl Plugin for AssetsPlugin {
     }
 }
 
-fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn setup(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+) {
     // Load ui image for each hero
     let mut heroes: HashMap<HeroType, UiImage> = HashMap::new();
     for hero in HeroType::into_iter() {
@@ -86,5 +98,40 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         );
     }
 
-    commands.insert_resource(GameAssets { heroes });
+    let level_asset = asset_server.load("level/level.ldtk");
+
+    let mut weapons = HashMap::new();
+
+    for weapon in WeaponType::iter() {
+        weapons.insert(
+            weapon.clone(),
+            texture_atlases.add(weapon.texture_atlas(&asset_server)),
+        );
+    }
+
+    let mut weapon_animation_effects = HashMap::new();
+
+    for weapon_animation_effect in WeaponAnimationEffect::iter() {
+        weapon_animation_effects.insert(
+            weapon_animation_effect.clone(),
+            texture_atlases.add(weapon_animation_effect.texture_atlas(&asset_server)),
+        );
+    }
+
+    let mut enemies = HashMap::new();
+
+    for enemy in EnemyType::iter() {
+        enemies.insert(
+            enemy.clone(),
+            texture_atlases.add(enemy.texture_atlas(&asset_server)),
+        );
+    }
+
+    commands.insert_resource(GameAssets {
+        heroes,
+        level: level_asset,
+        weapons,
+        weapon_animation_effects,
+        enemies,
+    });
 }

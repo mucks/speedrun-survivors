@@ -13,3 +13,4 @@ members = ["speedrun-survivors-bevy", "speedrun-survivors-api"]
 [workspace.dependencies]
 anyhow = "1"
 rand = "0.8"
+strum = { version = "0.25", features = ["derive"] }

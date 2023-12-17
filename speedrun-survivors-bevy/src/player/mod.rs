@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use bevy::prelude::*;
 
 use crate::heroes::HeroType;
+use crate::keyboard_key::KeyboardKey;
 use crate::plugins::assets::GameAssets;
 use crate::plugins::health::{add_health_bar, Health};
 use crate::plugins::menu::GameConfigState;
@@ -127,15 +128,15 @@ pub fn move_player(
     for (player_movement, mut transform, mut animator) in query.iter_mut() {
         animator.current_animation = "Idle".to_string();
 
-        if keys.pressed(ScanCode(17)) {
+        if keys.pressed(KeyboardKey::W.scan_code()) {
             animator.current_animation = "Walk".to_string();
             transform.translation.y += player_movement.speed * time.delta_seconds();
         }
-        if keys.pressed(ScanCode(31)) {
+        if keys.pressed(KeyboardKey::S.scan_code()) {
             animator.current_animation = "Walk".to_string();
             transform.translation.y -= player_movement.speed * time.delta_seconds();
         }
-        if keys.pressed(ScanCode(30)) {
+        if keys.pressed(KeyboardKey::A.scan_code()) {
             animator.current_animation = "Walk".to_string();
             transform.translation.x -= player_movement.speed * time.delta_seconds();
             // turn the sprite around if moving left
@@ -151,7 +152,7 @@ pub fn move_player(
                 weapon.flip_x = true;
             }
         }
-        if keys.pressed(ScanCode(32)) {
+        if keys.pressed(KeyboardKey::D.scan_code()) {
             animator.current_animation = "Walk".to_string();
             transform.translation.x += player_movement.speed * time.delta_seconds();
             transform.rotation = Quat::default();

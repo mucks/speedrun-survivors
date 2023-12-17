@@ -1,8 +1,8 @@
 use std::collections::HashMap;
-use std::ops::Neg;
 
 pub mod bullet;
 
+use crate::plugins::assets::GameAssets;
 use crate::plugins::audio_manager::{PlaySFX, SFX};
 use crate::state::{AppState, ForState};
 use crate::{
@@ -67,23 +67,12 @@ fn create_gun_anim_hashmap() -> HashMap<String, animation::Animation> {
 pub fn spawn_gun(
     commands: &mut Commands,
     asset_server: &Res<AssetServer>,
-    texture_atlases: &mut ResMut<Assets<TextureAtlas>>,
+    game_assets: &Res<GameAssets>,
 ) {
-    let texture_handle = asset_server.load("sprites/weapon/gun.png");
-    let texture_atlas = TextureAtlas::from_grid(
-        texture_handle,
-        Vec2::new(27., 21.),
-        2,
-        1,
-        Some(Vec2::new(1., 1.)),
-        None,
-    );
-    let texture_atlas_handle = texture_atlases.add(texture_atlas);
-
     commands
         .spawn((
             SpriteSheetBundle {
-                texture_atlas: texture_atlas_handle,
+                texture_atlas: game_assets.weapons.get(&WeaponType::Gun).unwrap().clone(),
                 transform: Transform::from_scale(Vec3::splat(5.)),
                 ..Default::default()
             },

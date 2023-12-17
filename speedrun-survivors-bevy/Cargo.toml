@@ -8,8 +8,9 @@ default-run = "speedrun-survivors-bevy"
 anyhow.workspace = true
 bevy = { version = "0.11" }
 bevy_editor_pls = { version = "0.6", optional = true }
-bevy_ecs_ldtk = "0.8"
+bevy_ecs_ldtk = { version = "0.8", features = ["atlas"] }
 rand.workspace = true
+strum.workspace = true
 
 [features]
 dev = ["bevy/dynamic_linking", "bevy_editor_pls"]

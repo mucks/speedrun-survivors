@@ -11,6 +11,7 @@ use crate::state::{AppState, ForState, StatesPlugin};
 use bevy::audio::VolumeLevel;
 use bevy::prelude::*;
 use bevy_ecs_ldtk::prelude::*;
+use plugins::assets::GameAssets;
 use plugins::combat_text::CombatTextPlugin;
 use plugins::health::HealthPlugin;
 use plugins::status_effect::StatusEffectPlugin;
@@ -22,6 +23,7 @@ mod enemy;
 mod player;
 
 mod heroes;
+mod keyboard_key;
 mod plugins;
 mod state;
 mod weapon;
@@ -88,7 +90,7 @@ fn on_exit_game_running(mut commands: Commands) {
     commands.insert_resource(LevelSelection::Index(1));
 }
 
-fn spawn_ldtk_level(asset_server: Res<AssetServer>, mut commands: Commands) {
+fn spawn_ldtk_level(game_assets: Res<GameAssets>, mut commands: Commands) {
     let level_scale = 5.;
     let level_witdh = 512. * level_scale;
     let level_height = 512. * level_scale;
@@ -98,7 +100,7 @@ fn spawn_ldtk_level(asset_server: Res<AssetServer>, mut commands: Commands) {
 
     commands.spawn((
         LdtkWorldBundle {
-            ldtk_handle: asset_server.load("level/level.ldtk"),
+            ldtk_handle: game_assets.level.clone(),
             transform,
             ..Default::default()
         },

@@ -7,6 +7,7 @@ use crate::{
     enemy::Enemy,
     player::player_attach,
     plugins::{
+        assets::GameAssets,
         health::{HealthChangeEvent, HealthChangeTargetType},
         menu::GameConfigState,
     },
@@ -79,28 +80,15 @@ fn create_flame_anim_hashmap() -> HashMap<String, animation::Animation> {
     hash_map
 }
 
-fn spawn_flame_effect(
-    commands: &mut Commands,
-    asset_server: &Res<AssetServer>,
-    texture_atlases: &mut ResMut<Assets<TextureAtlas>>,
-    translation: Vec3,
-) {
-    let texture_handle = asset_server.load("sprites/weapon/flame_effect.png");
-    let texture_atlas = TextureAtlas::from_grid(
-        texture_handle,
-        Vec2::new(48., 48.),
-        6,
-        1,
-        Some(Vec2::new(1., 1.)),
-        None,
-    );
-
-    let texture_atlas_handle = texture_atlases.add(texture_atlas);
-
+fn spawn_flame_effect(commands: &mut Commands, game_assets: &Res<GameAssets>, translation: Vec3) {
     commands
         .spawn((
             SpriteSheetBundle {
-                texture_atlas: texture_atlas_handle,
+                texture_atlas: game_assets
+                    .weapon_animation_effects
+                    .get(&WeaponAnimationEffect::FlameThrowerFlame)
+                    .unwrap()
+                    .clone(),
                 transform: Transform {
                     scale: Vec3::splat(5.5),
                     translation,
@@ -136,8 +124,7 @@ fn flame_thrower_controls(
         &Transform,
     )>,
     buttons: Res<Input<MouseButton>>,
-    asset_server: Res<AssetServer>,
-    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+    game_assets: Res<GameAssets>,
 ) {
     for (mut controller, mut animator, transform) in query.iter_mut() {
         if controller.is_firing {
@@ -146,12 +133,7 @@ fn flame_thrower_controls(
             controller.timer.tick(time.delta());
 
             if controller.timer.finished() {
-                spawn_flame_effect(
-                    &mut commands,
-                    &asset_server,
-                    &mut texture_atlases,
-                    transform.translation,
-                );
+                spawn_flame_effect(&mut commands, &game_assets, transform.translation);
             }
         } else {
             animator.current_animation = "Idle".to_string();
@@ -190,26 +172,17 @@ fn create_flame_thrower_anim_hashmap() -> HashMap<String, animation::Animation> 
 
 pub fn spawn_flame_thrower(
     commands: &mut Commands,
-    asset_server: &Res<AssetServer>,
-    texture_atlases: &mut ResMut<Assets<TextureAtlas>>,
     game_config: &Res<GameConfigState>,
+    game_assets: &Res<GameAssets>,
 ) {
-    let texture_handle = asset_server.load("sprites/weapon/flamethrower-sheet.png");
-    let texture_atlas = TextureAtlas::from_grid(
-        texture_handle,
-        Vec2::new(176., 142.),
-        3,
-        1,
-        Some(Vec2::new(1., 1.)),
-        None,
-    );
-
-    let texture_atlas_handle = texture_atlases.add(texture_atlas);
-
     commands
         .spawn((
             SpriteSheetBundle {
-                texture_atlas: texture_atlas_handle,
+                texture_atlas: game_assets
+                    .weapons
+                    .get(&WeaponType::FlameThrower)
+                    .unwrap()
+                    .clone(),
                 transform: Transform::from_scale(Vec3::splat(0.5)),
                 ..Default::default()
             },

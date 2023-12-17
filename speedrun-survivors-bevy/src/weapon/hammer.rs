@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use bevy::prelude::*;
 
 use crate::player::Player;
+use crate::plugins::assets::GameAssets;
 use crate::plugins::audio_manager::{PlaySFX, SFX};
 use crate::plugins::camera_shake::{CameraImpact, CameraImpactStrength};
 use crate::plugins::health::{self, Health};
@@ -17,6 +18,7 @@ use crate::{
     player::player_attach,
 };
 
+use super::weapon_animation_effect::WeaponAnimationEffect;
 use super::weapon_type::WeaponType;
 
 const HAMMER_KNOCKBACK: f32 = 1000.;
@@ -62,21 +64,13 @@ fn spawn_hammer_effect(
     texture_atlases: &mut ResMut<Assets<TextureAtlas>>,
     translation: Vec3,
 ) {
-    let texture_handle = asset_server.load("sprites/weapon/hammer-effect.png");
-    let texture_atlas = TextureAtlas::from_grid(
-        texture_handle,
-        Vec2::new(32., 32.),
-        10,
-        1,
-        Some(Vec2::new(1., 1.)),
-        None,
-    );
-    let texture_atlas_handle = texture_atlases.add(texture_atlas);
+    let texture_atlas = WeaponAnimationEffect::HammerStomp.texture_atlas(&asset_server);
+    let texture_atlas = texture_atlases.add(texture_atlas);
 
     commands
         .spawn((
             SpriteSheetBundle {
-                texture_atlas: texture_atlas_handle,
+                texture_atlas: texture_atlas,
                 transform: Transform {
                     translation,
                     scale: Vec3::splat(3.5),
@@ -193,25 +187,17 @@ fn create_hammer_anim_hashmap() -> HashMap<String, animation::Animation> {
 
 pub fn spawn_hammer(
     commands: &mut Commands,
-    asset_server: &Res<AssetServer>,
-    texture_atlases: &mut ResMut<Assets<TextureAtlas>>,
     game_config: &Res<GameConfigState>,
+    game_assets: &Res<GameAssets>,
 ) {
-    let texture_handle = asset_server.load("sprites/weapon/hammer.png");
-    let texture_atlas = TextureAtlas::from_grid(
-        texture_handle,
-        Vec2::new(32., 32.),
-        3,
-        1,
-        Some(Vec2::new(1., 1.)),
-        None,
-    );
-    let texture_atlas_handle = texture_atlases.add(texture_atlas);
-
     commands
         .spawn((
             SpriteSheetBundle {
-                texture_atlas: texture_atlas_handle,
+                texture_atlas: game_assets
+                    .weapons
+                    .get(&WeaponType::Hammer)
+                    .unwrap()
+                    .clone(),
                 transform: Transform::from_scale(Vec3::splat(3.5)),
                 ..Default::default()
             },

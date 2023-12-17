@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::plugins::menu::GameConfigState;
 
-use self::weapon_type::WeaponType;
+use self::{switch_weapon::SwitchWeaponEvent, weapon_type::WeaponType};
 
 pub mod flame_thrower;
 pub mod gun;
@@ -12,18 +12,10 @@ pub mod sword;
 pub mod weapon_animation_effect;
 pub mod weapon_type;
 
-fn spawn_initial_weapon(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
-    game_config: Res<GameConfigState>,
-) {
-    WeaponType::default().spawn(
-        &mut commands,
-        &asset_server,
-        &mut texture_atlases,
-        &game_config,
-    );
+fn spawn_initial_weapon(mut switch_weapon_events: EventWriter<SwitchWeaponEvent>) {
+    switch_weapon_events.send(SwitchWeaponEvent {
+        weapon_type: WeaponType::default(),
+    });
 }
 
 pub struct WeaponPlugin;

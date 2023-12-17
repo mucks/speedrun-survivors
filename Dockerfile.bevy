@@ -18,21 +18,29 @@ WORKDIR /usr/src/app
 COPY Cargo.toml Cargo.toml
 COPY Cargo.lock Cargo.lock
 
-# copy anchor structure 
-# frontend
+# unrelated workspace members still need to be created for cargo to build
+RUN cargo new --lib speedrun-survivors-api
+
+# bevy
 RUN mkdir -p speedrun-survivors-bevy/src
 COPY speedrun-survivors-bevy/Cargo.toml ./speedrun-survivors-bevy/Cargo.toml
-RUN touch speedrun-survivors-bevy/index.html
+COPY speedrun-survivors-bevy/index.html speedrun-survivors-bevy/index.html
 RUN touch speedrun-survivors-bevy/src/main.rs
 RUN echo "fn main() {}" > speedrun-survivors-bevy/src/main.rs
+RUN mkdir speedrun-survivors-bevy/assets
 
 WORKDIR /usr/src/app/speedrun-survivors-bevy
 RUN trunk build --release
 
+
 WORKDIR /usr/src/app
+
+
+RUN ls -l
 
 # remove template files
 RUN rm -r speedrun-survivors-bevy
+
 
 # build bin & libs
 RUN rm ./target/wasm32-unknown-unknown/release/deps/speedrun_survivors_bevy*

@@ -2,3 +2,4 @@
 .idea
 dist
 target/
+speedrun-survivors-bevy/dist/

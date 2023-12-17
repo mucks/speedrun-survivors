@@ -1,6 +1,10 @@
 use bevy::prelude::*;
 
-use crate::{plugins::menu::GameConfigState, state::AppState};
+use crate::{
+    keyboard_key::KeyboardKey,
+    plugins::{assets::GameAssets, menu::GameConfigState},
+    state::AppState,
+};
 
 use super::weapon_type::WeaponType;
 
@@ -24,25 +28,25 @@ fn switch_weapon_controls(
     mut switch_weapon_events: EventWriter<SwitchWeaponEvent>,
     scan_code_input: Res<Input<ScanCode>>,
 ) {
-    if scan_code_input.just_pressed(ScanCode(2)) {
+    if scan_code_input.just_pressed(KeyboardKey::Nk1.scan_code()) {
         switch_weapon_events.send(SwitchWeaponEvent {
             weapon_type: WeaponType::Sword,
         });
     }
 
-    if scan_code_input.just_pressed(ScanCode(3)) {
+    if scan_code_input.just_pressed(KeyboardKey::Nk2.scan_code()) {
         switch_weapon_events.send(SwitchWeaponEvent {
             weapon_type: WeaponType::Hammer,
         });
     }
 
-    if scan_code_input.just_pressed(ScanCode(4)) {
+    if scan_code_input.just_pressed(KeyboardKey::Nk3.scan_code()) {
         switch_weapon_events.send(SwitchWeaponEvent {
             weapon_type: WeaponType::Gun,
         });
     }
 
-    if scan_code_input.just_pressed(ScanCode(5)) {
+    if scan_code_input.just_pressed(KeyboardKey::Nk4.scan_code()) {
         switch_weapon_events.send(SwitchWeaponEvent {
             weapon_type: WeaponType::FlameThrower,
         });
@@ -54,8 +58,8 @@ fn on_switch_weapon(
     mut switch_weapon_event_reader: EventReader<SwitchWeaponEvent>,
     mut weapon_query: Query<(&mut Transform, Entity), With<WeaponType>>,
     asset_server: Res<AssetServer>,
-    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
     game_config: Res<GameConfigState>,
+    game_assets: Res<GameAssets>,
 ) {
     for switch_weapon_event in switch_weapon_event_reader.iter() {
         println!("Switching weapon to {:?}", switch_weapon_event.weapon_type);
@@ -70,8 +74,8 @@ fn on_switch_weapon(
         switch_weapon_event.weapon_type.spawn(
             &mut commands,
             &asset_server,
-            &mut texture_atlases,
             &game_config,
+            &game_assets,
         );
     }
 }
