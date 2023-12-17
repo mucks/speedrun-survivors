@@ -1,11 +1,11 @@
 use std::collections::HashMap;
+use std::ops::Neg;
 
 pub mod bullet;
 
 use crate::state::{AppState, ForState};
 use crate::{
     animation::{self, Animator},
-    cursor_info::OffsetedCursorPosition,
     player::player_attach,
 };
 use bevy::{prelude::*, window::PrimaryWindow};
@@ -107,14 +107,13 @@ pub fn spawn_gun(
 }
 
 pub fn gun_controls(
-    mut cursor_res: ResMut<OffsetedCursorPosition>,
     mut gun_query: Query<(&mut GunController, &mut Transform, &mut Animator)>,
-    mut cursor: EventReader<CursorMoved>,
     primary_query: Query<&Window, With<PrimaryWindow>>,
     buttons: Res<Input<MouseButton>>,
     time: Res<Time>,
     mut commands: Commands,
     asset_server: Res<AssetServer>,
+    query_camera: Query<(&Camera, &GlobalTransform)>,
 ) {
     for (mut gun_controller, mut transform, mut animator) in gun_query.iter_mut() {
         gun_controller.shoot_timer -= time.delta_seconds();
@@ -125,27 +124,26 @@ pub fn gun_controls(
             animator.current_animation = "Idle".to_string();
         }
 
-        let Ok(primary) = primary_query.get_single() else {
+        let Ok(window) = primary_query.get_single() else {
+            return;
+        };
+        let Ok((camera, camera_transform)) = query_camera.get_single() else {
             return;
         };
 
-        let mut cursor_position = match cursor.iter().last() {
-            Some(cursor_moved) => cursor_moved.position,
-            None => Vec2::new(
-                cursor_res.x + primary.width() / 2.,
-                cursor_res.y + primary.height() / 2.,
-            ),
+        // Aim gun at world location
+        let Some(cursor_world_position) = window
+            .cursor_position()
+            .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
+            .map(|ray| ray.origin.truncate())
+        else {
+            return;
         };
 
-        cursor_position.x -= primary.width() / 2.;
-        cursor_position.y -= primary.height() / 2.;
-
-        cursor_res.x = cursor_position.x;
-        cursor_res.y = cursor_position.y;
-
-        let diff = cursor_position - Vec2::new(transform.translation.x, transform.translation.y);
+        let diff =
+            cursor_world_position - Vec2::new(transform.translation.x, transform.translation.y);
         let angle = diff.y.atan2(diff.x);
-        transform.rotation = Quat::from_axis_angle(Vec3::new(0., 0., 1.), angle);
+        transform.rotation = Quat::from_axis_angle(Vec3::new(0., 0., 1.), angle).neg();
 
         if gun_controller.shoot_timer <= 0. {
             if buttons.pressed(MouseButton::Left) {
