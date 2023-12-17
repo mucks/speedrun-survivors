@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use super::{gun::spawn_gun, hammer::spawn_hammer, sword::spawn_sword};
 
-#[derive(Debug, Clone, Copy, Component)]
+#[derive(Debug, Clone, Copy, Component, PartialEq)]
 pub enum WeaponType {
     Gun,
     Hammer,

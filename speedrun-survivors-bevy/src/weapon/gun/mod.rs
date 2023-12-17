@@ -145,7 +145,15 @@ pub fn gun_controls(
         let diff =
             cursor_world_position - Vec2::new(transform.translation.x, transform.translation.y);
         let angle = diff.y.atan2(diff.x);
-        transform.rotation = Quat::from_axis_angle(Vec3::new(0., 0., 1.), angle).neg();
+        transform.rotation = Quat::from_axis_angle(Vec3::new(0., 0., 1.), angle);
+
+        // The character can walk left or right, but the gun should not flip as we rotate it here and flip it on the y axis so it doesnt go upside down
+        if cursor_world_position.x < transform.translation.x && transform.scale.y > 0. {
+            transform.scale.y *= -1.;
+        }
+        if cursor_world_position.x >= transform.translation.x && transform.scale.y < 0. {
+            transform.scale.y *= -1.;
+        }
 
         if gun_controller.shoot_timer <= 0. {
             if buttons.pressed(MouseButton::Left) {

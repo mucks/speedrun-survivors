@@ -119,12 +119,8 @@ pub fn move_player(
     keys: Res<Input<KeyCode>>,
     mut query: Query<(&PlayerMovement, &mut Transform, &mut Animator)>,
     mut weapon_query: Query<
-        (&mut TextureAtlasSprite, &mut PlayerAttach),
-        (
-            With<WeaponType>,
-            Without<PlayerMovement>,
-            Without<WeaponAnimationEffect>,
-        ),
+        (&mut TextureAtlasSprite, &mut PlayerAttach, &WeaponType),
+        (Without<PlayerMovement>, Without<WeaponAnimationEffect>),
     >,
     // TODO: refactor this, probably better to use WeaponAttack for the effects
     mut weapon_animation_effect_query: Query<
@@ -135,7 +131,6 @@ pub fn move_player(
             Without<WeaponType>,
         ),
     >,
-    cursor_res: ResMut<OffsetedCursorPosition>,
 ) {
     for (player_movement, mut transform, mut animator) in query.iter_mut() {
         animator.current_animation = "Idle".to_string();
@@ -155,9 +150,11 @@ pub fn move_player(
             // turn the sprite around if moving left
             transform.rotation = Quat::from_rotation_y(std::f32::consts::PI);
 
-            for (mut weapon, mut pa) in weapon_query.iter_mut() {
-                weapon.flip_x = true;
-                pa.flip_x = true;
+            for (mut weapon, mut pa, kind) in weapon_query.iter_mut() {
+                if kind != &WeaponType::Gun {
+                    weapon.flip_x = true;
+                    pa.flip_x = true;
+                }
             }
             for (mut weapon, mut pa) in weapon_animation_effect_query.iter_mut() {
                 weapon.flip_x = true;
@@ -169,7 +166,7 @@ pub fn move_player(
             transform.translation.x += player_movement.speed * time.delta_seconds();
             transform.rotation = Quat::default();
 
-            for (mut weapon, mut pa) in weapon_query.iter_mut() {
+            for (mut weapon, mut pa, kind) in weapon_query.iter_mut() {
                 weapon.flip_x = false;
                 pa.flip_x = false;
             }
