@@ -26,7 +26,8 @@ impl Plugin for MenuPlugin {
                 Update,
                 (
                     mouse_scroll,
-                    on_checkbox_click,
+                    on_checkbox_interaction,
+                    on_button_interaction,
                     menu_input_system,
                     menu_blink_system,
                 ),
@@ -105,12 +106,40 @@ impl CheckBox {
     }
 }
 
-fn on_checkbox_click(mut query: Query<(&Interaction, &CheckBox), Changed<Interaction>>) {
-    for (interaction, checkbox) in query.iter_mut() {
+fn on_checkbox_interaction(
+    mut query: Query<(&Interaction, &mut CheckBox, &mut UiImage), Changed<Interaction>>,
+    assets: Res<UiAssets>,
+) {
+    for (interaction, mut checkbox, mut image) in query.iter_mut() {
         match *interaction {
             Interaction::Pressed => {
-                eprintln!("Checkbox clicked {}", checkbox.nft_id);
+                eprintln!("Checkbox clicked {}, {:?}", checkbox.nft_id, image.texture);
+
+                checkbox.checked = !checkbox.checked;
+
+                //TODO doesnt work
+                if checkbox.checked {
+                    *image = assets.checkbox_x.clone();
+                } else {
+                    *image = assets.checkbox_o.clone();
+                }
             }
+            _ => {}
+        }
+    }
+}
+
+fn on_button_interaction(
+    mut query: Query<(&Interaction, &mut MenuButtonAction), Changed<Interaction>>,
+    mut next_state: ResMut<NextState<AppState>>,
+    mut app_exit_events: EventWriter<AppExit>,
+) {
+    for (interaction, mut action) in query.iter_mut() {
+        match *interaction {
+            Interaction::Pressed => match *action {
+                MenuButtonAction::Play => next_state.set(AppState::GameRunning),
+                MenuButtonAction::Quit => app_exit_events.send(AppExit),
+            },
             _ => {}
         }
     }
