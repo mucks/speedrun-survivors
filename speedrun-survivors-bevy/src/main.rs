@@ -20,6 +20,7 @@ mod cursor_info;
 mod enemy;
 mod player;
 
+mod heroes;
 mod plugins;
 mod state;
 mod weapon;

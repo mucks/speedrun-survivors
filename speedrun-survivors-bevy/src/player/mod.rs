@@ -2,7 +2,9 @@ use std::collections::HashMap;
 
 use bevy::prelude::*;
 
+use crate::plugins::assets::GameAssets;
 use crate::plugins::health::{add_health_bar, Health};
+use crate::plugins::menu::GameConfigState;
 use crate::state::{AppState, ForState};
 use crate::weapon::weapon_animation_effect::WeaponAnimationEffect;
 use crate::{
@@ -75,9 +77,11 @@ pub fn spawn_player(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+    game_config: Res<GameConfigState>,
+    game_assets: Res<GameAssets>,
 ) {
     // player
-    let texture_handle = asset_server.load("sprites/player/pepe.png");
+    let texture_handle = game_assets.heroes.get(&game_config.hero).unwrap().clone();
     let texture_atlas = TextureAtlas::from_grid(
         texture_handle,
         Vec2::new(32., 56.),

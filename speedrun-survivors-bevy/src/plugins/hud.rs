@@ -172,12 +172,12 @@ fn spawn_child_node(
         node.insert(WeaponButton { weapon_type });
     }
     node.with_children(|parent| {
-        spawn_nested_text_bundle(parent, ITEMS_COLOR, ui_img.clone());
+        spawn_nested_icon(parent, ITEMS_COLOR, ui_img.clone());
     })
     .id()
 }
 
-fn spawn_nested_text_bundle(builder: &mut ChildBuilder, background_color: Color, ui_img: UiImage) {
+fn spawn_nested_icon(builder: &mut ChildBuilder, background_color: Color, ui_img: UiImage) {
     builder
         .spawn(NodeBundle {
             background_color: BackgroundColor(background_color),
