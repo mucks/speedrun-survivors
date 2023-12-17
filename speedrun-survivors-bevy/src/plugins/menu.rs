@@ -1,8 +1,8 @@
-use bevy::a11y::AccessibilityNode;
-use bevy::a11y::accesskit::{NodeBuilder, Role};
 use crate::heroes::{HeroType, Levels};
 use crate::plugins::assets::UiAssets;
 use crate::state::{AppState, ForState};
+use bevy::a11y::accesskit::{NodeBuilder, Role};
+use bevy::a11y::AccessibilityNode;
 use bevy::app::AppExit;
 use bevy::input::mouse::{MouseScrollUnit, MouseWheel};
 use bevy::prelude::*;
@@ -366,10 +366,10 @@ fn wrapper_nft_list(parent: &mut ChildBuilder, assets: &UiAssets) {
                         ..default()
                     },
                 )
-                    .with_style(Style {
-                        margin: UiRect::all(Val::Px(20.0)),
-                        ..default()
-                    }),
+                .with_style(Style {
+                    margin: UiRect::all(Val::Px(20.0)),
+                    ..default()
+                }),
             );
 
             parent
@@ -443,10 +443,10 @@ fn wrapper_nft_equipment(parent: &mut ChildBuilder, assets: &UiAssets) {
                         ..default()
                     },
                 )
-                    .with_style(Style {
-                        margin: UiRect::all(Val::Px(20.0)),
-                        ..default()
-                    }),
+                .with_style(Style {
+                    margin: UiRect::all(Val::Px(20.0)),
+                    ..default()
+                }),
             );
 
             parent
@@ -459,8 +459,8 @@ fn wrapper_nft_equipment(parent: &mut ChildBuilder, assets: &UiAssets) {
                     ..Default::default()
                 })
                 .with_children(|parent| {
-                    spawn_equipment_row(parent, assets, [1,2,3]);
-                    spawn_equipment_row(parent, assets, [4,5,6]);
+                    spawn_equipment_row(parent, assets, [1, 2, 3]);
+                    spawn_equipment_row(parent, assets, [4, 5, 6]);
                 });
         });
 }
@@ -485,11 +485,7 @@ fn spawn_equipment_row(parent: &mut ChildBuilder, assets: &UiAssets, slots: [u32
         });
 }
 
-fn spawn_equipment_selected_box(
-    builder: &mut ChildBuilder,
-    ui_img: UiImage,
-    slot: u32,
-) -> Entity {
+fn spawn_equipment_selected_box(builder: &mut ChildBuilder, ui_img: UiImage, slot: u32) -> Entity {
     let mut node = builder.spawn(ButtonBundle {
         style: Style {
             flex_direction: FlexDirection::Column,
@@ -508,7 +504,7 @@ fn spawn_equipment_selected_box(
     node.with_children(|parent| {
         spawn_nested_icon(parent, Color::GOLD, ui_img.clone());
     })
-        .id()
+    .id()
 }
 
 fn wrapper_footer(parent: &mut ChildBuilder, assets: &UiAssets) {
