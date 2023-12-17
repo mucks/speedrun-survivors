@@ -87,15 +87,16 @@ pub fn spawn_combat_text(commands: &mut Commands, text: &str, position: Vec3, co
 }
 
 pub fn float_combat_text(
-    mut query: Query<(&mut Transform, &mut Text, &mut CombatText), With<CombatText>>,
+    mut query: Query<(&mut Transform, &mut Text, &mut CombatText, Entity), With<CombatText>>,
     time: Res<Time>,
+    mut commands: Commands,
 ) {
-    for (mut transform, mut text, mut ct) in query.iter_mut() {
+    for (mut transform, mut text, mut ct, ent) in query.iter_mut() {
         transform.translation.y += 1.0 * time.delta_seconds();
         text.sections[0].style.color.set_a(ct.timer.percent());
         ct.timer.tick(time.delta());
         if ct.timer.finished() {
-            text.sections[0].style.color.set_a(0.0);
+            commands.entity(ent).despawn_recursive();
         }
     }
 }

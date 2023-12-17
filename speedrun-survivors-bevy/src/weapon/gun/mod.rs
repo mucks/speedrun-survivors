@@ -157,7 +157,7 @@ pub fn gun_controls(
 
         if gun_controller.shoot_timer <= 0. {
             if buttons.pressed(MouseButton::Left) {
-                let mut spawn_transform = Transform::from_scale(Vec3::splat(5.0));
+                let mut spawn_transform = Transform::from_scale(Vec3::splat(2.0));
                 spawn_transform.translation = transform.translation;
                 spawn_transform.rotation = Quat::from_axis_angle(Vec3::new(0., 0., 1.), angle);
                 gun_controller.shoot_timer = gun_controller.shoot_cooldown;

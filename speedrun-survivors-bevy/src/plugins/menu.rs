@@ -912,19 +912,9 @@ fn mouse_scroll(
     }
 }
 
-#[derive(Debug, Resource)]
+#[derive(Resource, Debug, Default)]
 pub struct GameConfigState {
     pub hero: HeroType,
     pub level: u64,
     pub nft_list: Vec<String>,
-}
-
-impl Default for GameConfigState {
-    fn default() -> Self {
-        Self {
-            hero: HeroType::BonkInu,
-            level: 0,
-            nft_list: vec![],
-        }
-    }
 }

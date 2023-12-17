@@ -6,6 +6,7 @@ use crate::player::Player;
 use crate::plugins::audio_manager::{PlaySFX, SFX};
 use crate::plugins::camera_shake::{CameraImpact, CameraImpactStrength};
 use crate::plugins::health::{self, Health};
+use crate::plugins::menu::GameConfigState;
 use crate::plugins::status_effect::{
     StatusEffect, StatusEffectEvent, StatusEffectEventType, StatusEffectType,
 };
@@ -194,6 +195,7 @@ pub fn spawn_hammer(
     commands: &mut Commands,
     asset_server: &Res<AssetServer>,
     texture_atlases: &mut ResMut<Assets<TextureAtlas>>,
+    game_config: &Res<GameConfigState>,
 ) {
     let texture_handle = asset_server.load("sprites/weapon/hammer.png");
     let texture_atlas = TextureAtlas::from_grid(
@@ -225,7 +227,9 @@ pub fn spawn_hammer(
             animation_bank: create_hammer_anim_hashmap(),
             destroy_on_end: false,
         })
-        .insert(player_attach::PlayerAttach::new(Vec2::new(50., 30.)))
+        .insert(player_attach::PlayerAttach::new(
+            game_config.hero.weapon_offset(WeaponType::Hammer),
+        ))
         .insert(HammerController {
             hitbox: HAMMER_HITBOX,
             stomp_time: 0.,

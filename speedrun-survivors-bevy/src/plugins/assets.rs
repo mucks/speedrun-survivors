@@ -66,6 +66,12 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                 WeaponType::Gun,
                 asset_server.load("ui/weapon/gun-icon.png").into(),
             ),
+            (
+                WeaponType::FlameThrower,
+                asset_server
+                    .load("ui/weapon/flamethrower-ui-icon.png")
+                    .into(),
+            ),
         ],
         heroes,
         levels,

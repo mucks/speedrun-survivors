@@ -1,0 +1,54 @@
+FROM rust:slim-bookworm AS builder
+
+# Add wasm target
+RUN rustup target add wasm32-unknown-unknown
+
+# Install wasm-pack for testing
+RUN curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+# Install trunk
+ADD https://github.com/thedodd/trunk/releases/download/v0.17.5/trunk-x86_64-unknown-linux-gnu.tar.gz ./tmp
+RUN cd /tmp && tar xf trunk-x86_64-unknown-linux-gnu.tar.gz && chmod +x trunk && mv trunk /bin
+
+WORKDIR /usr/src/app
+
+# build project without source code
+
+# copy workspace files
+COPY Cargo.toml Cargo.toml
+COPY Cargo.lock Cargo.lock
+
+# copy anchor structure 
+# frontend
+RUN mkdir -p speedrun-survivors-bevy/src
+COPY speedrun-survivors-bevy/Cargo.toml ./speedrun-survivors-bevy/Cargo.toml
+RUN touch speedrun-survivors-bevy/index.html
+RUN touch speedrun-survivors-bevy/src/main.rs
+RUN echo "fn main() {}" > speedrun-survivors-bevy/src/main.rs
+
+WORKDIR /usr/src/app/speedrun-survivors-bevy
+RUN trunk build --release
+
+WORKDIR /usr/src/app
+
+# remove template files
+RUN rm -r speedrun-survivors-bevy
+RUN rm -r tutorverse-anchor
+
+# build bin & libs
+RUN rm ./target/wasm32-unknown-unknown/release/deps/speedrun_survivors_bevy*
+
+# copy over source code and deps
+COPY speedrun-survivors-bevy speedrun-survivors-bevy
+
+WORKDIR /usr/src/app/speedrun-survivors-bevy
+RUN trunk build
+
+FROM nginx:alpine as runner
+
+COPY --from=builder /usr/src/app/speedrun-survivors-bevy/dist /usr/share/nginx/html
+COPY ./speedrun-survivors-bevy/nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]

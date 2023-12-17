@@ -52,7 +52,7 @@ pub fn animate_sprite(
                 if sprite.index > anim.end - 1 {
                     sprite.index = anim.end - 1;
                     if animator.destroy_on_end {
-                        commands.entity(ent).despawn();
+                        commands.entity(ent).despawn_recursive();
                     }
                 }
             }

@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use bevy::prelude::*;
 
+use crate::heroes::HeroType;
 use crate::plugins::assets::GameAssets;
 use crate::plugins::health::{add_health_bar, Health};
 use crate::plugins::menu::GameConfigState;
@@ -50,7 +51,7 @@ pub struct PlayerMovement {
 #[derive(Component)]
 pub struct Player {}
 
-fn create_player_anim_hashmap() -> HashMap<String, animation::Animation> {
+fn create_player_anim_hashmap(hero_type: HeroType) -> HashMap<String, animation::Animation> {
     let mut hash_map = HashMap::new();
     hash_map.insert(
         "Idle".to_string(),
@@ -61,15 +62,7 @@ fn create_player_anim_hashmap() -> HashMap<String, animation::Animation> {
             cooldown: 0.1,
         },
     );
-    hash_map.insert(
-        "Walk".to_string(),
-        animation::Animation {
-            start: 1,
-            end: 4,
-            looping: true,
-            cooldown: 0.1,
-        },
-    );
+    hash_map.insert("Walk".to_string(), hero_type.walk_animation());
     hash_map
 }
 
@@ -81,15 +74,10 @@ pub fn spawn_player(
     game_assets: Res<GameAssets>,
 ) {
     // player
-    let texture_handle = game_assets.heroes.get(&game_config.hero).unwrap().clone();
-    let texture_atlas = TextureAtlas::from_grid(
-        texture_handle,
-        Vec2::new(32., 56.),
-        4,
-        1,
-        Some(Vec2::new(1., 1.)),
-        None,
-    );
+
+    let hero_type = game_config.hero.clone();
+
+    let texture_atlas = hero_type.texture_atlas(&game_assets);
     let texture_atlas_handle = texture_atlases.add(texture_atlas);
 
     let health_bar = add_health_bar(&mut commands, Vec3::default(), 5.);
@@ -98,7 +86,7 @@ pub fn spawn_player(
         .spawn((
             SpriteSheetBundle {
                 texture_atlas: texture_atlas_handle,
-                transform: Transform::from_scale(Vec3::splat(2.)),
+                transform: Transform::from_scale(Vec3::splat(hero_type.splat_scale())),
                 ..Default::default()
             },
             ForState {
@@ -110,7 +98,7 @@ pub fn spawn_player(
             cooldown: 0.05,
             last_animation: "Walk".to_string(),
             current_animation: "Walk".to_string(),
-            animation_bank: create_player_anim_hashmap(),
+            animation_bank: create_player_anim_hashmap(hero_type),
             destroy_on_end: false,
         })
         .insert(Player {})
@@ -120,7 +108,7 @@ pub fn spawn_player(
 
 pub fn move_player(
     time: Res<Time>,
-    keys: Res<Input<KeyCode>>,
+    keys: Res<Input<ScanCode>>,
     mut query: Query<(&PlayerMovement, &mut Transform, &mut Animator)>,
     mut weapon_query: Query<
         (&mut TextureAtlasSprite, &mut PlayerAttach, &WeaponType),
@@ -128,7 +116,7 @@ pub fn move_player(
     >,
     // TODO: refactor this, probably better to use WeaponAttack for the effects
     mut weapon_animation_effect_query: Query<
-        (&mut TextureAtlasSprite, &mut PlayerAttach),
+        &mut TextureAtlasSprite,
         (
             With<WeaponAnimationEffect>,
             Without<PlayerMovement>,
@@ -139,16 +127,15 @@ pub fn move_player(
     for (player_movement, mut transform, mut animator) in query.iter_mut() {
         animator.current_animation = "Idle".to_string();
 
-        // supports WASD & DVORAK
-        if keys.pressed(KeyCode::W) || keys.pressed(KeyCode::Comma) {
+        if keys.pressed(ScanCode(17)) {
             animator.current_animation = "Walk".to_string();
             transform.translation.y += player_movement.speed * time.delta_seconds();
         }
-        if keys.pressed(KeyCode::S) || keys.pressed(KeyCode::O) {
+        if keys.pressed(ScanCode(31)) {
             animator.current_animation = "Walk".to_string();
             transform.translation.y -= player_movement.speed * time.delta_seconds();
         }
-        if keys.pressed(KeyCode::A) {
+        if keys.pressed(ScanCode(30)) {
             animator.current_animation = "Walk".to_string();
             transform.translation.x -= player_movement.speed * time.delta_seconds();
             // turn the sprite around if moving left
@@ -160,12 +147,11 @@ pub fn move_player(
                     pa.flip_x = true;
                 }
             }
-            for (mut weapon, mut pa) in weapon_animation_effect_query.iter_mut() {
+            for mut weapon in weapon_animation_effect_query.iter_mut() {
                 weapon.flip_x = true;
-                pa.flip_x = true;
             }
         }
-        if keys.pressed(KeyCode::D) || keys.pressed(KeyCode::E) {
+        if keys.pressed(ScanCode(32)) {
             animator.current_animation = "Walk".to_string();
             transform.translation.x += player_movement.speed * time.delta_seconds();
             transform.rotation = Quat::default();
@@ -174,9 +160,8 @@ pub fn move_player(
                 weapon.flip_x = false;
                 pa.flip_x = false;
             }
-            for (mut weapon, mut pa) in weapon_animation_effect_query.iter_mut() {
+            for (mut weapon) in weapon_animation_effect_query.iter_mut() {
                 weapon.flip_x = false;
-                pa.flip_x = false;
             }
         }
     }

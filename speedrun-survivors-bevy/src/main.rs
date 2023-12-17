@@ -8,6 +8,7 @@ use crate::plugins::coin_rewards::CoinRewardsPlugin;
 use crate::plugins::hud::HudPlugin;
 use crate::plugins::menu::MenuPlugin;
 use crate::state::{AppState, ForState, StatesPlugin};
+use bevy::audio::VolumeLevel;
 use bevy::prelude::*;
 use bevy_ecs_ldtk::prelude::*;
 use plugins::combat_text::CombatTextPlugin;
@@ -61,17 +62,8 @@ fn main() {
         ))
         .add_systems(
             Update,
-            (
-                weapon::gun::bullet::update_bullets,
-                weapon::gun::bullet::update_bullet_hits,
-                weapon::gun::gun_controls,
-                weapon::sword::update_sword_hits,
-                weapon::sword::sword_controls,
-                animation::animate_sprite,
-            )
-                .run_if(in_state(AppState::GameRunning)),
+            (animation::animate_sprite,).run_if(in_state(AppState::GameRunning)),
         )
-        // .add_systems(Startup, spawn_gun)
         .add_systems(Startup, spawn_camera)
         .add_systems(
             OnEnter(AppState::GameRunning),
@@ -81,7 +73,12 @@ fn main() {
         .run();
 }
 
-fn on_enter_game_running(mut commands: Commands) {
+fn on_enter_game_running(mut commands: Commands, mut volume: ResMut<GlobalVolume>) {
+    #[cfg(feature = "dev")]
+    {
+        volume.volume = VolumeLevel::new(0.)
+    }
+
     //TODO run logic when a new game starts
     commands.insert_resource(LevelSelection::Index(0));
 }
@@ -92,10 +89,11 @@ fn on_exit_game_running(mut commands: Commands) {
 }
 
 fn spawn_ldtk_level(asset_server: Res<AssetServer>, mut commands: Commands) {
-    let level_witdh = 256. * 10.;
-    let level_height = 256. * 10.;
+    let level_scale = 5.;
+    let level_witdh = 512. * level_scale;
+    let level_height = 512. * level_scale;
 
-    let mut transform = Transform::from_scale(Vec3::new(10., 10., 0.1));
+    let mut transform = Transform::from_scale(Vec3::new(level_scale, level_scale, 0.1));
     transform.translation = Vec3::new(-level_witdh / 2., -level_height / 2., -10.);
 
     commands.spawn((
