@@ -21,6 +21,7 @@ impl Plugin for MenuPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(AppState::SplashScreen), menu_splash_screen)
             .add_systems(OnEnter(AppState::GameCreate), menu_game_create)
+            .add_systems(OnExit(AppState::GameCreate), menu_game_create_complete)
             .add_systems(OnEnter(AppState::GameOver), menu_game_over)
             .add_systems(
                 Update,
@@ -106,6 +107,11 @@ impl CheckBox {
     }
 }
 
+#[derive(Component)]
+struct HeroButton {
+    hero_type: HeroType,
+}
+
 fn on_checkbox_interaction(
     mut query: Query<(&Interaction, &mut CheckBox, &mut UiImage), Changed<Interaction>>,
     assets: Res<UiAssets>,
@@ -130,17 +136,37 @@ fn on_checkbox_interaction(
 }
 
 fn on_button_interaction(
-    mut query: Query<(&Interaction, &mut MenuButtonAction), Changed<Interaction>>,
+    mut query_action_button: Query<(&Interaction, &mut MenuButtonAction), Changed<Interaction>>,
+    mut query_hero_button: Query<
+        (&Interaction, &mut BorderColor, &mut HeroButton),
+        Changed<Interaction>,
+    >,
     mut next_state: ResMut<NextState<AppState>>,
     mut app_exit_events: EventWriter<AppExit>,
+    mut state: ResMut<GameConfigState>,
 ) {
-    for (interaction, mut action) in query.iter_mut() {
+    for (interaction, mut action) in query_action_button.iter_mut() {
         match *interaction {
             Interaction::Pressed => match *action {
                 MenuButtonAction::Play => next_state.set(AppState::GameRunning),
                 MenuButtonAction::Quit => app_exit_events.send(AppExit),
             },
             _ => {}
+        }
+    }
+
+    for (interaction, mut border, mut hero) in query_hero_button.iter_mut() {
+        match *interaction {
+            Interaction::Pressed => {
+                state.hero = hero.hero_type.clone();
+                border.0 = Color::RED; //TODO doesnt really work as hover will immediatly overwrite and even if thats checked against, would need to be flipped back if another is selected
+            }
+            Interaction::Hovered => {
+                border.0 = Color::PINK;
+            }
+            Interaction::None => {
+                border.0 = Color::INDIGO;
+            }
         }
     }
 }
@@ -161,7 +187,10 @@ fn menu_game_create(
     assets: Res<UiAssets>,
     mut state: ResMut<GameConfigState>,
 ) {
+    // Reset state
     state.hero = HeroType::Pepe;
+    state.level = 1;
+    state.nft_list = vec![];
 
     // Screen wrapper
     commands
@@ -210,30 +239,19 @@ fn menu_game_create(
         });
 }
 
-fn wrapper_content(parent: &mut ChildBuilder, assets: &UiAssets) {
-    // Common style for all buttons on the screen
-    let button_style = Style {
-        width: Val::Px(250.0),
-        height: Val::Px(65.0),
-        margin: UiRect::all(Val::Px(20.0)),
-        justify_content: JustifyContent::Center,
-        align_items: AlignItems::Center,
-        ..default()
-    };
-    let button_icon_style = Style {
-        width: Val::Px(30.0),
-        // This takes the icons out of the flexbox flow, to be positioned exactly
-        position_type: PositionType::Absolute,
-        // The icon will be close to the left border of the button
-        left: Val::Px(10.0),
-        ..default()
-    };
-    let button_text_style = TextStyle {
-        font_size: 40.0,
-        color: TEXT_COLOR,
-        ..default()
-    };
+/// Process the UI data so we can send it to the game setup
+fn menu_game_create_complete(nft_list: Query<&CheckBox>, mut state: ResMut<GameConfigState>) {
+    for CheckBox { nft_id, checked } in nft_list.iter() {
+        if !checked {
+            continue;
+        }
+        state.nft_list.push(nft_id.clone());
+    }
 
+    eprintln!("Configured GameState:: {:?}", state);
+}
+
+fn wrapper_content(parent: &mut ChildBuilder, assets: &UiAssets) {
     // Wrapper for the left side
     parent
         .spawn(NodeBundle {
@@ -692,30 +710,28 @@ fn wrapper_footer(parent: &mut ChildBuilder, assets: &UiAssets) {
         });
 }
 
-fn spawn_hero_select_box(
-    parent: &mut ChildBuilder,
-    ui_img: UiImage,
-    hero_type: &HeroType,
-) -> Entity {
-    let mut node = parent.spawn(ButtonBundle {
-        style: Style {
-            flex_direction: FlexDirection::Column,
-            align_items: AlignItems::Center,
-            justify_content: JustifyContent::Center,
-            width: Val::Px(64f32),
-            height: Val::Px(64f32),
-            margin: UiRect::all(Val::Px(5.)),
-            padding: UiRect::all(Val::Px(2.)),
+fn spawn_hero_select_box(parent: &mut ChildBuilder, ui_img: UiImage, hero_type: &HeroType) {
+    parent
+        .spawn(ButtonBundle {
+            style: Style {
+                flex_direction: FlexDirection::Column,
+                align_items: AlignItems::Center,
+                justify_content: JustifyContent::Center,
+                width: Val::Px(64f32),
+                height: Val::Px(64f32),
+                margin: UiRect::all(Val::Px(5.)),
+                border: UiRect::all(Val::Px(5.)),
+                ..Default::default()
+            },
+            border_color: BorderColor(Color::INDIGO),
             ..Default::default()
-        },
-        background_color: BackgroundColor(Color::INDIGO),
-        ..Default::default()
-    });
-
-    node.with_children(|parent| {
-        spawn_nested_icon(parent, Color::GOLD, ui_img.clone(), 56.0);
-    })
-    .id()
+        })
+        .insert(HeroButton {
+            hero_type: hero_type.clone(),
+        })
+        .with_children(|parent| {
+            spawn_nested_icon(parent, Color::GOLD, ui_img.clone(), 56.0);
+        });
 }
 
 fn spawn_level_select_box(
@@ -896,10 +912,11 @@ fn mouse_scroll(
     }
 }
 
-#[derive(Resource)]
+#[derive(Debug, Resource)]
 pub struct GameConfigState {
     pub hero: HeroType,
     pub level: u64,
+    pub nft_list: Vec<String>,
 }
 
 impl Default for GameConfigState {
@@ -907,6 +924,7 @@ impl Default for GameConfigState {
         Self {
             hero: HeroType::BonkInu,
             level: 0,
+            nft_list: vec![],
         }
     }
 }
