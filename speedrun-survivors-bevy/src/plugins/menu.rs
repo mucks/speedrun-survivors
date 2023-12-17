@@ -377,11 +377,11 @@ fn wrapper_nft_list(parent: &mut ChildBuilder, assets: &UiAssets) {
                     style: Style {
                         flex_direction: FlexDirection::Column,
                         align_self: AlignSelf::Stretch,
-                        height: Val::Percent(50.),
+                        height: Val::Percent(65.),//TODO why does overflow the container
                         overflow: Overflow::clip_y(),
+                        margin: UiRect::all(Val::Px(20.0)),
                         ..default()
                     },
-                    background_color: Color::rgb(0.10, 0.10, 0.10).into(),
                     ..default()
                 })
                 .with_children(|parent| {
