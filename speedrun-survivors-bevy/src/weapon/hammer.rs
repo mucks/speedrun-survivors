@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use bevy::prelude::*;
 
 use crate::player::Player;
+use crate::plugins::camera_shake::{CameraImpact, CameraImpactStrength};
 use crate::plugins::health::{self, Health};
 use crate::plugins::status_effect::{
     StatusEffect, StatusEffectEvent, StatusEffectEventType, StatusEffectType,
@@ -102,6 +103,7 @@ fn on_hammer_stomp(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+    mut impact_tx: EventWriter<CameraImpact>,
 ) {
     for ev in hammer_stomp.iter() {
         spawn_hammer_effect(
@@ -110,6 +112,10 @@ fn on_hammer_stomp(
             &mut texture_atlases,
             ev.translation,
         );
+
+        impact_tx.send(CameraImpact {
+            strength: CameraImpactStrength::Medium,
+        });
 
         for (transform, ent) in enemy_query.iter_mut() {
             let distance = (transform.translation - ev.translation).length();

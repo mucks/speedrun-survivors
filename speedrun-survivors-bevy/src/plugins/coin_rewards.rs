@@ -24,7 +24,6 @@ fn on_enter_game_running(mut commands: Commands, mut coin_accumulator: ResMut<Co
 fn on_exit_game_running(mut commands: Commands) {}
 
 fn on_update(
-    mut commands: Commands,
     mut event_reader: EventReader<CoinAccumulated>,
     mut coin_accumulator: ResMut<CoinAccumulator>,
     time: Res<Time>,
