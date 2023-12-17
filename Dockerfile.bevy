@@ -33,7 +33,6 @@ WORKDIR /usr/src/app
 
 # remove template files
 RUN rm -r speedrun-survivors-bevy
-RUN rm -r tutorverse-anchor
 
 # build bin & libs
 RUN rm ./target/wasm32-unknown-unknown/release/deps/speedrun_survivors_bevy*
