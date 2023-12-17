@@ -207,6 +207,7 @@ fn wrapper_content(parent: &mut ChildBuilder, assets: &UiAssets) {
         .spawn(NodeBundle {
             style: Style {
                 width: Val::Percent(50.),
+                height: Val::Percent(100.),
                 flex_direction: FlexDirection::Column,
                 ..Default::default()
             },
@@ -216,9 +217,6 @@ fn wrapper_content(parent: &mut ChildBuilder, assets: &UiAssets) {
         .with_children(|parent| {
             // Wrapper for the list of owned NFTs
             wrapper_nft_list(parent, assets);
-
-            // Wrapper for the equipped NFT list
-            wrapper_nft_equipment(parent, assets);
         });
 }
 
@@ -320,16 +318,15 @@ fn wrapper_level_selector(parent: &mut ChildBuilder, assets: &UiAssets) {
 }
 
 fn wrapper_nft_list(parent: &mut ChildBuilder, assets: &UiAssets) {
-    //TODO scrollable list of cNFT items
-    let NFT_LIST: Vec<&str> = vec![
-        "BonkInu Battleground (+10% Attack Speed)",
-        "Pepe's Crypto Quest (+8% Movement Speed)",
+    let nfts_from_api_todo: Vec<&str> = vec![
+        "BonkInu's Battle Gloves (+10% Attack Speed)",
+        "Pepe's Crypto Wings (+8% Movement Speed)",
         "MadLads Market Mayhem (+15% Damage Boost)",
-        "CryptoKitties Carnival (+12% Critical Hit Chance)",
+        "CryptoKitty Fever (+12% Critical Hit Chance)",
         "BonkInu's Blockchain Brawl (+20% Token Harvesting Rate)",
         "Pepe's Pixelated Portfolio (+5% Defense)",
         "MadLads Moonshot Madness (+18% Dodge Chance)",
-        "CryptoKitties Chaos Conclave (+7% Experience Gain)",
+        "CryptoKitties Wisdom Tonic (+7% Experience Gain)",
         "BonkInu's DeFi Derby (+25% DeFi Yield)",
         "Pepe's NFT Nexus (+10% Rarity Find)",
         "MadLads MetaVerse Mayhem (+15% Stamina Regeneration)",
@@ -348,7 +345,7 @@ fn wrapper_nft_list(parent: &mut ChildBuilder, assets: &UiAssets) {
         .spawn(NodeBundle {
             style: Style {
                 width: Val::Percent(100.),
-                height: Val::Percent(50.),
+                height: Val::Percent(100.),
                 flex_direction: FlexDirection::Column,
                 align_items: AlignItems::Center,
                 ..default()
@@ -377,7 +374,7 @@ fn wrapper_nft_list(parent: &mut ChildBuilder, assets: &UiAssets) {
                     style: Style {
                         flex_direction: FlexDirection::Column,
                         align_self: AlignSelf::Stretch,
-                        height: Val::Percent(65.), //TODO why does overflow the container
+                        height: Val::Percent(100.),
                         overflow: Overflow::clip_y(),
                         margin: UiRect::all(Val::Px(20.0)),
                         ..default()
@@ -400,68 +397,56 @@ fn wrapper_nft_list(parent: &mut ChildBuilder, assets: &UiAssets) {
                             AccessibilityNode(NodeBuilder::new(Role::List)),
                         ))
                         .with_children(|parent| {
-                            // List items
-                            for itm in NFT_LIST {
-                                parent.spawn((
-                                    TextBundle::from_section(
-                                        itm,
-                                        TextStyle {
-                                            // font: asset_server
-                                            //     .load("fonts/FiraSans-Bold.ttf"),
-                                            font_size: 20.,
-                                            ..default()
-                                        },
-                                    ),
-                                    Label,
-                                    AccessibilityNode(NodeBuilder::new(Role::ListItem)),
-                                ));
+                            for text in nfts_from_api_todo {
+                                list_item_selectable(parent, assets, text);
                             }
                         });
                 });
         });
 }
 
-fn wrapper_nft_equipment(parent: &mut ChildBuilder, assets: &UiAssets) {
+fn list_item_selectable(parent: &mut ChildBuilder, assets: &UiAssets, text: &str) {
     parent
         .spawn(NodeBundle {
             style: Style {
-                width: Val::Percent(100.),
-                height: Val::Percent(50.),
-                flex_direction: FlexDirection::Column,
+                flex_direction: FlexDirection::Row,
                 align_items: AlignItems::Center,
+                margin: UiRect::all(Val::Px(2.0)),
                 ..default()
             },
             ..default()
         })
         .with_children(|parent| {
-            parent.spawn(
-                TextBundle::from_section(
-                    "Equipped items",
-                    TextStyle {
-                        font_size: 30.0,
-                        color: TEXT_COLOR,
-                        ..default()
-                    },
-                )
-                .with_style(Style {
-                    margin: UiRect::all(Val::Px(20.0)),
-                    ..default()
-                }),
-            );
-
             parent
-                .spawn(NodeBundle {
+                .spawn(ButtonBundle {
                     style: Style {
-                        width: Val::Percent(100.),
                         flex_direction: FlexDirection::Column,
+                        align_items: AlignItems::Center,
+                        justify_content: JustifyContent::Center,
+                        width: Val::Px(32f32),
+                        height: Val::Px(32f32),
+                        margin: UiRect::all(Val::Px(2.)),
+                        padding: UiRect::all(Val::Px(2.)),
                         ..Default::default()
                     },
+                    background_color: BackgroundColor(Color::INDIGO),
                     ..Default::default()
                 })
                 .with_children(|parent| {
-                    spawn_equipment_row(parent, assets, [1, 2, 3]);
-                    spawn_equipment_row(parent, assets, [4, 5, 6]);
+                    spawn_nested_icon_32(parent, Color::GOLD, assets.checkbox_o.clone());
                 });
+
+            parent.spawn((
+                TextBundle::from_section(
+                    text,
+                    TextStyle {
+                        font_size: 16.,
+                        ..default()
+                    },
+                ),
+                Label,
+                AccessibilityNode(NodeBuilder::new(Role::ListItem)),
+            ));
         });
 }
 
@@ -645,8 +630,8 @@ fn spawn_level_select_box(
     .id()
 }
 
-fn spawn_nested_icon(builder: &mut ChildBuilder, background_color: Color, ui_img: UiImage) {
-    builder
+fn spawn_nested_icon(parent: &mut ChildBuilder, background_color: Color, ui_img: UiImage) {
+    parent
         .spawn(NodeBundle {
             background_color: BackgroundColor(background_color),
             ..Default::default()
@@ -657,6 +642,29 @@ fn spawn_nested_icon(builder: &mut ChildBuilder, background_color: Color, ui_img
                     style: Style {
                         width: Val::Px(56.0),
                         height: Val::Px(56.0),
+                        ..default()
+                    },
+                    background_color: Color::WHITE.into(),
+                    ..default()
+                },
+                ui_img,
+            ));
+        });
+}
+
+//TODO can be refactored with above
+fn spawn_nested_icon_32(parent: &mut ChildBuilder, background_color: Color, ui_img: UiImage) {
+    parent
+        .spawn(NodeBundle {
+            background_color: BackgroundColor(background_color),
+            ..Default::default()
+        })
+        .with_children(|parent| {
+            parent.spawn((
+                NodeBundle {
+                    style: Style {
+                        width: Val::Px(28.0),
+                        height: Val::Px(28.0),
                         ..default()
                     },
                     background_color: Color::WHITE.into(),

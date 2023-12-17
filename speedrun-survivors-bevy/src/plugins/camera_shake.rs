@@ -66,6 +66,7 @@ fn on_update(
     } else {
         camera_transform.rotation = Quat::default();
     }
+    // TODO: since the camera moves, it should lerp by delta time towards the player position as not to mess with the shake
 }
 
 #[derive(Event)]

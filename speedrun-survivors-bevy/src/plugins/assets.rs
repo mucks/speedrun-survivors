@@ -8,6 +8,8 @@ use crate::weapon::weapon_type::WeaponType;
 pub struct UiAssets {
     pub font: Handle<Font>,
     pub buff_1: UiImage,
+    pub checkbox_o: UiImage,
+    pub checkbox_x: UiImage,
     pub weapons: Vec<(WeaponType, UiImage)>,
     pub heroes: HashMap<HeroType, UiImage>,
     pub levels: HashMap<Levels, UiImage>,
@@ -49,6 +51,8 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         font: asset_server.load("ui/expanse.otf"),
         buff_1: asset_server.load("ui/buff_1.png").into(),
         //TODO refactor this to hashmap as well with an iter() as the hero images above?
+        checkbox_o: asset_server.load("ui/checkbox_o.png").into(),
+        checkbox_x: asset_server.load("ui/checkbox_x.png").into(),
         weapons: vec![
             (
                 WeaponType::Hammer,

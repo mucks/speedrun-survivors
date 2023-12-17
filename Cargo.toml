@@ -2,7 +2,7 @@
 version = "0.1.0"
 edition = "2021"
 license = "Closed Source; All rights reserved"
-license-file = "LICENSE.txt"
+license-file = "LICENSE.md"
 
 
 [workspace]
