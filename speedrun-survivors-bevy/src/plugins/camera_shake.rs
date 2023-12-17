@@ -15,11 +15,11 @@ impl Plugin for CameraShakePlugin {
 }
 
 fn on_enter_game_running(mut shake: ResMut<Shake>) {
-    shake.remaining = 0f64;
+    shake.trauma = 0f32;
 }
 
 fn on_exit_game_running(mut shake: ResMut<Shake>) {
-    shake.remaining = 0f64;
+    shake.trauma = 0f32;
 }
 
 fn on_update(
@@ -33,13 +33,13 @@ fn on_update(
         *shake = Shake::create_shake(&impact.strength);
     }
 
-    // Return if the timer ran out
-    if shake.remaining <= 0f64 {
+    // Return if trauma ran out
+    if shake.trauma <= 0f32 {
         return;
     }
 
     // Get the camera
-    let Ok((camera, mut camera_transform)) = query_camera.get_single_mut() else {
+    let Ok((_, mut camera_transform)) = query_camera.get_single_mut() else {
         return;
     };
 
@@ -67,9 +67,6 @@ fn on_update(
         camera_transform.translation = Vec3::default();
         camera_transform.rotation = Quat::default();
     }
-
-    // Reduce remaining time
-    shake.remaining -= time.delta().as_secs_f64();
 }
 
 #[derive(Event)]
@@ -105,27 +102,35 @@ struct Shake {
     /// If set below 0, trauma will *increase* over time, and if set above 1, trauma will decrease very quickly.
     /// Defaults to `0.8`.
     decay: f32,
-    /// Time left to keep shaking
-    remaining: f64,
 }
 
 impl Shake {
     fn create_shake(strength: &CameraImpactStrength) -> Self {
-        //TODO
-        match strength {
-            CameraImpactStrength::Light => {}
-            CameraImpactStrength::Medium => {}
-            CameraImpactStrength::Heavy => {}
-            CameraImpactStrength::Absurd => {}
-            _ => {}
-        }
-        Self {
+        let mut shake = Self {
             max_offset: Vec2::new(100.0, 100.0),
             max_roll: 0.1,
             trauma: 1.0,
             trauma_power: 2.0,
             decay: 0.8,
-            remaining: 1.1f64,
+        };
+
+        match strength {
+            CameraImpactStrength::Light => {
+                shake.trauma = 0.6;
+            }
+            CameraImpactStrength::Medium => {
+            }
+            CameraImpactStrength::Heavy => {
+                shake.trauma = 1.4;
+                shake.max_roll = 0.15;
+            }
+            CameraImpactStrength::Absurd => {
+                shake.trauma = 1.8;
+                shake.max_roll = 0.2;
+            }
+            _ => {}
         }
+
+        shake
     }
 }
