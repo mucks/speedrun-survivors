@@ -1,6 +1,7 @@
 use crate::state::AppState;
 use bevy::prelude::*;
 use rand::Rng;
+use std::ops::Add;
 
 pub struct CameraShakePlugin;
 
@@ -24,7 +25,7 @@ fn on_exit_game_running(mut shake: ResMut<Shake>) {
 
 fn on_update(
     mut shake: ResMut<Shake>,
-    mut query_camera: Query<(&Camera, &mut Transform)>,
+    mut query_camera: Query<(&Camera2d, &mut Transform)>,
     time: Res<Time>,
     mut impact_events: EventReader<CameraImpact>,
 ) {
@@ -60,11 +61,9 @@ fn on_update(
             0.0,
             shake.max_roll * trauma_amount * rng.gen::<f32>(),
         );
-
-        camera_transform.translation = shake_translation;
+        camera_transform.translation.add(shake_translation);
         camera_transform.rotation = shake_rotation;
     } else {
-        camera_transform.translation = Vec3::default();
         camera_transform.rotation = Quat::default();
     }
 }
@@ -107,7 +106,7 @@ struct Shake {
 impl Shake {
     fn create_shake(strength: &CameraImpactStrength) -> Self {
         let mut shake = Self {
-            max_offset: Vec2::new(50.0, 50.0),
+            max_offset: Vec2::new(100.0, 100.0),
             max_roll: 0.1,
             trauma: 1.0,
             trauma_power: 2.0,
@@ -116,9 +115,12 @@ impl Shake {
 
         match strength {
             CameraImpactStrength::Light => {
+                shake.max_offset = Vec2::new(50.0, 50.0);
                 shake.trauma = 0.6;
             }
-            CameraImpactStrength::Medium => {}
+            CameraImpactStrength::Medium => {
+                shake.max_offset = Vec2::new(70.0, 70.0);
+            }
             CameraImpactStrength::Heavy => {
                 shake.trauma = 1.4;
                 shake.max_roll = 0.15;
