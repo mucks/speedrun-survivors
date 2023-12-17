@@ -1,4 +1,4 @@
-use crate::heroes::HeroType;
+use crate::heroes::{HeroType, Levels};
 use crate::plugins::assets::UiAssets;
 use crate::state::{AppState, ForState};
 use bevy::app::AppExit;
@@ -196,6 +196,7 @@ fn wrapper_content(parent: &mut ChildBuilder, assets: &UiAssets) {
         });
 
     // Wrapper for the right side
+    //TODO split this up
     parent
         .spawn(NodeBundle {
             style: Style {
@@ -360,6 +361,24 @@ fn wrapper_level_selector(parent: &mut ChildBuilder, assets: &UiAssets) {
                     ..default()
                 }),
             );
+
+            parent
+                .spawn(NodeBundle {
+                    style: Style {
+                        width: Val::Percent(100.),
+                        flex_direction: FlexDirection::Row,
+                        align_items: AlignItems::Center,
+                        justify_content: JustifyContent::Center,
+                        ..Default::default()
+                    },
+                    ..Default::default()
+                })
+                .with_children(|parent| {
+                    for level in Levels::into_iter() {
+                        let ui_img = assets.levels.get(&level).unwrap();
+                        spawn_level_select_box(parent, ui_img.clone(), &level);
+                    }
+                });
         });
 }
 
@@ -392,7 +411,6 @@ fn wrapper_footer(parent: &mut ChildBuilder, assets: &UiAssets) {
             style: Style {
                 width: Val::Percent(50.),
                 height: Val::Percent(100.),
-                flex_direction: FlexDirection::Row,
                 ..Default::default()
             },
             ..Default::default()
@@ -426,7 +444,6 @@ fn wrapper_footer(parent: &mut ChildBuilder, assets: &UiAssets) {
                 justify_content: JustifyContent::End,
                 ..Default::default()
             },
-            background_color: Color::PINK.into(),
             ..Default::default()
         })
         .with_children(|parent| {
@@ -437,7 +454,7 @@ fn wrapper_footer(parent: &mut ChildBuilder, assets: &UiAssets) {
                         background_color: NORMAL_BUTTON.into(),
                         ..default()
                     },
-                    MenuButtonAction::Quit,
+                    MenuButtonAction::Play,
                 ))
                 .with_children(|parent| {
                     let icon = assets.buff_1.clone();
@@ -446,7 +463,7 @@ fn wrapper_footer(parent: &mut ChildBuilder, assets: &UiAssets) {
                         image: icon,
                         ..default()
                     });
-                    parent.spawn(TextBundle::from_section("Start", button_text_style));
+                    parent.spawn(TextBundle::from_section("Play!", button_text_style));
                 });
         });
 }
@@ -455,6 +472,32 @@ fn spawn_hero_select_box(
     builder: &mut ChildBuilder,
     ui_img: UiImage,
     hero_type: &HeroType,
+) -> Entity {
+    let mut node = builder.spawn(ButtonBundle {
+        style: Style {
+            flex_direction: FlexDirection::Column,
+            align_items: AlignItems::Center,
+            justify_content: JustifyContent::Center,
+            width: Val::Px(64f32),
+            height: Val::Px(64f32),
+            margin: UiRect::all(Val::Px(5.)),
+            padding: UiRect::all(Val::Px(2.)),
+            ..Default::default()
+        },
+        background_color: BackgroundColor(Color::CRIMSON),
+        ..Default::default()
+    });
+
+    node.with_children(|parent| {
+        spawn_nested_icon(parent, Color::GOLD, ui_img.clone());
+    })
+    .id()
+}
+
+fn spawn_level_select_box(
+    builder: &mut ChildBuilder,
+    ui_img: UiImage,
+    level_type: &Levels,
 ) -> Entity {
     let mut node = builder.spawn(ButtonBundle {
         style: Style {

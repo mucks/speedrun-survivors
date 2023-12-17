@@ -1,4 +1,4 @@
-use crate::heroes::HeroType;
+use crate::heroes::{HeroType, Levels};
 use bevy::prelude::*;
 use bevy::utils::HashMap;
 
@@ -10,6 +10,7 @@ pub struct UiAssets {
     pub buff_1: UiImage,
     pub weapons: Vec<(WeaponType, UiImage)>,
     pub heroes: HashMap<HeroType, UiImage>,
+    pub levels: HashMap<Levels, UiImage>,
 }
 
 #[derive(Resource)]
@@ -35,6 +36,15 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         );
     }
 
+    // Load ui image for each level
+    let mut levels: HashMap<Levels, UiImage> = HashMap::new();
+    for level in Levels::into_iter() {
+        levels.insert(
+            level.clone(),
+            asset_server.load(level.get_ui_image_name()).into(),
+        );
+    }
+
     commands.insert_resource(UiAssets {
         font: asset_server.load("ui/expanse.otf"),
         buff_1: asset_server.load("ui/buff_1.png").into(),
@@ -54,6 +64,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             ),
         ],
         heroes,
+        levels,
     });
 
     // Load sprite sheets for each hero

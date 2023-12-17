@@ -44,6 +44,45 @@ impl HeroType {
 }
 
 //TODO doesnt belong here REFACTOR
+#[derive(Clone, Eq, Hash, PartialEq)]
+pub enum Levels {
+    Level1,
+    Level2,
+    Level3,
+    Level4,
+}
+
+impl Levels {
+    pub fn get_level_path(&self) -> &str {
+        match self {
+            _ => "level/level.ldtk",
+        }
+    }
+
+    pub fn get_ui_image_name(&self) -> &str {
+        match self {
+            Levels::Level1 => "ui/level/level_1.png",
+            _ => "ui/level/level_unk.png",
+        }
+    }
+
+    pub fn get_gameplay_effects(&self) -> Vec<GameplayEffect> {
+        //TODO each level can have a set of game play effects (such as faster spawn rates)
+        vec![]
+    }
+
+    pub fn into_iter() -> core::array::IntoIter<Levels, 4> {
+        [
+            Levels::Level1,
+            Levels::Level2,
+            Levels::Level3,
+            Levels::Level4,
+        ]
+        .into_iter()
+    }
+}
+
+//TODO doesnt belong here REFACTOR
 //TODO not sure how to do these - need some calculators to ADD hero base stats + level base stats and then multiply with item based multipliers or so
 // hero has base stats
 // level has base stats
