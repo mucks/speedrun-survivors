@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use bevy::prelude::*;
 
 use crate::player::Player;
+use crate::plugins::audio_manager::{PlaySFX, SFX};
 use crate::plugins::camera_shake::{CameraImpact, CameraImpactStrength};
 use crate::plugins::health::{self, Health};
 use crate::plugins::status_effect::{
@@ -104,6 +105,7 @@ fn on_hammer_stomp(
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
     mut impact_tx: EventWriter<CameraImpact>,
+    mut sfx_tx: EventWriter<PlaySFX>,
 ) {
     for ev in hammer_stomp.iter() {
         spawn_hammer_effect(
@@ -117,7 +119,7 @@ fn on_hammer_stomp(
         for (transform, ent) in enemy_query.iter_mut() {
             let distance = (transform.translation - ev.translation).length();
             if distance < ev.hitbox {
-                hit_count +=1;
+                hit_count += 1;
                 let knockback = (transform.translation - ev.translation).normalize()
                     * ev.knockback
                     * (1. - distance / ev.hitbox);
@@ -138,6 +140,15 @@ fn on_hammer_stomp(
             impact_tx.send(CameraImpact {
                 strength: CameraImpactStrength::Medium,
             });
+            sfx_tx.send(PlaySFX {
+                sfx: SFX::AttackHammerHit,
+                location: None,
+            })
+        } else {
+            sfx_tx.send(PlaySFX {
+                sfx: SFX::AttackHammerMiss,
+                location: None,
+            })
         }
     }
 }

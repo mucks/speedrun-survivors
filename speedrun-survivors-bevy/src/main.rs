@@ -2,6 +2,7 @@ use crate::enemy::enemy_spawner::SpawnEnemiesPlugin;
 use crate::enemy::EnemyPlugin;
 use crate::player::PlayerPlugin;
 use crate::plugins::assets::AssetsPlugin;
+use crate::plugins::audio_manager::AudioManagerPlugin;
 use crate::plugins::camera_shake::CameraShakePlugin;
 use crate::plugins::coin_rewards::CoinRewardsPlugin;
 use crate::plugins::hud::HudPlugin;
@@ -43,6 +44,7 @@ fn main() {
         .add_plugins(LdtkPlugin)
         .add_plugins((
             AssetsPlugin,
+            AudioManagerPlugin,
             MenuPlugin,
             StatesPlugin,
             SpawnEnemiesPlugin,

@@ -37,7 +37,8 @@ fn on_update(
     // Issue coins based on timer
     coin_accumulator.timer.tick(time.delta());
     if coin_accumulator.timer.finished() {
-        coins_gained += coin_accumulator.coin_rate * coin_accumulator.timer.times_finished_this_tick() as u64;
+        coins_gained +=
+            coin_accumulator.coin_rate * coin_accumulator.timer.times_finished_this_tick() as u64;
     }
 
     // Update the total

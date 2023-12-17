@@ -1,4 +1,5 @@
 pub mod assets;
+pub mod audio_manager;
 pub mod camera_shake;
 pub mod coin_rewards;
 pub mod combat_text;

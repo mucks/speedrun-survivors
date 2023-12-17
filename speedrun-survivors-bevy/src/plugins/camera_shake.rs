@@ -118,8 +118,7 @@ impl Shake {
             CameraImpactStrength::Light => {
                 shake.trauma = 0.6;
             }
-            CameraImpactStrength::Medium => {
-            }
+            CameraImpactStrength::Medium => {}
             CameraImpactStrength::Heavy => {
                 shake.trauma = 1.4;
                 shake.max_roll = 0.15;

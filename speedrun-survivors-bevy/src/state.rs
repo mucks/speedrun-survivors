@@ -9,9 +9,10 @@ pub struct ForState<T> {
 /// Possible Game States
 #[derive(States, Debug, Copy, Clone, Hash, Eq, PartialEq, Default)]
 pub enum AppState {
+    #[default]
     SplashScreen,
     GameCreate,
-    #[default] // TODO - for testing we probably want to switch this to GameRunning :)
+    // #[default] // TODO - for testing we probably want to switch this to GameRunning :)
     GameRunning,
     GameOver,
 }

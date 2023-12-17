@@ -3,6 +3,7 @@ use std::ops::Neg;
 
 pub mod bullet;
 
+use crate::plugins::audio_manager::{PlaySFX, SFX};
 use crate::state::{AppState, ForState};
 use crate::{
     animation::{self, Animator},
@@ -114,6 +115,7 @@ pub fn gun_controls(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     query_camera: Query<(&Camera, &GlobalTransform)>,
+    mut sfx_tx: EventWriter<PlaySFX>,
 ) {
     for (mut gun_controller, mut transform, mut animator) in gun_query.iter_mut() {
         gun_controller.shoot_timer -= time.delta_seconds();
@@ -167,6 +169,10 @@ pub fn gun_controls(
                         speed: BULLET_SPEED,
                         direction: diff.normalize(),
                     });
+                sfx_tx.send(PlaySFX {
+                    sfx: SFX::AttackGun,
+                    location: None,
+                })
             }
         }
     }
