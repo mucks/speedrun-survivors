@@ -1,7 +1,10 @@
+use bevy::a11y::AccessibilityNode;
+use bevy::a11y::accesskit::{NodeBuilder, Role};
 use crate::heroes::{HeroType, Levels};
 use crate::plugins::assets::UiAssets;
 use crate::state::{AppState, ForState};
 use bevy::app::AppExit;
+use bevy::input::mouse::{MouseScrollUnit, MouseWheel};
 use bevy::prelude::*;
 
 const TEXT_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
@@ -19,7 +22,7 @@ impl Plugin for MenuPlugin {
         app.add_systems(OnEnter(AppState::SplashScreen), menu_splash_screen)
             .add_systems(OnEnter(AppState::GameCreate), menu_game_create)
             .add_systems(OnEnter(AppState::GameOver), menu_game_over)
-            .add_systems(Update, (menu_input_system, menu_blink_system))
+            .add_systems(Update, (mouse_scroll, menu_input_system, menu_blink_system))
             .add_systems(Startup, setup)
             .insert_resource(GameConfigState::default());
     }
@@ -95,12 +98,16 @@ enum MenuButtonAction {
     Quit,
 }
 
+#[derive(Component, Default)]
+struct ScrollingList {
+    position: f32,
+}
+
 fn menu_game_create(
     mut commands: Commands,
     assets: Res<UiAssets>,
     mut state: ResMut<GameConfigState>,
 ) {
-    // TODO on this screen all kinds of stats should be modifiable, the level selected, and the hero selected
     state.hero = HeroType::Pepe;
 
     // Screen wrapper
@@ -196,7 +203,6 @@ fn wrapper_content(parent: &mut ChildBuilder, assets: &UiAssets) {
         });
 
     // Wrapper for the right side
-    //TODO split this up
     parent
         .spawn(NodeBundle {
             style: Style {
@@ -208,80 +214,11 @@ fn wrapper_content(parent: &mut ChildBuilder, assets: &UiAssets) {
             ..Default::default()
         })
         .with_children(|parent| {
-            // Right side wrapper TODO
-            parent
-                .spawn(NodeBundle {
-                    style: Style {
-                        flex_direction: FlexDirection::Column,
-                        align_items: AlignItems::Center,
-                        ..default()
-                    },
-                    ..default()
-                })
-                .with_children(|parent| {
-                    // Display the game name
-                    parent.spawn(
-                        TextBundle::from_section(
-                            "Equip your cNFTs",
-                            TextStyle {
-                                font_size: 30.0,
-                                color: TEXT_COLOR,
-                                ..default()
-                            },
-                        )
-                        .with_style(Style {
-                            margin: UiRect::all(Val::Px(20.0)),
-                            ..default()
-                        }),
-                    );
+            // Wrapper for the list of owned NFTs
+            wrapper_nft_list(parent, assets);
 
-                    // Display three buttons for each action available from the main menu:
-                    // - new game
-                    // - settings
-                    // - quit
-                    parent
-                        .spawn((
-                            ButtonBundle {
-                                style: button_style.clone(),
-                                background_color: NORMAL_BUTTON.into(),
-                                ..default()
-                            },
-                            MenuButtonAction::Play,
-                        ))
-                        .with_children(|parent| {
-                            let icon = assets.buff_1.clone();
-                            parent.spawn(ImageBundle {
-                                style: button_icon_style.clone(),
-                                image: icon,
-                                ..default()
-                            });
-                            parent.spawn(TextBundle::from_section(
-                                "New Game",
-                                button_text_style.clone(),
-                            ));
-                        });
-                    parent
-                        .spawn((
-                            ButtonBundle {
-                                style: button_style.clone(),
-                                background_color: NORMAL_BUTTON.into(),
-                                ..default()
-                            },
-                            MenuButtonAction::Settings,
-                        ))
-                        .with_children(|parent| {
-                            let icon = assets.buff_1.clone();
-                            parent.spawn(ImageBundle {
-                                style: button_icon_style.clone(),
-                                image: icon,
-                                ..default()
-                            });
-                            parent.spawn(TextBundle::from_section(
-                                "Settings",
-                                button_text_style.clone(),
-                            ));
-                        });
-                });
+            // Wrapper for the equipped NFT list
+            wrapper_nft_equipment(parent, assets);
         });
 }
 
@@ -343,7 +280,7 @@ fn wrapper_level_selector(parent: &mut ChildBuilder, assets: &UiAssets) {
                 align_items: AlignItems::Center,
                 ..default()
             },
-            background_color: Color::GRAY.into(),
+            background_color: Color::YELLOW_GREEN.into(),
             ..default()
         })
         .with_children(|parent| {
@@ -380,6 +317,198 @@ fn wrapper_level_selector(parent: &mut ChildBuilder, assets: &UiAssets) {
                     }
                 });
         });
+}
+
+fn wrapper_nft_list(parent: &mut ChildBuilder, assets: &UiAssets) {
+    //TODO scrollable list of cNFT items
+    let NFT_LIST: Vec<&str> = vec![
+        "BonkInu Battleground (+10% Attack Speed)",
+        "Pepe's Crypto Quest (+8% Movement Speed)",
+        "MadLads Market Mayhem (+15% Damage Boost)",
+        "CryptoKitties Carnival (+12% Critical Hit Chance)",
+        "BonkInu's Blockchain Brawl (+20% Token Harvesting Rate)",
+        "Pepe's Pixelated Portfolio (+5% Defense)",
+        "MadLads Moonshot Madness (+18% Dodge Chance)",
+        "CryptoKitties Chaos Conclave (+7% Experience Gain)",
+        "BonkInu's DeFi Derby (+25% DeFi Yield)",
+        "Pepe's NFT Nexus (+10% Rarity Find)",
+        "MadLads MetaVerse Mayhem (+15% Stamina Regeneration)",
+        "CryptoKitties Caper (+10% Catnip Collection)",
+        "BonkInu's Bonanza Blitz (+12% Resource Gathering)",
+        "Pepe's Precious Tokens (+15% Gold Discovery)",
+        "MadLads Meme Minefield (+8% Energy Regeneration)",
+        "CryptoKitties Crypto Carnival (+10% Kitty Breeding Speed)",
+        "BonkInu's Bullish Battle (+20% Investment Returns)",
+        "Pepe's Profits Parade (+5% Market Influence)",
+        "MadLads Market Mingle (+15% Social Interaction Bonus)",
+        "CryptoKitties Kitty Kingdom (+10% Kingdom Prosperity)",
+    ];
+
+    parent
+        .spawn(NodeBundle {
+            style: Style {
+                width: Val::Percent(100.),
+                height: Val::Percent(50.),
+                flex_direction: FlexDirection::Column,
+                align_items: AlignItems::Center,
+                ..default()
+            },
+            ..default()
+        })
+        .with_children(|parent| {
+            // Display the game name
+            parent.spawn(
+                TextBundle::from_section(
+                    "Equip your cNFTs",
+                    TextStyle {
+                        font_size: 30.0,
+                        color: TEXT_COLOR,
+                        ..default()
+                    },
+                )
+                    .with_style(Style {
+                        margin: UiRect::all(Val::Px(20.0)),
+                        ..default()
+                    }),
+            );
+
+            parent
+                .spawn(NodeBundle {
+                    style: Style {
+                        flex_direction: FlexDirection::Column,
+                        align_self: AlignSelf::Stretch,
+                        height: Val::Percent(50.),
+                        overflow: Overflow::clip_y(),
+                        ..default()
+                    },
+                    background_color: Color::rgb(0.10, 0.10, 0.10).into(),
+                    ..default()
+                })
+                .with_children(|parent| {
+                    // Moving panel
+                    parent
+                        .spawn((
+                            NodeBundle {
+                                style: Style {
+                                    flex_direction: FlexDirection::Column,
+                                    align_items: AlignItems::Start,
+                                    ..default()
+                                },
+                                ..default()
+                            },
+                            ScrollingList::default(),
+                            AccessibilityNode(NodeBuilder::new(Role::List)),
+                        ))
+                        .with_children(|parent| {
+                            // List items
+                            for itm in NFT_LIST {
+                                parent.spawn((
+                                    TextBundle::from_section(
+                                        itm,
+                                        TextStyle {
+                                            // font: asset_server
+                                            //     .load("fonts/FiraSans-Bold.ttf"),
+                                            font_size: 20.,
+                                            ..default()
+                                        },
+                                    ),
+                                    Label,
+                                    AccessibilityNode(NodeBuilder::new(Role::ListItem)),
+                                ));
+                            }
+                        });
+                });
+        });
+}
+
+fn wrapper_nft_equipment(parent: &mut ChildBuilder, assets: &UiAssets) {
+    parent
+        .spawn(NodeBundle {
+            style: Style {
+                width: Val::Percent(100.),
+                height: Val::Percent(50.),
+                flex_direction: FlexDirection::Column,
+                align_items: AlignItems::Center,
+                ..default()
+            },
+            ..default()
+        })
+        .with_children(|parent| {
+            parent.spawn(
+                TextBundle::from_section(
+                    "Equipped items",
+                    TextStyle {
+                        font_size: 30.0,
+                        color: TEXT_COLOR,
+                        ..default()
+                    },
+                )
+                    .with_style(Style {
+                        margin: UiRect::all(Val::Px(20.0)),
+                        ..default()
+                    }),
+            );
+
+            parent
+                .spawn(NodeBundle {
+                    style: Style {
+                        width: Val::Percent(100.),
+                        flex_direction: FlexDirection::Column,
+                        ..Default::default()
+                    },
+                    ..Default::default()
+                })
+                .with_children(|parent| {
+                    spawn_equipment_row(parent, assets, [1,2,3]);
+                    spawn_equipment_row(parent, assets, [4,5,6]);
+                });
+        });
+}
+
+fn spawn_equipment_row(parent: &mut ChildBuilder, assets: &UiAssets, slots: [u32; 3]) {
+    parent
+        .spawn(NodeBundle {
+            style: Style {
+                width: Val::Percent(100.),
+                flex_direction: FlexDirection::Row,
+                align_items: AlignItems::Center,
+                justify_content: JustifyContent::Center,
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .with_children(|parent| {
+            for slot in slots {
+                let ui_img = assets.buff_1.clone();
+                spawn_equipment_selected_box(parent, ui_img.clone(), slot);
+            }
+        });
+}
+
+fn spawn_equipment_selected_box(
+    builder: &mut ChildBuilder,
+    ui_img: UiImage,
+    slot: u32,
+) -> Entity {
+    let mut node = builder.spawn(ButtonBundle {
+        style: Style {
+            flex_direction: FlexDirection::Column,
+            align_items: AlignItems::Center,
+            justify_content: JustifyContent::Center,
+            width: Val::Px(64f32),
+            height: Val::Px(64f32),
+            margin: UiRect::all(Val::Px(5.)),
+            padding: UiRect::all(Val::Px(2.)),
+            ..Default::default()
+        },
+        background_color: BackgroundColor(Color::INDIGO),
+        ..Default::default()
+    });
+
+    node.with_children(|parent| {
+        spawn_nested_icon(parent, Color::GOLD, ui_img.clone());
+    })
+        .id()
 }
 
 fn wrapper_footer(parent: &mut ChildBuilder, assets: &UiAssets) {
@@ -484,7 +613,7 @@ fn spawn_hero_select_box(
             padding: UiRect::all(Val::Px(2.)),
             ..Default::default()
         },
-        background_color: BackgroundColor(Color::CRIMSON),
+        background_color: BackgroundColor(Color::INDIGO),
         ..Default::default()
     });
 
@@ -510,7 +639,7 @@ fn spawn_level_select_box(
             padding: UiRect::all(Val::Px(2.)),
             ..Default::default()
         },
-        background_color: BackgroundColor(Color::CRIMSON),
+        background_color: BackgroundColor(Color::INDIGO),
         ..Default::default()
     });
 
@@ -629,7 +758,6 @@ fn menu_input_system(
                 }
             }
             AppState::GameCreate => {
-                //TODO should be choose loadout, equip NFT UI
                 if keys.just_pressed(KeyCode::Return) {
                     next_state.set(AppState::GameRunning);
                 }
@@ -640,6 +768,30 @@ fn menu_input_system(
                 }
             }
             AppState::GameRunning => {}
+        }
+    }
+}
+
+fn mouse_scroll(
+    mut mouse_wheel_events: EventReader<MouseWheel>,
+    mut query_list: Query<(&mut ScrollingList, &mut Style, &Parent, &Node)>,
+    query_node: Query<&Node>,
+) {
+    for mouse_wheel_event in mouse_wheel_events.iter() {
+        for (mut scrolling_list, mut style, parent, list_node) in &mut query_list {
+            let items_height = list_node.size().y;
+            let container_height = query_node.get(parent.get()).unwrap().size().y;
+
+            let max_scroll = (items_height - container_height).max(0.);
+
+            let dy = match mouse_wheel_event.unit {
+                MouseScrollUnit::Line => mouse_wheel_event.y * 20.,
+                MouseScrollUnit::Pixel => mouse_wheel_event.y,
+            };
+
+            scrolling_list.position += dy;
+            scrolling_list.position = scrolling_list.position.clamp(-max_scroll, 0.);
+            style.top = Val::Px(scrolling_list.position);
         }
     }
 }
