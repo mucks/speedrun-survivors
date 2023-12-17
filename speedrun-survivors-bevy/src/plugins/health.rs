@@ -12,6 +12,7 @@ pub struct HealthPlugin;
 impl Plugin for HealthPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<HealthChangeEvent>();
+        app.add_event::<ActiveHealthReachedZeroEvent>();
         app.add_systems(
             Update,
             (on_health_change_event, update_health_bar).run_if(in_state(AppState::GameRunning)),
@@ -21,16 +22,22 @@ impl Plugin for HealthPlugin {
 
 #[derive(Debug, Component)]
 pub struct Health {
-    active_health: f32,
-    max_health: f32,
-    regen: f32,
-    health_bar: Option<Entity>,
+    pub active_health: f32,
+    pub max_health: f32,
+    pub regen: f32,
+    pub health_bar: Option<Entity>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum HealthChangeTargetType {
     Player,
     Enemy,
+}
+
+#[derive(Debug, Event)]
+pub struct ActiveHealthReachedZeroEvent {
+    pub entity: Entity,
+    pub target_type: HealthChangeTargetType,
 }
 
 #[derive(Debug, Event)]
@@ -44,12 +51,19 @@ pub struct HealthChangeEvent {
 fn on_health_change_event(
     mut health_change: EventReader<HealthChangeEvent>,
     mut health_query: Query<&mut Health>,
+    mut active_health_reached_zero_event: EventWriter<ActiveHealthReachedZeroEvent>,
 ) {
     for ev in health_change.iter() {
         let Ok(mut health) = health_query.get_mut(ev.entity) else {
             return;
         };
         health.active_health += ev.health_change;
+        if health.active_health <= 0. {
+            active_health_reached_zero_event.send(ActiveHealthReachedZeroEvent {
+                entity: ev.entity,
+                target_type: ev.target_type,
+            });
+        }
     }
 }
 
@@ -119,7 +133,6 @@ pub fn add_health_bar(commands: &mut Commands, translation: Vec3, z: f32) -> Ent
 }
 
 pub fn update_health_bar(
-    mut next_state: ResMut<NextState<AppState>>,
     mut healthbar_query: Query<
         (&HealthBar, &mut Sprite, &mut Transform, Entity),
         (With<HealthBar>, Without<Health>),
@@ -129,20 +142,10 @@ pub fn update_health_bar(
         (With<Health>, Without<HealthBar>),
     >,
     mut commands: Commands,
-    mut event_stream: EventWriter<CoinAccumulated>,
 ) {
     for (health, mut entity, mut transform, player) in health_query.iter_mut() {
         let health_percentage = health.active_health / health.max_health;
 
-        if health_percentage <= 0.0 {
-            if player.is_some() {
-                next_state.set(AppState::GameOver);
-                return; // Unspawn will happen due to state change
-            } else {
-                event_stream.send(CoinAccumulated { coin: 100 });
-            }
-            commands.entity(entity).despawn_recursive();
-        }
         //TODO refactored that a bit; but I think we should move the healthbar into the UI.. no need to update this bar as a separate component
         if let Some(health_bar_entity) = health.health_bar {
             if let Ok((health_bar, mut bar_sprite, mut bar_tr, br_entity)) =

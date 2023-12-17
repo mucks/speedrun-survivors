@@ -13,6 +13,7 @@ use bevy::prelude::*;
 use bevy_ecs_ldtk::prelude::*;
 use plugins::assets::GameAssets;
 use plugins::combat_text::CombatTextPlugin;
+use plugins::death::DeathPlugin;
 use plugins::health::HealthPlugin;
 use plugins::status_effect::StatusEffectPlugin;
 use weapon::WeaponPlugin;
@@ -61,6 +62,7 @@ fn main() {
             CombatTextPlugin,
             WeaponPlugin,
             StatusEffectPlugin,
+            DeathPlugin,
         ))
         .add_systems(
             Update,

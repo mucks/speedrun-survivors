@@ -26,6 +26,7 @@ pub struct GameAssets {
     pub weapons: HashMap<WeaponType, Handle<TextureAtlas>>,
     pub weapon_animation_effects: HashMap<WeaponAnimationEffect, Handle<TextureAtlas>>,
     pub enemies: HashMap<EnemyType, Handle<TextureAtlas>>,
+    pub skull: Handle<TextureAtlas>,
 }
 
 pub struct AssetsPlugin;
@@ -127,11 +128,21 @@ fn setup(
         );
     }
 
+    let skull = TextureAtlas::from_grid(
+        asset_server.load("sprites/misc/skull.png"),
+        Vec2::new(64., 64.),
+        1,
+        1,
+        Some(Vec2::new(1., 1.)),
+        None,
+    );
+
     commands.insert_resource(GameAssets {
         heroes,
         level: level_asset,
         weapons,
         weapon_animation_effects,
         enemies,
+        skull: texture_atlases.add(skull),
     });
 }

@@ -49,7 +49,7 @@ RUN rm ./target/wasm32-unknown-unknown/release/deps/speedrun_survivors_bevy*
 COPY speedrun-survivors-bevy speedrun-survivors-bevy
 
 WORKDIR /usr/src/app/speedrun-survivors-bevy
-RUN trunk build
+RUN trunk build --release
 
 FROM nginx:alpine as runner
 

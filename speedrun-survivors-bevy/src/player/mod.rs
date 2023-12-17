@@ -7,6 +7,7 @@ use crate::keyboard_key::KeyboardKey;
 use crate::plugins::assets::GameAssets;
 use crate::plugins::health::{add_health_bar, Health};
 use crate::plugins::menu::GameConfigState;
+use crate::plugins::status_effect::StatusEffectController;
 use crate::state::{AppState, ForState};
 use crate::weapon::weapon_animation_effect::WeaponAnimationEffect;
 use crate::{
@@ -104,7 +105,8 @@ pub fn spawn_player(
         })
         .insert(Player {})
         .insert(PlayerMovement { speed: 100. })
-        .insert(Health::new(200., 200., 10.0, Some(health_bar)));
+        .insert(Health::new(200., 200., 10.0, Some(health_bar)))
+        .insert(StatusEffectController { effects: vec![] });
 }
 
 pub fn move_player(

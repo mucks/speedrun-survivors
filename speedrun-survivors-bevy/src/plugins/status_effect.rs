@@ -37,6 +37,7 @@ pub struct StatusEffect {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum StatusEffectType {
     Knockback(Vec3),
+    DeathIsTemporary,
 }
 
 fn on_status_effect_event(
@@ -84,6 +85,7 @@ pub fn apply_status_effects(
                         });
                     }
                 }
+                _ => {}
             }
         }
     }
