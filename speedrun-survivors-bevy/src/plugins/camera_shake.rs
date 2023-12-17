@@ -107,7 +107,7 @@ struct Shake {
 impl Shake {
     fn create_shake(strength: &CameraImpactStrength) -> Self {
         let mut shake = Self {
-            max_offset: Vec2::new(100.0, 100.0),
+            max_offset: Vec2::new(50.0, 50.0),
             max_roll: 0.1,
             trauma: 1.0,
             trauma_power: 2.0,

@@ -377,7 +377,7 @@ fn wrapper_nft_list(parent: &mut ChildBuilder, assets: &UiAssets) {
                     style: Style {
                         flex_direction: FlexDirection::Column,
                         align_self: AlignSelf::Stretch,
-                        height: Val::Percent(65.),//TODO why does overflow the container
+                        height: Val::Percent(65.), //TODO why does overflow the container
                         overflow: Overflow::clip_y(),
                         margin: UiRect::all(Val::Px(20.0)),
                         ..default()
