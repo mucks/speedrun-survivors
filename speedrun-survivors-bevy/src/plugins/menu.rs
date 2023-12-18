@@ -11,6 +11,9 @@ use leafwing_input_manager::action_state::ActionState;
 
 const TEXT_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
 const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
+const BTN_BORDER_DEFAULT: Color = Color::INDIGO;
+const BTN_BORDER_HOVER: Color = Color::PINK;
+const BTN_BORDER_SELECTED: Color = Color::RED;
 const GAME_NAME: &str = "Speedrun Survivors";
 
 #[derive(Component)]
@@ -118,23 +121,42 @@ struct LevelSelectButton {
     level_id: LevelId,
 }
 
+#[derive(Component)]
+struct SelectedElement {}
+
 fn on_button_interaction(
+    mut commands: Commands,
     mut query_action_button: Query<(&Interaction, &mut MenuButtonAction), Changed<Interaction>>,
     mut query_hero_button: Query<
         (
             &Interaction,
+            Entity,
             &mut BorderColor,
             Option<&mut LevelSelectButton>,
             Option<&mut HeroSelectButton>,
             Option<&mut CheckBox>,
-            Option<&mut UiImage>,
         ),
-        Changed<Interaction>,
+        (Changed<Interaction>, Without<SelectedElement>),
     >,
     mut next_state: ResMut<NextState<AppState>>,
     mut app_exit_events: EventWriter<AppExit>,
     mut state: ResMut<MenuGameConfig>,
-    assets: Res<UiAssets>,
+    mut selected_hero: Query<
+        (Entity, &mut BorderColor),
+        (
+            With<SelectedElement>,
+            With<HeroSelectButton>,
+            Without<LevelSelectButton>,
+        ),
+    >,
+    mut selected_level: Query<
+        (Entity, &mut BorderColor),
+        (
+            With<SelectedElement>,
+            With<LevelSelectButton>,
+            Without<HeroSelectButton>,
+        ),
+    >,
 ) {
     for (interaction, mut action) in query_action_button.iter_mut() {
         match *interaction {
@@ -146,39 +168,39 @@ fn on_button_interaction(
         }
     }
 
-    for (interaction, mut border, mut level, mut hero, mut checkbox, mut image) in
+    for (interaction, entity, mut border, mut level, mut hero, mut checkbox) in
         query_hero_button.iter_mut()
     {
         match *interaction {
             Interaction::Pressed => {
                 if let Some(level) = level {
+                    for (entity, mut border) in selected_level.iter_mut() {
+                        border.0 = BTN_BORDER_DEFAULT;
+                        commands.entity(entity).remove::<SelectedElement>();
+                    }
                     state.level = level.level_id.clone();
                 }
                 if let Some(hero) = hero {
+                    for (entity, mut border) in selected_hero.iter_mut() {
+                        border.0 = BTN_BORDER_DEFAULT;
+                        commands.entity(entity).remove::<SelectedElement>();
+                    }
                     state.hero = hero.hero_type.clone();
                 }
                 if let Some(mut checkbox) = checkbox {
                     // TODO count the number of active cNFTs and cap at some limit
                     checkbox.checked = !checkbox.checked;
                     eprintln!("Checkbox clicked {}", checkbox.nft_id);
-                    //TODO fix checkbox image updating not working
-                    if let Some(mut image) = image {
-                        if checkbox.checked {
-                            *image = assets.checkbox_x.clone();
-                        } else {
-                            *image = assets.checkbox_o.clone();
-                        }
-                    }
                 }
 
-                border.0 = Color::RED; //TODO doesnt really work as hover will immediatly overwrite and even if thats checked against, would need to be flipped back if another is selected
+                // Attach or remove the SelectedElement tag from this entity
+                border.0 = BTN_BORDER_SELECTED;
+                commands.entity(entity).insert(SelectedElement {});
             }
             Interaction::Hovered => {
-                border.0 = Color::PINK;
+                border.0 = BTN_BORDER_HOVER;
             }
-            Interaction::None => {
-                border.0 = Color::INDIGO;
-            }
+            Interaction::None => border.0 = BTN_BORDER_DEFAULT,
         }
     }
 }

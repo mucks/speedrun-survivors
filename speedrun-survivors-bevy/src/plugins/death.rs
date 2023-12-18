@@ -92,8 +92,9 @@ fn on_health_reached_zero(
 
         if ev.target_type == HealthChangeTargetType::Enemy {
             event_stream.send(CoinAccumulated { coin: 100 });
-            commands.entity(ev.entity).despawn_recursive(); // TODO PANICK thread 'Compute Task Pool (3)' panicked at speedrun-survivors-bevy/src/plugins/death.rs:95:22
-                                                            // TODO Attempting to create an EntityCommands for entity 1731v0, which doesn't exist.
+            commands
+                .get_entity(ev.entity)
+                .and_then(|entity| Some(entity.despawn_recursive()));
         }
     }
 }
