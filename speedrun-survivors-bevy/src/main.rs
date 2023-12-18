@@ -133,6 +133,17 @@ fn spawn_ldtk_level(game_assets: Res<GameAssets>, mut commands: Commands) {
 
 fn setup_camera(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
+    // commands.spawn((
+    //     Camera2dBundle {
+    //         camera: Camera {
+    //             hdr: true,
+    //             ..default()
+    //         },
+    //         tonemapping: Tonemapping::TonyMcMapface,
+    //         ..default()
+    //     },
+    //     BloomSettings::default(),
+    // )); Can use this for better flame thrower https://bevyengine.org/examples/2D%20Rendering/bloom-2d/
 }
 
 fn setup_key_bindings(mut commands: Commands) {
@@ -156,11 +167,28 @@ fn setup_key_bindings(mut commands: Commands) {
     input_map.insert(InputKind::Mouse(MouseButton::Left), GameAction::Action1);
     input_map.insert(InputKind::Mouse(MouseButton::Left), GameAction::Action2);
 
-    // Gamepad bindings TODO no idea whats good; movement should be on stick probably
+    // Gamepad bindings
     input_map.insert(GamepadButtonType::DPadUp, GameAction::MoveUp);
     input_map.insert(GamepadButtonType::DPadLeft, GameAction::MoveLeft);
     input_map.insert(GamepadButtonType::DPadDown, GameAction::MoveDown);
     input_map.insert(GamepadButtonType::DPadRight, GameAction::MoveRight);
+
+    input_map.insert(
+        SingleAxis::symmetric(GamepadAxisType::LeftStickY, -0.1),
+        GameAction::MoveUp,
+    );
+    input_map.insert(
+        SingleAxis::symmetric(GamepadAxisType::LeftStickY, 0.1),
+        GameAction::MoveDown,
+    );
+    input_map.insert(
+        SingleAxis::symmetric(GamepadAxisType::LeftStickX, -0.1),
+        GameAction::MoveLeft,
+    );
+    input_map.insert(
+        SingleAxis::symmetric(GamepadAxisType::LeftStickX, 0.1),
+        GameAction::MoveRight,
+    );
 
     input_map.insert(GamepadButtonType::Select, GameAction::Confirm);
     input_map.insert(GamepadButtonType::Start, GameAction::Confirm);
