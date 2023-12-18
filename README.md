@@ -1,7 +1,7 @@
 ## Speedrun Survivors
 
-A game for true crypto degens. Play as Pepe and punish hordes of enemies with your mighty arsenal of weapons. 
-Speedrun Survivors is an area game where there are waves of enemies charging the player and the goal is to kill as many of them as fast as possible. 
+A game for true crypto degens. Play as Bonk Inu, Pepe or a Mad Lad and punish hordes of enemies with your mighty arsenal of bone crushing weapons. 
+Speedrun Survivors is an area game with waves of enemies charging the player and the goal is to kill as many of them as fast as possible. 
 The game rewards the player with gold for excellence. 
 Gold obtained can be traded for heroes, weapons and buffs of all kinds.
 
@@ -114,10 +114,7 @@ Gold obtained can be traded for heroes, weapons and buffs of all kinds.
   - this is not done right, player speed should be a constant f32
   - currently, when moving diagonally the speed will increase
   - use vector math to support gamepad sticks as well
-- Camera should not snap to player but lerp based on delta time - otherwise the camera shake does only rotate
-- UI
-  - Selection does not work, can not "see" selected hero, level and cNFTs
-  
+
 ### TODO
 - XP system
   - could be similar to coin_reward (or even use that)

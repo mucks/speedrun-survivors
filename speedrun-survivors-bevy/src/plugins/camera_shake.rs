@@ -66,7 +66,6 @@ fn on_update(
     } else {
         camera_transform.rotation = Quat::default();
     }
-    // TODO: since the camera moves, it should lerp by delta time towards the player position as not to mess with the shake
 }
 
 #[derive(Event)]
@@ -107,7 +106,7 @@ struct Shake {
 impl Shake {
     fn create_shake(strength: &CameraImpactStrength) -> Self {
         let mut shake = Self {
-            max_offset: Vec2::new(100.0, 100.0),
+            max_offset: Vec2::new(5.0, 5.0),
             max_roll: 0.1,
             trauma: 1.0,
             trauma_power: 2.0,
@@ -116,17 +115,18 @@ impl Shake {
 
         match strength {
             CameraImpactStrength::Light => {
-                shake.max_offset = Vec2::new(50.0, 50.0);
                 shake.trauma = 0.6;
             }
             CameraImpactStrength::Medium => {
-                shake.max_offset = Vec2::new(70.0, 70.0);
+                shake.max_offset = Vec2::new(10.0, 10.0);
             }
             CameraImpactStrength::Heavy => {
+                shake.max_offset = Vec2::new(20.0, 20.0);
                 shake.trauma = 1.4;
                 shake.max_roll = 0.15;
             }
             CameraImpactStrength::Absurd => {
+                shake.max_offset = Vec2::new(40.0, 40.0);
                 shake.trauma = 1.8;
                 shake.max_roll = 0.2;
             }
