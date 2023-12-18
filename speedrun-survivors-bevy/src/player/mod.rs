@@ -130,19 +130,17 @@ pub fn move_player(
     let action = actions.single();
 
     for (player_movement, mut transform, mut animator) in query.iter_mut() {
-        animator.current_animation = "Idle".to_string();
+        let mut movement = Vec2::ZERO;
 
         if action.pressed(GameAction::MoveUp) {
-            animator.current_animation = "Walk".to_string();
-            transform.translation.y += player_movement.speed * time.delta_seconds();
+            movement.y += 1.0;
         }
         if action.pressed(GameAction::MoveDown) {
-            animator.current_animation = "Walk".to_string();
-            transform.translation.y -= player_movement.speed * time.delta_seconds();
+            movement.y -= 1.0;
         }
         if action.pressed(GameAction::MoveLeft) {
-            animator.current_animation = "Walk".to_string();
-            transform.translation.x -= player_movement.speed * time.delta_seconds();
+            movement.x -= 1.0;
+
             // turn the sprite around if moving left
             transform.rotation = Quat::from_rotation_y(std::f32::consts::PI);
 
@@ -157,8 +155,7 @@ pub fn move_player(
             }
         }
         if action.pressed(GameAction::MoveRight) {
-            animator.current_animation = "Walk".to_string();
-            transform.translation.x += player_movement.speed * time.delta_seconds();
+            movement.x += 1.0;
             transform.rotation = Quat::default();
 
             for (mut weapon, mut pa, kind) in weapon_query.iter_mut() {
@@ -168,6 +165,22 @@ pub fn move_player(
             for (mut weapon) in weapon_animation_effect_query.iter_mut() {
                 weapon.flip_x = false;
             }
+        }
+
+        // Normalize speed
+        if movement.length_squared() > 1.0 {
+            movement = movement.normalize();
+        }
+
+        // Move player at a constant speed
+        transform.translation.x += movement.x * player_movement.speed * time.delta_seconds();
+        transform.translation.y += movement.y * player_movement.speed * time.delta_seconds();
+
+        // If the vector has a length, the player is moving
+        if movement.length() > 0. {
+            animator.current_animation = "Walk".to_string();
+        } else {
+            animator.current_animation = "Idle".to_string();
         }
     }
 }
