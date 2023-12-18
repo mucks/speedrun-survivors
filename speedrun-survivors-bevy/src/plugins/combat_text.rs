@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::state::AppState;
+use crate::state::{AppState, ForState};
 
 use super::{
     health::{Health, HealthChangeEvent, HealthChangeTargetType},
@@ -66,21 +66,26 @@ pub fn spawn_combat_text(commands: &mut Commands, text: &str, position: Vec3, co
     };
 
     commands
-        .spawn(Text2dBundle {
-            text: Text {
-                sections: vec![TextSection {
-                    value: text.to_string(),
-                    style: TextStyle {
-                        font_size: 50.0,
-                        color,
-                        ..Default::default()
-                    },
-                }],
+        .spawn((
+            Text2dBundle {
+                text: Text {
+                    sections: vec![TextSection {
+                        value: text.to_string(),
+                        style: TextStyle {
+                            font_size: 50.0,
+                            color,
+                            ..Default::default()
+                        },
+                    }],
+                    ..Default::default()
+                },
+                transform,
                 ..Default::default()
             },
-            transform,
-            ..Default::default()
-        })
+            ForState {
+                states: vec![AppState::GameRunning],
+            },
+        ))
         .insert(CombatText {
             timer: Timer::from_seconds(1.0, TimerMode::Once),
         });

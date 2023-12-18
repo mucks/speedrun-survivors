@@ -26,15 +26,12 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         sfx_sword_hit: asset_server.load("audio/sfx/sword_hit.ogg").into(),
         sfx_sword_miss: asset_server.load("audio/sfx/sword_miss.ogg").into(),
         sfx_gun_shot: asset_server.load("audio/sfx/gun_shot.ogg").into(),
+        sfx_game_over: asset_server.load("audio/sfx/game_over.ogg").into(),
     });
     commands.insert_resource(AudioPluginState::default());
 }
 
-fn on_enter_game_running(
-    mut commands: Commands,
-    mut state: ResMut<AudioPluginState>,
-    assets: Res<AudioPluginAssets>,
-) {
+fn on_enter_game_running(mut commands: Commands, assets: Res<AudioPluginAssets>) {
     // Play music when the level starts
     commands.spawn((
         AudioBundle {
@@ -48,7 +45,19 @@ fn on_enter_game_running(
     ));
 }
 
-fn on_exit_game_running(mut data: ResMut<AudioPluginState>) {}
+fn on_exit_game_running(mut commands: Commands, assets: Res<AudioPluginAssets>) {
+    // Play the game over sound effect
+    commands.spawn((
+        AudioBundle {
+            source: assets.sfx_game_over.clone(),
+            settings: PlaybackSettings::DESPAWN,
+            ..default()
+        },
+        ForState {
+            states: vec![AppState::GameOver],
+        },
+    ));
+}
 
 fn on_update(
     mut commands: Commands,
@@ -102,6 +111,7 @@ struct AudioPluginAssets {
     sfx_sword_hit: Handle<AudioSource>,
     sfx_sword_miss: Handle<AudioSource>,
     sfx_gun_shot: Handle<AudioSource>,
+    sfx_game_over: Handle<AudioSource>,
 }
 
 impl AudioPluginAssets {

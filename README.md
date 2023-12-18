@@ -110,10 +110,6 @@ Gold obtained can be traded for heroes, weapons and buffs of all kinds.
 ### Bugs
 - LDTK
   - maps does not appear in wasm+chrome
-- Player movement
-  - this is not done right, player speed should be a constant f32
-  - currently, when moving diagonally the speed will increase
-  - use vector math to support gamepad sticks as well
 
 ### TODO
 - XP system
@@ -121,11 +117,12 @@ Gold obtained can be traded for heroes, weapons and buffs of all kinds.
   - should we have enemy drop XP crystals as in Vamp Survivor?
 - Level up system
 - Gameplay Effect System
-- 
+  - need some gameplay data
+  - items should have Gameplay Effect stacks
+  - need to gather this data and attach it to the player
 - UI
   - TIME ELAPSED
   - LEVEL PROGRESS
-  - DMG texts (japanese style)
 - REPLAY / recording system
     - playback system
     - headless server playback
