@@ -83,7 +83,7 @@ fn main() {
             DeathPlugin,
         ))
         .add_plugins(InputManagerPlugin::<GameAction>::default())
-        .add_systems(Startup, (spawn_camera, register_inputs))
+        .add_systems(Startup, (setup_camera, setup_key_bindings))
         .add_systems(
             Update,
             (animation::animate_sprite,).run_if(in_state(AppState::GameRunning)),
@@ -131,11 +131,11 @@ fn spawn_ldtk_level(game_assets: Res<GameAssets>, mut commands: Commands) {
     ));
 }
 
-fn spawn_camera(mut commands: Commands) {
+fn setup_camera(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
 }
 
-fn register_inputs(mut commands: Commands) {
+fn setup_key_bindings(mut commands: Commands) {
     // Keyboard bindings
     let mut input_map = InputMap::<GameAction>::new([
         (KeyCode::W, GameAction::MoveUp),
@@ -156,22 +156,27 @@ fn register_inputs(mut commands: Commands) {
     input_map.insert(InputKind::Mouse(MouseButton::Left), GameAction::Action1);
     input_map.insert(InputKind::Mouse(MouseButton::Left), GameAction::Action2);
 
-    // Gamepad bindings TODO no idea whats good
-    input_map.insert(GamepadButtonType::North, GameAction::MoveUp);
-    input_map.insert(GamepadButtonType::West, GameAction::MoveLeft);
-    input_map.insert(GamepadButtonType::South, GameAction::MoveDown);
-    input_map.insert(GamepadButtonType::East, GameAction::MoveRight);
+    // Gamepad bindings TODO no idea whats good; movement should be on stick probably
+    input_map.insert(GamepadButtonType::DPadUp, GameAction::MoveUp);
+    input_map.insert(GamepadButtonType::DPadLeft, GameAction::MoveLeft);
+    input_map.insert(GamepadButtonType::DPadDown, GameAction::MoveDown);
+    input_map.insert(GamepadButtonType::DPadRight, GameAction::MoveRight);
 
     input_map.insert(GamepadButtonType::Select, GameAction::Confirm);
     input_map.insert(GamepadButtonType::Start, GameAction::Confirm);
     input_map.insert(GamepadButtonType::Z, GameAction::Cancel);
+    input_map.insert(GamepadButtonType::Mode, GameAction::Cancel);
+
+    input_map.insert(GamepadButtonType::West, GameAction::Slot1);
+    input_map.insert(GamepadButtonType::North, GameAction::Slot1);
+    input_map.insert(GamepadButtonType::East, GameAction::Slot1);
+    input_map.insert(GamepadButtonType::South, GameAction::Slot1);
 
     input_map.insert(GamepadButtonType::LeftTrigger, GameAction::Action1);
-    input_map.insert(GamepadButtonType::RightTrigger2, GameAction::Action2);
+    input_map.insert(GamepadButtonType::RightTrigger, GameAction::Action2);
 
     commands.spawn(InputManagerBundle::<GameAction> {
         action_state: ActionState::default(),
-        // Describes how to convert from player inputs into those actions
         input_map,
     });
 }
