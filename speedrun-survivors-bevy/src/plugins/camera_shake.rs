@@ -61,7 +61,7 @@ fn on_update(
             0.0,
             shake.max_roll * trauma_amount * rng.gen::<f32>(),
         );
-        camera_transform.translation.add(shake_translation);
+        camera_transform.translation = camera_transform.translation.add(shake_translation);
         camera_transform.rotation = shake_rotation;
     } else {
         camera_transform.rotation = Quat::default();

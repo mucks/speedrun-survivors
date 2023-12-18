@@ -5,7 +5,7 @@ Speedrun Survivors is an area game where there are waves of enemies charging the
 The game rewards the player with gold for excellence. 
 Gold obtained can be traded for heroes, weapons and buffs of all kinds.
 
-
+![Screenshot](docs/screen.png)
 
 ### Inspiration
 - Vampire Survivors
@@ -107,39 +107,31 @@ Gold obtained can be traded for heroes, weapons and buffs of all kinds.
         - FIRE +1 byte (rotation 256 degrees then -> 1.4° increments)
 
 
-### TODO
-- render a map using Tiled +ldk
-    - https://github.com/Trouv/bevy_ecs_ldtk/tree/main
-- render player sprite (or bone 2d animation if that exists)
-    - https://bevyengine.org/examples/2D%20Rendering/sprite-sheet/
-    - https://bevyengine.org/examples/Stress%20Tests/many-animated-sprites/
-- add player movement
-- add player animation
-- render enemy
-- add spawn system for enemies
-- move enemy in straight line to player (no collisions; no pathfinding)
-- damage taking system
-- death, undead system
-- add weapons
-- add power ups
+### Bugs
+- LDTK
+  - maps does not appear in wasm+chrome
+- Player movement
+  - this is not done right, player speed should be a constant f32
+  - currently, when moving diagonally the speed will increase
+  - use vector math to support gamepad sticks as well
+- Camera should not snap to player but lerp based on delta time - otherwise the camera shake does only rotate
 - UI
-    - DEBUG
-        - FPS
-    - TIME
-    - LEVEL PROGRESS
-    - KILL COUNT
-    - GOLD ACQUIRED
-    - HEALTH BAR
-    - WEAPON & PASSIVE icons
-    - DMG texts (japanese style)
-    - https://bevyengine.org/examples/UI%20(User%20Interface)/grid/
-    - https://bevyengine.org/examples/UI%20(User%20Interface)/ui-scaling/
-- recording system
+  - Selection does not work, can not "see" selected hero, level and cNFTs
+  
+### TODO
+- XP system
+  - could be similar to coin_reward (or even use that)
+  - should we have enemy drop XP crystals as in Vamp Survivor?
+- Level up system
+- Gameplay Effect System
+- 
+- UI
+  - TIME ELAPSED
+  - LEVEL PROGRESS
+  - DMG texts (japanese style)
+- REPLAY / recording system
     - playback system
     - headless server playback
-- API to upload game replay for processing
-- SFX
-    - https://bevyengine.org/examples/Audio/spatial-audio-2d/
 - VFX
     - https://bevyengine.org/examples/2D%20Rendering/bloom-2d/
 
@@ -165,7 +157,7 @@ How to not flood the market and make them worthless?
 
 
 ### Token
-Launch without a token but keep track of player scores (in-game gold) - try to gain followers, generate hype and then do an airdrop to players and or twitter followers or galxe quest etc.
+Launch without a token but keep track of player scores (in-game gold) - do an airdrop to players and or twitter followers or galxe quest etc.
 
 This token could then be used to:
 - buy NFTs, upgrades etc.
