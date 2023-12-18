@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use bevy::prelude::*;
+use leafwing_input_manager::action_state::ActionState;
 
 use crate::player::Player;
 use crate::plugins::assets::GameAssets;
@@ -16,6 +17,7 @@ use crate::{
     animation::{self, Animator},
     enemy::Enemy,
     player::player_attach,
+    GameAction,
 };
 
 use super::weapon_animation_effect::WeaponAnimationEffect;
@@ -228,9 +230,11 @@ pub fn spawn_hammer(
 
 pub fn hammer_controls(
     mut hammer_query: Query<(&mut HammerController, &Transform, &mut Animator)>,
-    buttons: Res<Input<MouseButton>>,
+    actions: Query<&ActionState<GameAction>>,
     mut ev_stomp: EventWriter<HammerStomp>,
 ) {
+    let action = actions.single();
+
     for (mut hammer, transform, mut animator) in hammer_query.iter_mut() {
         if hammer.cooldown > 0. {
             hammer.cooldown -= 0.1;
@@ -254,7 +258,7 @@ pub fn hammer_controls(
         }
 
         if hammer.stomp_time <= 0. && hammer.cooldown <= 0. {
-            if buttons.pressed(MouseButton::Left) {
+            if action.pressed(GameAction::Action1) {
                 hammer.stomp_time = 3.5;
                 hammer.cooldown = 5.;
             }

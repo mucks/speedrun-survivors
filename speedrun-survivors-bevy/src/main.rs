@@ -11,6 +11,8 @@ use crate::state::{AppState, ForState, StatesPlugin};
 use bevy::audio::VolumeLevel;
 use bevy::prelude::*;
 use bevy_ecs_ldtk::prelude::*;
+use leafwing_input_manager::prelude::*;
+use leafwing_input_manager::user_input::InputKind;
 use plugins::assets::GameAssets;
 use plugins::combat_text::CombatTextPlugin;
 use plugins::death::DeathPlugin;
@@ -21,13 +23,29 @@ use weapon::WeaponPlugin;
 mod animation;
 mod cursor_info;
 mod enemy;
-mod player;
-
 mod heroes;
-mod keyboard_key;
+mod player;
 mod plugins;
 mod state;
 mod weapon;
+
+#[derive(Actionlike, PartialEq, Eq, Hash, Clone, Copy, Debug, Reflect)]
+enum GameAction {
+    MoveUp,
+    MoveLeft,
+    MoveDown,
+    MoveRight,
+    Slot1,
+    Slot2,
+    Slot3,
+    Slot4,
+    Slot5,
+    Slot6,
+    Action1,
+    Action2,
+    Cancel,
+    Confirm,
+}
 
 fn main() {
     App::new()
@@ -64,11 +82,12 @@ fn main() {
             StatusEffectPlugin,
             DeathPlugin,
         ))
+        .add_plugins(InputManagerPlugin::<GameAction>::default())
+        .add_systems(Startup, (spawn_camera, register_inputs))
         .add_systems(
             Update,
             (animation::animate_sprite,).run_if(in_state(AppState::GameRunning)),
         )
-        .add_systems(Startup, spawn_camera)
         .add_systems(
             OnEnter(AppState::GameRunning),
             (on_enter_game_running, spawn_ldtk_level),
@@ -114,4 +133,45 @@ fn spawn_ldtk_level(game_assets: Res<GameAssets>, mut commands: Commands) {
 
 fn spawn_camera(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
+}
+
+fn register_inputs(mut commands: Commands) {
+    // Keyboard bindings
+    let mut input_map = InputMap::<GameAction>::new([
+        (KeyCode::W, GameAction::MoveUp),
+        (KeyCode::A, GameAction::MoveLeft),
+        (KeyCode::S, GameAction::MoveDown),
+        (KeyCode::D, GameAction::MoveRight),
+        (KeyCode::Key1, GameAction::Slot1),
+        (KeyCode::Key2, GameAction::Slot2),
+        (KeyCode::Key3, GameAction::Slot3),
+        (KeyCode::Key4, GameAction::Slot4),
+        (KeyCode::Key5, GameAction::Slot5),
+        (KeyCode::Key6, GameAction::Slot6),
+        (KeyCode::Return, GameAction::Confirm),
+        (KeyCode::Escape, GameAction::Cancel),
+    ]);
+
+    // Mouse bindings
+    input_map.insert(InputKind::Mouse(MouseButton::Left), GameAction::Action1);
+    input_map.insert(InputKind::Mouse(MouseButton::Left), GameAction::Action2);
+
+    // Gamepad bindings TODO no idea whats good
+    input_map.insert(GamepadButtonType::North, GameAction::MoveUp);
+    input_map.insert(GamepadButtonType::West, GameAction::MoveLeft);
+    input_map.insert(GamepadButtonType::South, GameAction::MoveDown);
+    input_map.insert(GamepadButtonType::East, GameAction::MoveRight);
+
+    input_map.insert(GamepadButtonType::Select, GameAction::Confirm);
+    input_map.insert(GamepadButtonType::Start, GameAction::Confirm);
+    input_map.insert(GamepadButtonType::Z, GameAction::Cancel);
+
+    input_map.insert(GamepadButtonType::LeftTrigger, GameAction::Action1);
+    input_map.insert(GamepadButtonType::RightTrigger2, GameAction::Action2);
+
+    commands.spawn(InputManagerBundle::<GameAction> {
+        action_state: ActionState::default(),
+        // Describes how to convert from player inputs into those actions
+        input_map,
+    });
 }

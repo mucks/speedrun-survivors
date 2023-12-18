@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use bevy::prelude::*;
+use leafwing_input_manager::action_state::ActionState;
 
 use crate::{
     animation,
@@ -12,6 +13,7 @@ use crate::{
         menu::GameConfigState,
     },
     state::{AppState, ForState},
+    GameAction,
 };
 
 use super::{weapon_animation_effect::WeaponAnimationEffect, weapon_type::WeaponType};
@@ -123,9 +125,11 @@ fn flame_thrower_controls(
         &mut animation::Animator,
         &Transform,
     )>,
-    buttons: Res<Input<MouseButton>>,
+    actions: Query<&ActionState<GameAction>>,
     game_assets: Res<GameAssets>,
 ) {
+    let action = actions.single();
+
     for (mut controller, mut animator, transform) in query.iter_mut() {
         if controller.is_firing {
             animator.current_animation = "Fire".to_string();
@@ -139,7 +143,7 @@ fn flame_thrower_controls(
             animator.current_animation = "Idle".to_string();
         }
 
-        if buttons.pressed(MouseButton::Left) {
+        if action.pressed(GameAction::Action1) {
             controller.is_firing = true;
         } else {
             controller.is_firing = false;

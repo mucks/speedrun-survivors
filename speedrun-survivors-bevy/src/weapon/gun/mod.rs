@@ -8,8 +8,10 @@ use crate::state::{AppState, ForState};
 use crate::{
     animation::{self, Animator},
     player::player_attach,
+    GameAction,
 };
 use bevy::{prelude::*, window::PrimaryWindow};
+use leafwing_input_manager::action_state::ActionState;
 
 use self::bullet::Bullet;
 
@@ -99,13 +101,15 @@ pub fn spawn_gun(
 pub fn gun_controls(
     mut gun_query: Query<(&mut GunController, &mut Transform, &mut Animator)>,
     primary_query: Query<&Window, With<PrimaryWindow>>,
-    buttons: Res<Input<MouseButton>>,
+    actions: Query<&ActionState<GameAction>>,
     time: Res<Time>,
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     query_camera: Query<(&Camera, &GlobalTransform)>,
     mut sfx_tx: EventWriter<PlaySFX>,
 ) {
+    let action = actions.single();
+
     for (mut gun_controller, mut transform, mut animator) in gun_query.iter_mut() {
         gun_controller.shoot_timer -= time.delta_seconds();
 
@@ -145,7 +149,7 @@ pub fn gun_controls(
         }
 
         if gun_controller.shoot_timer <= 0. {
-            if buttons.pressed(MouseButton::Left) {
+            if action.pressed(GameAction::Action1) {
                 let mut spawn_transform = Transform::from_scale(Vec3::splat(2.0));
                 spawn_transform.translation = transform.translation;
                 spawn_transform.rotation = Quat::from_axis_angle(Vec3::new(0., 0., 1.), angle);

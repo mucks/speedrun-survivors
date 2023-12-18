@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use bevy::prelude::*;
 use bevy::transform::commands;
+use leafwing_input_manager::action_state::ActionState;
 
 use crate::plugins::assets::GameAssets;
 use crate::plugins::health::{self, Health};
@@ -11,6 +12,7 @@ use crate::{
     animation::{self, Animator},
     enemy::Enemy,
     player::player_attach,
+    GameAction,
 };
 
 use super::weapon_animation_effect::WeaponAnimationEffect;
@@ -185,10 +187,12 @@ pub fn sword_controls(
         &mut Animator,
         &TextureAtlasSprite,
     )>,
-    buttons: Res<Input<MouseButton>>,
+    actions: Query<&ActionState<GameAction>>,
     mut commands: Commands,
     game_assets: Res<GameAssets>,
 ) {
+    let action = actions.single();
+
     for (mut sword_controller, transform, mut animator, ta) in sword_query.iter_mut() {
         if sword_controller.cooldown > 0. {
             sword_controller.cooldown -= 0.1;
@@ -214,7 +218,7 @@ pub fn sword_controls(
         }
 
         if sword_controller.swing_time <= 0. && sword_controller.cooldown <= 0. {
-            if buttons.just_pressed(MouseButton::Left) {
+            if action.just_pressed(GameAction::Action1) {
                 sword_controller.swing_time = SWORD_SWING_TIME;
                 sword_controller.cooldown = SWORD_COOLDOWN;
             }

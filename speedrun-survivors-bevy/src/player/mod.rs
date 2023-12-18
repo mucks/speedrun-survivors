@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 
 use bevy::prelude::*;
+use leafwing_input_manager::action_state::ActionState;
 
 use crate::heroes::HeroType;
-use crate::keyboard_key::KeyboardKey;
 use crate::plugins::assets::GameAssets;
 use crate::plugins::health::{add_health_bar, Health};
 use crate::plugins::menu::GameConfigState;
@@ -12,8 +12,8 @@ use crate::state::{AppState, ForState};
 use crate::weapon::weapon_animation_effect::WeaponAnimationEffect;
 use crate::{
     animation::{self, Animator},
-    cursor_info::OffsetedCursorPosition,
     weapon::weapon_type::WeaponType,
+    GameAction,
 };
 
 use self::player_attach::PlayerAttach;
@@ -111,7 +111,7 @@ pub fn spawn_player(
 
 pub fn move_player(
     time: Res<Time>,
-    keys: Res<Input<ScanCode>>,
+    actions: Query<&ActionState<GameAction>>,
     mut query: Query<(&PlayerMovement, &mut Transform, &mut Animator)>,
     mut weapon_query: Query<
         (&mut TextureAtlasSprite, &mut PlayerAttach, &WeaponType),
@@ -127,18 +127,20 @@ pub fn move_player(
         ),
     >,
 ) {
+    let action = actions.single();
+
     for (player_movement, mut transform, mut animator) in query.iter_mut() {
         animator.current_animation = "Idle".to_string();
 
-        if keys.pressed(KeyboardKey::W.scan_code()) {
+        if action.pressed(GameAction::MoveUp) {
             animator.current_animation = "Walk".to_string();
             transform.translation.y += player_movement.speed * time.delta_seconds();
         }
-        if keys.pressed(KeyboardKey::S.scan_code()) {
+        if action.pressed(GameAction::MoveDown) {
             animator.current_animation = "Walk".to_string();
             transform.translation.y -= player_movement.speed * time.delta_seconds();
         }
-        if keys.pressed(KeyboardKey::A.scan_code()) {
+        if action.pressed(GameAction::MoveLeft) {
             animator.current_animation = "Walk".to_string();
             transform.translation.x -= player_movement.speed * time.delta_seconds();
             // turn the sprite around if moving left
@@ -154,7 +156,7 @@ pub fn move_player(
                 weapon.flip_x = true;
             }
         }
-        if keys.pressed(KeyboardKey::D.scan_code()) {
+        if action.pressed(GameAction::MoveRight) {
             animator.current_animation = "Walk".to_string();
             transform.translation.x += player_movement.speed * time.delta_seconds();
             transform.rotation = Quat::default();

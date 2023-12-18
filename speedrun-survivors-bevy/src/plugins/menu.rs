@@ -1,11 +1,13 @@
 use crate::heroes::{HeroType, Levels};
 use crate::plugins::assets::UiAssets;
 use crate::state::{AppState, ForState};
+use crate::GameAction;
 use bevy::a11y::accesskit::{NodeBuilder, Role};
 use bevy::a11y::AccessibilityNode;
 use bevy::app::AppExit;
 use bevy::input::mouse::{MouseScrollUnit, MouseWheel};
 use bevy::prelude::*;
+use leafwing_input_manager::action_state::ActionState;
 
 const TEXT_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
 const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
@@ -857,29 +859,30 @@ fn menu_blink_system(
 fn menu_input_system(
     state: ResMut<State<AppState>>,
     mut next_state: ResMut<NextState<AppState>>,
-    keys: Res<Input<KeyCode>>,
     mut app_exit_events: EventWriter<AppExit>,
+    actions: Query<&ActionState<GameAction>>,
 ) {
-    //if keys.pressed(KeyCode::W) || keys.pressed(KeyCode::Comma) {
-    if state.get() != &AppState::SplashScreen && keys.just_pressed(KeyCode::Escape) {
+    let action = actions.single();
+
+    if state.get() != &AppState::SplashScreen && action.just_pressed(GameAction::Cancel) {
         next_state.set(AppState::SplashScreen);
     } else {
         match state.get() {
             AppState::SplashScreen => {
-                if keys.just_pressed(KeyCode::Return) {
+                if action.just_pressed(GameAction::Confirm) {
                     next_state.set(AppState::GameCreate);
                 }
-                if keys.just_pressed(KeyCode::Escape) {
+                if action.just_pressed(GameAction::Cancel) {
                     app_exit_events.send(AppExit);
                 }
             }
             AppState::GameCreate => {
-                if keys.just_pressed(KeyCode::Return) {
+                if action.just_pressed(GameAction::Confirm) {
                     next_state.set(AppState::GameRunning);
                 }
             }
             AppState::GameOver => {
-                if keys.just_pressed(KeyCode::Return) {
+                if action.just_pressed(GameAction::Confirm) {
                     next_state.set(AppState::SplashScreen);
                 }
             }

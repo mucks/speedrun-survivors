@@ -1,9 +1,10 @@
 use bevy::prelude::*;
+use leafwing_input_manager::action_state::ActionState;
 
 use crate::{
-    keyboard_key::KeyboardKey,
     plugins::{assets::GameAssets, menu::GameConfigState},
     state::AppState,
+    GameAction,
 };
 
 use super::weapon_type::WeaponType;
@@ -26,27 +27,29 @@ pub struct SwitchWeaponEvent {
 
 fn switch_weapon_controls(
     mut switch_weapon_events: EventWriter<SwitchWeaponEvent>,
-    scan_code_input: Res<Input<ScanCode>>,
+    actions: Query<&ActionState<GameAction>>,
 ) {
-    if scan_code_input.just_pressed(KeyboardKey::Nk1.scan_code()) {
+    let action = actions.single();
+
+    if action.just_pressed(GameAction::Slot1) {
         switch_weapon_events.send(SwitchWeaponEvent {
             weapon_type: WeaponType::Sword,
         });
     }
 
-    if scan_code_input.just_pressed(KeyboardKey::Nk2.scan_code()) {
+    if action.just_pressed(GameAction::Slot2) {
         switch_weapon_events.send(SwitchWeaponEvent {
             weapon_type: WeaponType::Hammer,
         });
     }
 
-    if scan_code_input.just_pressed(KeyboardKey::Nk3.scan_code()) {
+    if action.just_pressed(GameAction::Slot3) {
         switch_weapon_events.send(SwitchWeaponEvent {
             weapon_type: WeaponType::Gun,
         });
     }
 
-    if scan_code_input.just_pressed(KeyboardKey::Nk4.scan_code()) {
+    if action.just_pressed(GameAction::Slot4) {
         switch_weapon_events.send(SwitchWeaponEvent {
             weapon_type: WeaponType::FlameThrower,
         });
