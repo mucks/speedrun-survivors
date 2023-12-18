@@ -124,15 +124,16 @@ impl HeroType {
 }
 
 //TODO doesnt belong here REFACTOR
-#[derive(Clone, Eq, Hash, PartialEq)]
-pub enum Levels {
+#[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
+pub enum LevelId {
+    #[default]
     Level1,
     Level2,
     Level3,
     Level4,
 }
 
-impl Levels {
+impl LevelId {
     pub fn get_level_path(&self) -> &str {
         match self {
             _ => "level/level.ldtk",
@@ -141,7 +142,7 @@ impl Levels {
 
     pub fn get_ui_image_name(&self) -> &str {
         match self {
-            Levels::Level1 => "ui/level/level_1.png",
+            LevelId::Level1 => "ui/level/level_1.png",
             _ => "ui/level/level_unk.png",
         }
     }
@@ -151,12 +152,12 @@ impl Levels {
         vec![]
     }
 
-    pub fn into_iter() -> core::array::IntoIter<Levels, 4> {
+    pub fn into_iter() -> core::array::IntoIter<LevelId, 4> {
         [
-            Levels::Level1,
-            Levels::Level2,
-            Levels::Level3,
-            Levels::Level4,
+            LevelId::Level1,
+            LevelId::Level2,
+            LevelId::Level3,
+            LevelId::Level4,
         ]
         .into_iter()
     }

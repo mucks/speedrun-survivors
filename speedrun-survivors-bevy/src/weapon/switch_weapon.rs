@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use leafwing_input_manager::action_state::ActionState;
 
 use crate::{
-    plugins::{assets::GameAssets, menu::GameConfigState},
+    plugins::{assets::GameAssets, menu::MenuGameConfig},
     state::AppState,
     GameAction,
 };
@@ -61,7 +61,7 @@ fn on_switch_weapon(
     mut switch_weapon_event_reader: EventReader<SwitchWeaponEvent>,
     mut weapon_query: Query<(&mut Transform, Entity), With<WeaponType>>,
     asset_server: Res<AssetServer>,
-    game_config: Res<GameConfigState>,
+    game_config: Res<MenuGameConfig>,
     game_assets: Res<GameAssets>,
 ) {
     for switch_weapon_event in switch_weapon_event_reader.iter() {

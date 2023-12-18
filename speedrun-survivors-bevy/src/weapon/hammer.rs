@@ -8,7 +8,7 @@ use crate::plugins::assets::GameAssets;
 use crate::plugins::audio_manager::{PlaySFX, SFX};
 use crate::plugins::camera_shake::{CameraImpact, CameraImpactStrength};
 use crate::plugins::health::{self, Health};
-use crate::plugins::menu::GameConfigState;
+use crate::plugins::menu::MenuGameConfig;
 use crate::plugins::status_effect::{
     StatusEffect, StatusEffectEvent, StatusEffectEventType, StatusEffectType,
 };
@@ -189,7 +189,7 @@ fn create_hammer_anim_hashmap() -> HashMap<String, animation::Animation> {
 
 pub fn spawn_hammer(
     commands: &mut Commands,
-    game_config: &Res<GameConfigState>,
+    game_config: &Res<MenuGameConfig>,
     game_assets: &Res<GameAssets>,
 ) {
     commands

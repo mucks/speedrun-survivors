@@ -1,5 +1,5 @@
 use crate::enemy::enemy_type::EnemyType;
-use crate::heroes::{HeroType, Levels};
+use crate::heroes::{HeroType, LevelId};
 use crate::weapon::weapon_animation_effect::{self, WeaponAnimationEffect};
 use bevy::prelude::*;
 use bevy::utils::HashMap;
@@ -16,7 +16,7 @@ pub struct UiAssets {
     pub checkbox_x: UiImage,
     pub weapons: Vec<(WeaponType, UiImage)>,
     pub heroes: HashMap<HeroType, UiImage>,
-    pub levels: HashMap<Levels, UiImage>,
+    pub levels: HashMap<LevelId, UiImage>,
 }
 
 #[derive(Resource)]
@@ -52,8 +52,8 @@ fn setup(
     }
 
     // Load ui image for each level
-    let mut levels: HashMap<Levels, UiImage> = HashMap::new();
-    for level in Levels::into_iter() {
+    let mut levels: HashMap<LevelId, UiImage> = HashMap::new();
+    for level in LevelId::into_iter() {
         levels.insert(
             level.clone(),
             asset_server.load(level.get_ui_image_name()).into(),
@@ -63,9 +63,9 @@ fn setup(
     commands.insert_resource(UiAssets {
         font: asset_server.load("ui/expanse.otf"),
         buff_1: asset_server.load("ui/buff_1.png").into(),
-        //TODO refactor this to hashmap as well with an iter() as the hero images above?
         checkbox_o: asset_server.load("ui/checkbox_o.png").into(),
         checkbox_x: asset_server.load("ui/checkbox_x.png").into(),
+        //TODO refactor this to hashmap as well with an iter() as the hero images above?
         weapons: vec![
             (
                 WeaponType::Hammer,

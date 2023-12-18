@@ -1,12 +1,11 @@
 use std::collections::HashMap;
 
 use bevy::prelude::*;
-use bevy::transform::commands;
 use leafwing_input_manager::action_state::ActionState;
 
 use crate::plugins::assets::GameAssets;
-use crate::plugins::health::{self, Health};
-use crate::plugins::menu::GameConfigState;
+use crate::plugins::health::{self};
+use crate::plugins::menu::MenuGameConfig;
 use crate::state::{AppState, ForState};
 use crate::{
     animation::{self, Animator},
@@ -146,7 +145,7 @@ fn spawn_sword_swing_effect(
 
 pub fn spawn_sword(
     commands: &mut Commands,
-    game_config: &Res<GameConfigState>,
+    game_config: &Res<MenuGameConfig>,
     game_assets: &Res<GameAssets>,
 ) {
     commands

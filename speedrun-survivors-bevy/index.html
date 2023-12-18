@@ -22,8 +22,38 @@
             background-color: white;
         }
     </style>
+    <input style="position: fixed;left: 10px;top: 10px;" type="button" id="btn-audio" value="🔇 MUTE / UNMUTE" onclick="toggleAudio()">
     <link data-trunk rel="rust" data-type="main" href="Cargo.toml" data-bin="speedrun-survivors-bevy" />
     <link data-trunk rel="copy-dir" href="assets" />
 </body>
 
+<script type='text/javascript'>
+    var audioBtn = document.querySelector('#btn-audio');
+
+    // An array of all contexts to resume on the page
+    const audioContexList = [];
+    (function() {
+        // A proxy object to intercept AudioContexts and
+        // add them to the array for tracking and resuming later
+        self.AudioContext = new Proxy(self.AudioContext, {
+            construct(target, args) {
+                const result = new target(...args);
+                audioContexList.push(result);
+                if (result.state == "suspended") audioBtn.value = "🔈 RESUME";
+                return result;
+            }
+        });
+    })();
+
+    function toggleAudio() {
+        var resumed = false;
+        audioContexList.forEach(ctx => {
+            if (ctx.state == "suspended") { ctx.resume(); resumed = true; }
+            else if (ctx.state == "running") ctx.suspend();
+        });
+
+        if (resumed) audioBtn.value = "🔇 MUTE";
+        else audioBtn.value = "🔈 RESUME";
+    }
+</script>
 </html>

@@ -10,7 +10,7 @@ use crate::{
     plugins::{
         assets::GameAssets,
         health::{HealthChangeEvent, HealthChangeTargetType},
-        menu::GameConfigState,
+        menu::MenuGameConfig,
     },
     state::{AppState, ForState},
     GameAction,
@@ -176,7 +176,7 @@ fn create_flame_thrower_anim_hashmap() -> HashMap<String, animation::Animation> 
 
 pub fn spawn_flame_thrower(
     commands: &mut Commands,
-    game_config: &Res<GameConfigState>,
+    game_config: &Res<MenuGameConfig>,
     game_assets: &Res<GameAssets>,
 ) {
     commands

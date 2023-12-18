@@ -1,4 +1,4 @@
-use crate::heroes::{HeroType, Levels};
+use crate::heroes::{HeroType, LevelId};
 use crate::plugins::assets::UiAssets;
 use crate::state::{AppState, ForState};
 use crate::GameAction;
@@ -11,9 +11,7 @@ use leafwing_input_manager::action_state::ActionState;
 
 const TEXT_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
 const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
-const HOVERED_BUTTON: Color = Color::rgb(0.25, 0.25, 0.25);
-const HOVERED_PRESSED_BUTTON: Color = Color::rgb(0.25, 0.65, 0.25);
-const PRESSED_BUTTON: Color = Color::rgb(0.35, 0.75, 0.35);
+const GAME_NAME: &str = "Speedrun Survivors";
 
 #[derive(Component)]
 pub struct DrawBlinkTimer(pub Timer);
@@ -29,19 +27,20 @@ impl Plugin for MenuPlugin {
                 Update,
                 (
                     mouse_scroll,
-                    on_checkbox_interaction,
                     on_button_interaction,
                     menu_input_system,
                     menu_blink_system,
                 ),
             )
-            .add_systems(Startup, setup)
-            .insert_resource(GameConfigState::default());
+            .insert_resource(MenuGameConfig::default());
     }
 }
 
-fn setup(mut _commands: Commands) {
-    //TODO
+#[derive(Resource, Debug, Default)]
+pub struct MenuGameConfig {
+    pub hero: HeroType,
+    pub level: LevelId,
+    pub nft_list: Vec<String>,
 }
 
 fn menu_splash_screen(mut commands: Commands, assets: ResMut<UiAssets>) {
@@ -68,7 +67,7 @@ fn menu_splash_screen(mut commands: Commands, assets: ResMut<UiAssets>) {
             parent.spawn((TextBundle {
                 style: Style { ..default() },
                 text: Text::from_section(
-                    "Speedrun Survivors",
+                    GAME_NAME,
                     TextStyle {
                         font: assets.font.clone(),
                         font_size: 100.0,
@@ -110,42 +109,32 @@ impl CheckBox {
 }
 
 #[derive(Component)]
-struct HeroButton {
+struct HeroSelectButton {
     hero_type: HeroType,
 }
 
-fn on_checkbox_interaction(
-    mut query: Query<(&Interaction, &mut CheckBox, &mut UiImage), Changed<Interaction>>,
-    assets: Res<UiAssets>,
-) {
-    for (interaction, mut checkbox, mut image) in query.iter_mut() {
-        match *interaction {
-            Interaction::Pressed => {
-                eprintln!("Checkbox clicked {}, {:?}", checkbox.nft_id, image.texture);
-
-                checkbox.checked = !checkbox.checked;
-
-                //TODO doesnt work
-                if checkbox.checked {
-                    *image = assets.checkbox_x.clone();
-                } else {
-                    *image = assets.checkbox_o.clone();
-                }
-            }
-            _ => {}
-        }
-    }
+#[derive(Component)]
+struct LevelSelectButton {
+    level_id: LevelId,
 }
 
 fn on_button_interaction(
     mut query_action_button: Query<(&Interaction, &mut MenuButtonAction), Changed<Interaction>>,
     mut query_hero_button: Query<
-        (&Interaction, &mut BorderColor, &mut HeroButton),
+        (
+            &Interaction,
+            &mut BorderColor,
+            Option<&mut LevelSelectButton>,
+            Option<&mut HeroSelectButton>,
+            Option<&mut CheckBox>,
+            Option<&mut UiImage>,
+        ),
         Changed<Interaction>,
     >,
     mut next_state: ResMut<NextState<AppState>>,
     mut app_exit_events: EventWriter<AppExit>,
-    mut state: ResMut<GameConfigState>,
+    mut state: ResMut<MenuGameConfig>,
+    assets: Res<UiAssets>,
 ) {
     for (interaction, mut action) in query_action_button.iter_mut() {
         match *interaction {
@@ -157,10 +146,31 @@ fn on_button_interaction(
         }
     }
 
-    for (interaction, mut border, mut hero) in query_hero_button.iter_mut() {
+    for (interaction, mut border, mut level, mut hero, mut checkbox, mut image) in
+        query_hero_button.iter_mut()
+    {
         match *interaction {
             Interaction::Pressed => {
-                state.hero = hero.hero_type.clone();
+                if let Some(level) = level {
+                    state.level = level.level_id.clone();
+                }
+                if let Some(hero) = hero {
+                    state.hero = hero.hero_type.clone();
+                }
+                if let Some(mut checkbox) = checkbox {
+                    // TODO count the number of active cNFTs and cap at some limit
+                    checkbox.checked = !checkbox.checked;
+                    eprintln!("Checkbox clicked {}", checkbox.nft_id);
+                    //TODO fix checkbox image updating not working
+                    if let Some(mut image) = image {
+                        if checkbox.checked {
+                            *image = assets.checkbox_x.clone();
+                        } else {
+                            *image = assets.checkbox_o.clone();
+                        }
+                    }
+                }
+
                 border.0 = Color::RED; //TODO doesnt really work as hover will immediatly overwrite and even if thats checked against, would need to be flipped back if another is selected
             }
             Interaction::Hovered => {
@@ -187,11 +197,11 @@ struct ScrollingList {
 fn menu_game_create(
     mut commands: Commands,
     assets: Res<UiAssets>,
-    mut state: ResMut<GameConfigState>,
+    mut state: ResMut<MenuGameConfig>,
 ) {
     // Reset state
     state.hero = HeroType::Pepe;
-    state.level = 1;
+    state.level = LevelId::Level1;
     state.nft_list = vec![];
 
     // Screen wrapper
@@ -242,17 +252,26 @@ fn menu_game_create(
 }
 
 /// Process the UI data so we can send it to the game setup
-fn menu_game_create_complete(nft_list: Query<&CheckBox>, mut state: ResMut<GameConfigState>) {
-    for CheckBox { nft_id, checked } in nft_list.iter() {
-        if !checked {
-            continue;
-        }
-        state.nft_list.push(nft_id.clone());
-    }
+fn menu_game_create_complete(nft_list: Query<&CheckBox>, mut state: ResMut<MenuGameConfig>) {
+    state.nft_list = get_equipped_nfts(&nft_list);
 
     eprintln!("Configured GameState:: {:?}", state);
 }
 
+/// A query to find all the NFTs that have been equipped
+fn get_equipped_nfts(nft_list: &Query<&CheckBox>) -> Vec<String> {
+    let mut res = vec![];
+    for CheckBox { nft_id, checked } in nft_list.iter() {
+        if !checked {
+            continue;
+        }
+        res.push(nft_id.clone());
+    }
+
+    res
+}
+
+/// Wrapper for the game menu content, this is split into two sides, on the left the hero and level are selected and on the right the NFTs can be equipped
 fn wrapper_content(parent: &mut ChildBuilder, assets: &UiAssets) {
     // Wrapper for the left side
     parent
@@ -264,7 +283,6 @@ fn wrapper_content(parent: &mut ChildBuilder, assets: &UiAssets) {
                 ..Default::default()
             },
             background_color: Color::DARK_GREEN.into(),
-
             ..Default::default()
         })
         .with_children(|parent| {
@@ -284,7 +302,7 @@ fn wrapper_content(parent: &mut ChildBuilder, assets: &UiAssets) {
                 flex_direction: FlexDirection::Column,
                 ..Default::default()
             },
-            background_color: Color::CRIMSON.into(),
+            background_color: Color::TEAL.into(),
             ..Default::default()
         })
         .with_children(|parent| {
@@ -293,6 +311,7 @@ fn wrapper_content(parent: &mut ChildBuilder, assets: &UiAssets) {
         });
 }
 
+/// This section is about choosing a hero
 fn wrapper_hero_selector(parent: &mut ChildBuilder, assets: &UiAssets) {
     parent
         .spawn(NodeBundle {
@@ -335,12 +354,17 @@ fn wrapper_hero_selector(parent: &mut ChildBuilder, assets: &UiAssets) {
                 .with_children(|parent| {
                     for hero in HeroType::into_iter() {
                         let ui_img = assets.heroes.get(&hero).unwrap();
-                        spawn_hero_select_box(parent, ui_img.clone(), &hero);
+                        spawn_bordered_button_with_bundle(
+                            parent,
+                            ui_img.clone(),
+                            HeroSelectButton { hero_type: hero },
+                        );
                     }
                 });
         });
 }
 
+/// This section is about selecting a level
 fn wrapper_level_selector(parent: &mut ChildBuilder, assets: &UiAssets) {
     parent
         .spawn(NodeBundle {
@@ -382,14 +406,19 @@ fn wrapper_level_selector(parent: &mut ChildBuilder, assets: &UiAssets) {
                     ..Default::default()
                 })
                 .with_children(|parent| {
-                    for level in Levels::into_iter() {
+                    for level in LevelId::into_iter() {
                         let ui_img = assets.levels.get(&level).unwrap();
-                        spawn_level_select_box(parent, ui_img.clone(), &level);
+                        spawn_bordered_button_with_bundle(
+                            parent,
+                            ui_img.clone(),
+                            LevelSelectButton { level_id: level },
+                        );
                     }
                 });
         });
 }
 
+/// This section is about equipping cNFTs
 fn wrapper_nft_list(parent: &mut ChildBuilder, assets: &UiAssets) {
     let nfts_from_api_todo: Vec<(&str, &str)> = vec![
         (
@@ -538,6 +567,7 @@ fn wrapper_nft_list(parent: &mut ChildBuilder, assets: &UiAssets) {
         });
 }
 
+/// This is a select box used for equipping a particular cNFT
 fn list_item_selectable(parent: &mut ChildBuilder, assets: &UiAssets, id: &str, text: &str) {
     parent
         .spawn(NodeBundle {
@@ -559,10 +589,10 @@ fn list_item_selectable(parent: &mut ChildBuilder, assets: &UiAssets, id: &str, 
                         width: Val::Px(32f32),
                         height: Val::Px(32f32),
                         margin: UiRect::all(Val::Px(2.)),
-                        padding: UiRect::all(Val::Px(2.)),
+                        border: UiRect::all(Val::Px(5.)),
                         ..Default::default()
                     },
-                    background_color: BackgroundColor(Color::INDIGO),
+                    border_color: BorderColor(Color::INDIGO),
                     ..Default::default()
                 })
                 .insert(CheckBox::make_checkbox(id.to_string()))
@@ -584,48 +614,7 @@ fn list_item_selectable(parent: &mut ChildBuilder, assets: &UiAssets, id: &str, 
         });
 }
 
-fn spawn_equipment_row(parent: &mut ChildBuilder, assets: &UiAssets, slots: [u32; 3]) {
-    parent
-        .spawn(NodeBundle {
-            style: Style {
-                width: Val::Percent(100.),
-                flex_direction: FlexDirection::Row,
-                align_items: AlignItems::Center,
-                justify_content: JustifyContent::Center,
-                ..Default::default()
-            },
-            ..Default::default()
-        })
-        .with_children(|parent| {
-            for slot in slots {
-                let ui_img = assets.buff_1.clone();
-                spawn_equipment_selected_box(parent, ui_img.clone(), slot);
-            }
-        });
-}
-
-fn spawn_equipment_selected_box(parent: &mut ChildBuilder, ui_img: UiImage, slot: u32) -> Entity {
-    let mut node = parent.spawn(ButtonBundle {
-        style: Style {
-            flex_direction: FlexDirection::Column,
-            align_items: AlignItems::Center,
-            justify_content: JustifyContent::Center,
-            width: Val::Px(64f32),
-            height: Val::Px(64f32),
-            margin: UiRect::all(Val::Px(5.)),
-            padding: UiRect::all(Val::Px(2.)),
-            ..Default::default()
-        },
-        background_color: BackgroundColor(Color::INDIGO),
-        ..Default::default()
-    });
-
-    node.with_children(|parent| {
-        spawn_nested_icon(parent, Color::GOLD, ui_img.clone(), 56.0);
-    })
-    .id()
-}
-
+/// This wrapper contains the quit and play buttons
 fn wrapper_footer(parent: &mut ChildBuilder, assets: &UiAssets) {
     // Common style for all buttons on the screen
     let button_style = Style {
@@ -712,7 +701,12 @@ fn wrapper_footer(parent: &mut ChildBuilder, assets: &UiAssets) {
         });
 }
 
-fn spawn_hero_select_box(parent: &mut ChildBuilder, ui_img: UiImage, hero_type: &HeroType) {
+/// These buttons are used for the hero and level selection
+fn spawn_bordered_button_with_bundle(
+    parent: &mut ChildBuilder,
+    ui_img: UiImage,
+    bundle: impl Bundle,
+) {
     parent
         .spawn(ButtonBundle {
             style: Style {
@@ -728,40 +722,13 @@ fn spawn_hero_select_box(parent: &mut ChildBuilder, ui_img: UiImage, hero_type: 
             border_color: BorderColor(Color::INDIGO),
             ..Default::default()
         })
-        .insert(HeroButton {
-            hero_type: hero_type.clone(),
-        })
+        .insert(bundle)
         .with_children(|parent| {
             spawn_nested_icon(parent, Color::GOLD, ui_img.clone(), 56.0);
         });
 }
 
-fn spawn_level_select_box(
-    parent: &mut ChildBuilder,
-    ui_img: UiImage,
-    level_type: &Levels,
-) -> Entity {
-    let mut node = parent.spawn(ButtonBundle {
-        style: Style {
-            flex_direction: FlexDirection::Column,
-            align_items: AlignItems::Center,
-            justify_content: JustifyContent::Center,
-            width: Val::Px(64f32),
-            height: Val::Px(64f32),
-            margin: UiRect::all(Val::Px(5.)),
-            padding: UiRect::all(Val::Px(2.)),
-            ..Default::default()
-        },
-        background_color: BackgroundColor(Color::INDIGO),
-        ..Default::default()
-    });
-
-    node.with_children(|parent| {
-        spawn_nested_icon(parent, Color::GOLD, ui_img.clone(), 56.0);
-    })
-    .id()
-}
-
+/// Spawns an icon for some button
 fn spawn_nested_icon(
     parent: &mut ChildBuilder,
     background_color: Color,
@@ -789,6 +756,7 @@ fn spawn_nested_icon(
         });
 }
 
+/// This menu is displayed if the player looses the game
 fn menu_game_over(mut commands: Commands, assets: Res<UiAssets>) {
     commands
         .spawn((
@@ -838,6 +806,7 @@ fn menu_game_over(mut commands: Commands, assets: Res<UiAssets>) {
         });
 }
 
+/// Flashes some text at a fixed interval
 fn menu_blink_system(
     mut commands: Commands,
     time: Res<Time>,
@@ -856,6 +825,7 @@ fn menu_blink_system(
     }
 }
 
+/// Handle input specific to the menu
 fn menu_input_system(
     state: ResMut<State<AppState>>,
     mut next_state: ResMut<NextState<AppState>>,
@@ -891,6 +861,7 @@ fn menu_input_system(
     }
 }
 
+/// Scroll handler for the cNFT list
 fn mouse_scroll(
     mut mouse_wheel_events: EventReader<MouseWheel>,
     mut query_list: Query<(&mut ScrollingList, &mut Style, &Parent, &Node)>,
@@ -913,11 +884,4 @@ fn mouse_scroll(
             style.top = Val::Px(scrolling_list.position);
         }
     }
-}
-
-#[derive(Resource, Debug, Default)]
-pub struct GameConfigState {
-    pub hero: HeroType,
-    pub level: u64,
-    pub nft_list: Vec<String>,
 }

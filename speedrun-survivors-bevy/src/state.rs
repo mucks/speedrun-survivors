@@ -12,7 +12,6 @@ pub enum AppState {
     #[cfg_attr(not(feature = "dev"), default)]
     SplashScreen,
     GameCreate,
-    // #[default] // TODO - for testing we probably want to switch this to GameRunning :)
     #[cfg_attr(feature = "dev", default)]
     GameRunning,
     GameOver,

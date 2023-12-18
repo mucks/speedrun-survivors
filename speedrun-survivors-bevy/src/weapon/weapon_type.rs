@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::plugins::{assets::GameAssets, menu::GameConfigState};
+use crate::plugins::{assets::GameAssets, menu::MenuGameConfig};
 
 use super::{
     flame_thrower::spawn_flame_thrower, gun::spawn_gun, hammer::spawn_hammer, sword::spawn_sword,
@@ -22,7 +22,7 @@ impl WeaponType {
         &self,
         commands: &mut Commands,
         asset_server: &Res<AssetServer>,
-        game_config: &Res<GameConfigState>,
+        game_config: &Res<MenuGameConfig>,
         game_assets: &Res<GameAssets>,
     ) {
         match self {

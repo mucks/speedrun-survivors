@@ -6,7 +6,7 @@ use leafwing_input_manager::action_state::ActionState;
 use crate::heroes::HeroType;
 use crate::plugins::assets::GameAssets;
 use crate::plugins::health::{add_health_bar, Health};
-use crate::plugins::menu::GameConfigState;
+use crate::plugins::menu::MenuGameConfig;
 use crate::plugins::status_effect::StatusEffectController;
 use crate::state::{AppState, ForState};
 use crate::weapon::weapon_animation_effect::WeaponAnimationEffect;
@@ -72,7 +72,7 @@ pub fn spawn_player(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
-    game_config: Res<GameConfigState>,
+    game_config: Res<MenuGameConfig>,
     game_assets: Res<GameAssets>,
 ) {
     // player
