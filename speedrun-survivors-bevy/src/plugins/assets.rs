@@ -1,5 +1,6 @@
+use crate::data::hero::HeroType;
+use crate::data::map::MapId;
 use crate::enemy::enemy_type::EnemyType;
-use crate::heroes::{HeroType, LevelId};
 use crate::weapon::weapon_animation_effect::{self, WeaponAnimationEffect};
 use bevy::prelude::*;
 use bevy::utils::HashMap;
@@ -16,13 +17,13 @@ pub struct UiAssets {
     pub checkbox_x: UiImage,
     pub weapons: Vec<(WeaponType, UiImage)>,
     pub heroes: HashMap<HeroType, UiImage>,
-    pub levels: HashMap<LevelId, UiImage>,
+    pub maps: HashMap<MapId, UiImage>,
 }
 
 #[derive(Resource)]
 pub struct GameAssets {
     pub heroes: HashMap<HeroType, Handle<Image>>,
-    pub level: Handle<LdtkAsset>,
+    pub map: Handle<LdtkAsset>,
     pub weapons: HashMap<WeaponType, Handle<TextureAtlas>>,
     pub weapon_animation_effects: HashMap<WeaponAnimationEffect, Handle<TextureAtlas>>,
     pub enemies: HashMap<EnemyType, Handle<TextureAtlas>>,
@@ -51,12 +52,12 @@ fn setup(
         );
     }
 
-    // Load ui image for each level
-    let mut levels: HashMap<LevelId, UiImage> = HashMap::new();
-    for level in LevelId::into_iter() {
-        levels.insert(
-            level.clone(),
-            asset_server.load(level.get_ui_image_name()).into(),
+    // Load ui image for each map
+    let mut maps: HashMap<MapId, UiImage> = HashMap::new();
+    for map in MapId::into_iter() {
+        maps.insert(
+            map.clone(),
+            asset_server.load(map.get_ui_image_name()).into(),
         );
     }
 
@@ -87,7 +88,7 @@ fn setup(
             ),
         ],
         heroes,
-        levels,
+        maps,
     });
 
     // Load sprite sheets for each hero
@@ -99,7 +100,7 @@ fn setup(
         );
     }
 
-    let level_asset = asset_server.load("level/level.ldtk");
+    let map_asset = asset_server.load("level/level.ldtk");
 
     let mut weapons = HashMap::new();
 
@@ -139,7 +140,7 @@ fn setup(
 
     commands.insert_resource(GameAssets {
         heroes,
-        level: level_asset,
+        map: map_asset,
         weapons,
         weapon_animation_effects,
         enemies,

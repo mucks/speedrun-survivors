@@ -1,5 +1,4 @@
 use crate::player::Player;
-use crate::plugins::coin_rewards::CoinAccumulated;
 use crate::state::{AppState, ForState};
 use bevy::prelude::*;
 

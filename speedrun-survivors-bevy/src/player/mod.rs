@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use bevy::prelude::*;
 use leafwing_input_manager::action_state::ActionState;
 
-use crate::heroes::HeroType;
+use crate::data::hero::HeroType;
 use crate::plugins::assets::GameAssets;
 use crate::plugins::health::{add_health_bar, Health};
 use crate::plugins::menu::MenuGameConfig;

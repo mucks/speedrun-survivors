@@ -5,6 +5,7 @@ use crate::plugins::assets::AssetsPlugin;
 use crate::plugins::audio_manager::AudioManagerPlugin;
 use crate::plugins::camera_shake::CameraShakePlugin;
 use crate::plugins::coin_rewards::CoinRewardsPlugin;
+use crate::plugins::gameplay_effects::{GameplayEffect, GameplayEffectsPlugin};
 use crate::plugins::hud::HudPlugin;
 use crate::plugins::menu::MenuPlugin;
 use crate::state::{AppState, ForState, StatesPlugin};
@@ -22,8 +23,8 @@ use weapon::WeaponPlugin;
 
 mod animation;
 mod cursor_info;
+mod data;
 mod enemy;
-mod heroes;
 mod player;
 mod plugins;
 mod state;
@@ -64,7 +65,7 @@ fn main() {
                     ..default()
                 }),
         )
-        .add_plugins(LdtkPlugin)
+        .add_plugins((LdtkPlugin, InputManagerPlugin::<GameAction>::default()))
         .add_plugins((
             AssetsPlugin,
             AudioManagerPlugin,
@@ -82,7 +83,7 @@ fn main() {
             StatusEffectPlugin,
             DeathPlugin,
         ))
-        .add_plugins(InputManagerPlugin::<GameAction>::default())
+        .add_plugins(GameplayEffectsPlugin)
         .add_systems(Startup, (setup_camera, setup_key_bindings))
         .add_systems(
             Update,
@@ -121,7 +122,7 @@ fn spawn_ldtk_level(game_assets: Res<GameAssets>, mut commands: Commands) {
 
     commands.spawn((
         LdtkWorldBundle {
-            ldtk_handle: game_assets.level.clone(),
+            ldtk_handle: game_assets.map.clone(),
             transform,
             ..Default::default()
         },

@@ -1,5 +1,7 @@
-use crate::heroes::{HeroType, LevelId};
+use crate::data::hero::HeroType;
+use crate::data::map::MapId;
 use crate::plugins::assets::UiAssets;
+use crate::plugins::gameplay_effects::GameplayEffectEvent;
 use crate::state::{AppState, ForState};
 use crate::GameAction;
 use bevy::a11y::accesskit::{NodeBuilder, Role};
@@ -42,9 +44,9 @@ impl Plugin for MenuPlugin {
 #[derive(Resource, Debug, Default)]
 pub struct MenuGameConfig {
     pub hero: HeroType,
-    pub level: LevelId,
+    pub map: MapId,
     pub nft_list: Vec<String>,
-}
+} //TODO not sure if we need this at all, as most is handled by gameplay effect plugin now
 
 fn menu_splash_screen(mut commands: Commands, assets: ResMut<UiAssets>) {
     let font_color = Color::rgb_u8(0x92, 0xA6, 0x8A);
@@ -117,8 +119,8 @@ struct HeroSelectButton {
 }
 
 #[derive(Component)]
-struct LevelSelectButton {
-    level_id: LevelId,
+struct MapSelectButton {
+    map_id: MapId,
 }
 
 #[derive(Component)]
@@ -132,7 +134,7 @@ fn on_button_interaction(
             &Interaction,
             Entity,
             &mut BorderColor,
-            Option<&mut LevelSelectButton>,
+            Option<&mut MapSelectButton>,
             Option<&mut HeroSelectButton>,
             Option<&mut CheckBox>,
         ),
@@ -146,17 +148,18 @@ fn on_button_interaction(
         (
             With<SelectedElement>,
             With<HeroSelectButton>,
-            Without<LevelSelectButton>,
+            Without<MapSelectButton>,
         ),
     >,
-    mut selected_level: Query<
+    mut selected_map: Query<
         (Entity, &mut BorderColor),
         (
             With<SelectedElement>,
-            With<LevelSelectButton>,
+            With<MapSelectButton>,
             Without<HeroSelectButton>,
         ),
     >,
+    mut event_stream: EventWriter<GameplayEffectEvent>,
 ) {
     for (interaction, mut action) in query_action_button.iter_mut() {
         match *interaction {
@@ -168,17 +171,18 @@ fn on_button_interaction(
         }
     }
 
-    for (interaction, entity, mut border, mut level, mut hero, mut checkbox) in
+    for (interaction, entity, mut border, mut map, mut hero, mut checkbox) in
         query_hero_button.iter_mut()
     {
         match *interaction {
             Interaction::Pressed => {
-                if let Some(level) = level {
-                    for (entity, mut border) in selected_level.iter_mut() {
+                if let Some(map) = map {
+                    for (entity, mut border) in selected_map.iter_mut() {
                         border.0 = BTN_BORDER_DEFAULT;
                         commands.entity(entity).remove::<SelectedElement>();
                     }
-                    state.level = level.level_id.clone();
+                    state.map = map.map_id.clone();
+                    event_stream.send(GameplayEffectEvent::MapSelected(map.map_id.clone()));
                 }
                 if let Some(hero) = hero {
                     for (entity, mut border) in selected_hero.iter_mut() {
@@ -186,6 +190,7 @@ fn on_button_interaction(
                         commands.entity(entity).remove::<SelectedElement>();
                     }
                     state.hero = hero.hero_type.clone();
+                    event_stream.send(GameplayEffectEvent::HeroSelected(hero.hero_type.clone()));
                 }
                 if let Some(mut checkbox) = checkbox {
                     // TODO count the number of active cNFTs and cap at some limit
@@ -223,7 +228,7 @@ fn menu_game_create(
 ) {
     // Reset state
     state.hero = HeroType::Pepe;
-    state.level = LevelId::Level1;
+    state.map = MapId::Map1;
     state.nft_list = vec![];
 
     // Screen wrapper
@@ -293,7 +298,7 @@ fn get_equipped_nfts(nft_list: &Query<&CheckBox>) -> Vec<String> {
     res
 }
 
-/// Wrapper for the game menu content, this is split into two sides, on the left the hero and level are selected and on the right the NFTs can be equipped
+/// Wrapper for the game menu content, this is split into two sides, on the left the hero and map are selected and on the right the NFTs can be equipped
 fn wrapper_content(parent: &mut ChildBuilder, assets: &UiAssets) {
     // Wrapper for the left side
     parent
@@ -311,8 +316,8 @@ fn wrapper_content(parent: &mut ChildBuilder, assets: &UiAssets) {
             // Wrapper for hero selection
             wrapper_hero_selector(parent, assets);
 
-            // Wrapper for level selection
-            wrapper_level_selector(parent, assets);
+            // Wrapper for map selection
+            wrapper_map_selector(parent, assets);
         });
 
     // Wrapper for the right side
@@ -386,8 +391,8 @@ fn wrapper_hero_selector(parent: &mut ChildBuilder, assets: &UiAssets) {
         });
 }
 
-/// This section is about selecting a level
-fn wrapper_level_selector(parent: &mut ChildBuilder, assets: &UiAssets) {
+/// This section is about selecting a map
+fn wrapper_map_selector(parent: &mut ChildBuilder, assets: &UiAssets) {
     parent
         .spawn(NodeBundle {
             style: Style {
@@ -403,7 +408,7 @@ fn wrapper_level_selector(parent: &mut ChildBuilder, assets: &UiAssets) {
         .with_children(|parent| {
             parent.spawn(
                 TextBundle::from_section(
-                    "Level Selection",
+                    "Map Selection",
                     TextStyle {
                         font_size: 30.0,
                         color: TEXT_COLOR,
@@ -428,12 +433,12 @@ fn wrapper_level_selector(parent: &mut ChildBuilder, assets: &UiAssets) {
                     ..Default::default()
                 })
                 .with_children(|parent| {
-                    for level in LevelId::into_iter() {
-                        let ui_img = assets.levels.get(&level).unwrap();
+                    for map in MapId::into_iter() {
+                        let ui_img = assets.maps.get(&map).unwrap();
                         spawn_bordered_button_with_bundle(
                             parent,
                             ui_img.clone(),
-                            LevelSelectButton { level_id: level },
+                            MapSelectButton { map_id: map },
                         );
                     }
                 });
@@ -723,7 +728,7 @@ fn wrapper_footer(parent: &mut ChildBuilder, assets: &UiAssets) {
         });
 }
 
-/// These buttons are used for the hero and level selection
+/// These buttons are used for the hero and map selection
 fn spawn_bordered_button_with_bundle(
     parent: &mut ChildBuilder,
     ui_img: UiImage,
