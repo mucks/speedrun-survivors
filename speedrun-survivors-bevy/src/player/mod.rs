@@ -140,9 +140,7 @@ pub fn move_player(
         }
         if action.pressed(GameAction::MoveLeft) {
             movement.x -= 1.0;
-
-            // turn the sprite around if moving left
-            transform.rotation = Quat::from_rotation_y(std::f32::consts::PI);
+            transform.scale.x = movement.x.signum() * f32::abs(transform.scale.x);
 
             for (mut weapon, mut pa, kind) in weapon_query.iter_mut() {
                 if kind != &WeaponType::Gun {
@@ -156,7 +154,7 @@ pub fn move_player(
         }
         if action.pressed(GameAction::MoveRight) {
             movement.x += 1.0;
-            transform.rotation = Quat::default();
+            transform.scale.x = movement.x.signum() * f32::abs(transform.scale.x);
 
             for (mut weapon, mut pa, kind) in weapon_query.iter_mut() {
                 weapon.flip_x = false;

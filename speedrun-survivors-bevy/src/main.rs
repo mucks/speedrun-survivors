@@ -173,22 +173,22 @@ fn setup_key_bindings(mut commands: Commands) {
     input_map.insert(GamepadButtonType::DPadDown, GameAction::MoveDown);
     input_map.insert(GamepadButtonType::DPadRight, GameAction::MoveRight);
 
-    input_map.insert(
-        SingleAxis::symmetric(GamepadAxisType::LeftStickY, -0.1),
-        GameAction::MoveUp,
-    );
-    input_map.insert(
-        SingleAxis::symmetric(GamepadAxisType::LeftStickY, 0.1),
-        GameAction::MoveDown,
-    );
-    input_map.insert(
-        SingleAxis::symmetric(GamepadAxisType::LeftStickX, -0.1),
-        GameAction::MoveLeft,
-    );
-    input_map.insert(
-        SingleAxis::symmetric(GamepadAxisType::LeftStickX, 0.1),
-        GameAction::MoveRight,
-    );
+    // input_map.insert(
+    //     SingleAxis::symmetric(GamepadAxisType::LeftStickY, -0.1),
+    //     GameAction::MoveUp,
+    // );
+    // input_map.insert(
+    //     SingleAxis::symmetric(GamepadAxisType::LeftStickY, 0.1),
+    //     GameAction::MoveDown,
+    // );
+    // input_map.insert(
+    //     SingleAxis::symmetric(GamepadAxisType::LeftStickX, -0.1),
+    //     GameAction::MoveLeft,
+    // );
+    // input_map.insert(
+    //     SingleAxis::symmetric(GamepadAxisType::LeftStickX, 0.1),
+    //     GameAction::MoveRight,
+    // );
 
     input_map.insert(GamepadButtonType::Select, GameAction::Confirm);
     input_map.insert(GamepadButtonType::Start, GameAction::Confirm);
