@@ -66,11 +66,7 @@ fn create_gun_anim_hashmap() -> HashMap<String, animation::Animation> {
     hash_map
 }
 
-pub fn spawn_gun(
-    commands: &mut Commands,
-    asset_server: &Res<AssetServer>,
-    game_assets: &Res<GameAssets>,
-) {
+pub fn spawn_gun(commands: &mut Commands, game_assets: &Res<GameAssets>) {
     commands
         .spawn((
             SpriteSheetBundle {

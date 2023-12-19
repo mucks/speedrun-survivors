@@ -1,6 +1,7 @@
 use crate::plugins::gameplay_effects::{GameplayEffect, GameplayStat};
+use strum::EnumIter;
 
-#[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq, EnumIter)]
 pub enum MapId {
     #[default]
     Map1,
@@ -36,9 +37,5 @@ impl MapId {
                 ]
             }
         }
-    }
-
-    pub fn into_iter() -> core::array::IntoIter<MapId, 4> {
-        [MapId::Map1, MapId::Map2, MapId::Map3, MapId::Map4].into_iter()
     }
 }

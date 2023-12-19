@@ -1,7 +1,5 @@
 use bevy::prelude::*;
 
-use crate::plugins::menu::MenuGameConfig;
-
 use self::{switch_weapon::SwitchWeaponEvent, weapon_type::WeaponType};
 
 pub mod flame_thrower;

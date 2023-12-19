@@ -15,7 +15,7 @@ impl Plugin for AudioManagerPlugin {
         app.add_systems(Startup, setup)
             .add_systems(OnEnter(AppState::GameRunning), on_enter_game_running)
             .add_systems(OnExit(AppState::GameRunning), on_exit_game_running)
-            .add_systems(Update, (on_update).run_if(in_state(AppState::GameRunning)))
+            .add_systems(Update, on_update.run_if(in_state(AppState::GameRunning)))
             .add_event::<PlaySFX>();
     }
 }

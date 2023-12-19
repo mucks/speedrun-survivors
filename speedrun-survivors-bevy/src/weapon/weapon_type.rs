@@ -28,9 +28,18 @@ impl WeaponType {
         match self {
             WeaponType::Hammer => spawn_hammer(commands, game_config, game_assets),
             WeaponType::Sword => spawn_sword(commands, game_config, game_assets),
-            WeaponType::Gun => spawn_gun(commands, asset_server, game_assets),
+            WeaponType::Gun => spawn_gun(commands, game_assets),
             WeaponType::FlameThrower => spawn_flame_thrower(commands, game_config, game_assets),
         };
+    }
+
+    pub fn get_ui_image_name(&self) -> &str {
+        match self {
+            WeaponType::Gun => "ui/weapon/gun-icon.png",
+            WeaponType::Hammer => "ui/weapon/hammer-icon.png",
+            WeaponType::Sword => "ui/weapon/sword-icon.png",
+            WeaponType::FlameThrower => "ui/weapon/flamethrower-ui-icon.png",
+        }
     }
 
     pub fn texture_atlas(&self, asset_server: &Res<AssetServer>) -> TextureAtlas {

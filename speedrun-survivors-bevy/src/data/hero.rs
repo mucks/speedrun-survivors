@@ -1,9 +1,10 @@
 use bevy::prelude::*;
+use strum::EnumIter;
 
 use crate::plugins::gameplay_effects::{GameplayEffect, GameplayStat};
 use crate::{animation::Animation, plugins::assets::GameAssets, weapon::weapon_type::WeaponType};
 
-#[derive(Clone, Debug, Eq, Hash, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, Hash, Default, PartialEq, EnumIter)]
 pub enum HeroType {
     Pepe,
     #[default]
@@ -122,17 +123,5 @@ impl HeroType {
                 ]
             }
         }
-    }
-
-    pub fn into_iter() -> core::array::IntoIter<HeroType, 6> {
-        [
-            HeroType::Pepe,
-            HeroType::BonkInu,
-            HeroType::PudgyPenguin,
-            HeroType::MadLad,
-            HeroType::MysteryHero1,
-            HeroType::MysteryHero2,
-        ]
-        .into_iter()
     }
 }

@@ -1,6 +1,7 @@
 use crate::plugins::gameplay_effects::{GameplayEffect, GameplayStat};
+use strum::EnumIter;
 
-#[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq, EnumIter)]
 pub enum ItemType {
     #[default]
     RingOfPower,
@@ -29,14 +30,5 @@ impl ItemType {
                 ]
             }
         }
-    }
-
-    pub fn into_iter() -> core::array::IntoIter<ItemType, 3> {
-        [
-            ItemType::RingOfPower,
-            ItemType::BonkInuBattleBracers,
-            ItemType::WindForce,
-        ]
-        .into_iter()
     }
 }

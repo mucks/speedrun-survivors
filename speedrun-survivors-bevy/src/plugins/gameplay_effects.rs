@@ -12,7 +12,7 @@ impl Plugin for GameplayEffectsPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(AppState::GameRunning), on_enter_game_running)
             .add_systems(OnExit(AppState::GameRunning), on_exit_game_running)
-            .add_systems(Update, (on_update))
+            .add_systems(Update, on_update)
             .add_event::<GameplayEffectEvent>()
             .insert_resource(GameplayEffectPluginState::default());
     }
@@ -175,12 +175,12 @@ pub struct GameplayEffectContainer {
     pub hero: Vec<GameplayEffect>,
     /// The map can also modify the stats
     pub map: Vec<GameplayEffect>,
-    /// The NFTs that were equipped TODO good to display stats in the menu screen; then we need this here and messages from the UI
+    /// The NFTs that were equipped
     pub nfts: Vec<(String, GameplayEffect)>,
     /// Each equipped item has effects
     pub items: Vec<(Entity, GameplayEffect)>,
     /// With each level up, additional effects can be added
-    pub levels: Vec<GameplayEffect>, //TODO implement below
+    pub levels: Vec<GameplayEffect>,
 
     /// Used for fast access of final values
     flat_packed: HashMap<GameplayStat, f64>,

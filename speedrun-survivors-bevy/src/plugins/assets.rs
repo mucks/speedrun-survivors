@@ -2,20 +2,19 @@ use crate::data::hero::HeroType;
 use crate::data::map::MapId;
 use crate::enemy::enemy_type::EnemyType;
 use crate::weapon::weapon_animation_effect::{self, WeaponAnimationEffect};
+use crate::weapon::weapon_type::WeaponType;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
 use bevy_ecs_ldtk::LdtkAsset;
 use strum::IntoEnumIterator;
 
-use crate::weapon::weapon_type::WeaponType;
-
 #[derive(Resource)]
 pub struct UiAssets {
-    pub font: Handle<Font>,
+    pub font_expanse: Handle<Font>,
     pub buff_1: UiImage,
     pub checkbox_o: UiImage,
     pub checkbox_x: UiImage,
-    pub weapons: Vec<(WeaponType, UiImage)>,
+    pub weapons: HashMap<WeaponType, UiImage>,
     pub heroes: HashMap<HeroType, UiImage>,
     pub maps: HashMap<MapId, UiImage>,
 }
@@ -44,90 +43,63 @@ fn setup(
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
 ) {
     // Load ui image for each hero
-    let mut heroes: HashMap<HeroType, UiImage> = HashMap::new();
-    for hero in HeroType::into_iter() {
-        heroes.insert(
-            hero.clone(),
-            asset_server.load(hero.get_ui_image_name()).into(),
-        );
-    }
+    let heroes: HashMap<HeroType, UiImage> = HeroType::iter()
+        .map(|hero| (hero, asset_server.load(hero.get_ui_image_name()).into()))
+        .collect();
 
     // Load ui image for each map
-    let mut maps: HashMap<MapId, UiImage> = HashMap::new();
-    for map in MapId::into_iter() {
-        maps.insert(
-            map.clone(),
-            asset_server.load(map.get_ui_image_name()).into(),
-        );
-    }
+    let maps: HashMap<MapId, UiImage> = MapId::iter()
+        .map(|map| (map, asset_server.load(map.get_ui_image_name()).into()))
+        .collect();
+
+    // Load ui image for each weapon
+    let weapons: HashMap<WeaponType, UiImage> = WeaponType::iter()
+        .map(|weapon| (weapon, asset_server.load(weapon.get_ui_image_name()).into()))
+        .collect();
 
     commands.insert_resource(UiAssets {
-        font: asset_server.load("ui/expanse.otf"),
+        font_expanse: asset_server.load("ui/expanse.otf"),
         buff_1: asset_server.load("ui/buff_1.png").into(),
         checkbox_o: asset_server.load("ui/checkbox_o.png").into(),
         checkbox_x: asset_server.load("ui/checkbox_x.png").into(),
         //TODO refactor this to hashmap as well with an iter() as the hero images above?
-        weapons: vec![
-            (
-                WeaponType::Hammer,
-                asset_server.load("ui/weapon/hammer-icon.png").into(),
-            ),
-            (
-                WeaponType::Sword,
-                asset_server.load("ui/weapon/sword-icon.png").into(),
-            ),
-            (
-                WeaponType::Gun,
-                asset_server.load("ui/weapon/gun-icon.png").into(),
-            ),
-            (
-                WeaponType::FlameThrower,
-                asset_server
-                    .load("ui/weapon/flamethrower-ui-icon.png")
-                    .into(),
-            ),
-        ],
+        weapons,
         heroes,
         maps,
     });
 
     // Load sprite sheets for each hero
-    let mut heroes: HashMap<HeroType, Handle<Image>> = HashMap::new();
-    for hero in HeroType::into_iter() {
-        heroes.insert(
-            hero.clone(),
-            asset_server.load(hero.get_sprite_name()).into(),
-        );
-    }
+    let heroes: HashMap<HeroType, Handle<Image>> = HeroType::iter()
+        .map(|hero| (hero, asset_server.load(hero.get_sprite_name()).into()))
+        .collect();
 
-    let map_asset = asset_server.load("maps/map_1.ldtk");
+    let map_asset = asset_server.load(MapId::Map1.get_map_path());
 
-    let mut weapons = HashMap::new();
+    // Load texture atlases for each weapons
+    let weapons: HashMap<WeaponType, Handle<TextureAtlas>> = WeaponType::iter()
+        .map(|weapon| {
+            (
+                weapon,
+                texture_atlases.add(weapon.texture_atlas(&asset_server)),
+            )
+        })
+        .collect();
 
-    for weapon in WeaponType::iter() {
-        weapons.insert(
-            weapon.clone(),
-            texture_atlases.add(weapon.texture_atlas(&asset_server)),
-        );
-    }
+    // Load weapon texture atlases
+    let weapon_animation_effects: HashMap<WeaponAnimationEffect, Handle<TextureAtlas>> =
+        WeaponAnimationEffect::iter()
+            .map(|anim| (anim, texture_atlases.add(anim.texture_atlas(&asset_server))))
+            .collect();
 
-    let mut weapon_animation_effects = HashMap::new();
-
-    for weapon_animation_effect in WeaponAnimationEffect::iter() {
-        weapon_animation_effects.insert(
-            weapon_animation_effect.clone(),
-            texture_atlases.add(weapon_animation_effect.texture_atlas(&asset_server)),
-        );
-    }
-
-    let mut enemies = HashMap::new();
-
-    for enemy in EnemyType::iter() {
-        enemies.insert(
-            enemy.clone(),
-            texture_atlases.add(enemy.texture_atlas(&asset_server)),
-        );
-    }
+    // Load enemy texture atlases
+    let enemies: HashMap<EnemyType, Handle<TextureAtlas>> = EnemyType::iter()
+        .map(|enemy| {
+            (
+                enemy,
+                texture_atlases.add(enemy.texture_atlas(&asset_server)),
+            )
+        })
+        .collect();
 
     let skull = TextureAtlas::from_grid(
         asset_server.load("sprites/misc/skull.png"),

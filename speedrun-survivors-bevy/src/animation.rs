@@ -42,12 +42,12 @@ pub fn animate_sprite(
         animator.timer = animator.timer - time.delta().as_secs_f32();
         if animator.timer <= 0. {
             animator.timer = anim.cooldown;
-            if anim.looping == true {
+            if anim.looping {
                 sprite.index = ((sprite.index + 1 - (anim.start - 1))
                     % (anim.end - anim.start + 1))
                     + anim.start
                     - 1;
-            } else if anim.looping == false {
+            } else if !anim.looping {
                 sprite.index += 1;
                 if sprite.index > anim.end - 1 {
                     sprite.index = anim.end - 1;

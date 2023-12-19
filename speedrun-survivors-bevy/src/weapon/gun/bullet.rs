@@ -42,30 +42,24 @@ pub fn update_bullet_hits(
             entity,
         });
     }
-    let mut bullet_len = bullet_list.len();
     for (mut enemy, transform, mut health, ent) in enemy_query.iter_mut() {
-        let mut i: i32 = 0;
-        while i < bullet_len as i32 {
-            if Vec2::distance(
-                bullet_list[i as usize].translation,
+        bullet_list.retain(|bullet| {
+            let distance = Vec2::distance(
+                bullet.translation,
                 Vec2::new(transform.translation.x, transform.translation.y),
-            ) <= 36.
-            {
+            );
+            if distance <= 36. {
                 ev_health_change.send(health::HealthChangeEvent {
                     entity: ent,
                     health_change: -1.,
                     target_type: health::HealthChangeTargetType::Enemy,
                 });
 
-                commands.entity(bullet_list[i as usize].entity).despawn();
-
-                bullet_list.remove(i as usize);
-
-                i -= 1;
-
-                bullet_len -= 1;
+                commands.entity(bullet.entity).despawn();
+                false
+            } else {
+                true
             }
-            i += 1;
-        }
+        });
     }
 }

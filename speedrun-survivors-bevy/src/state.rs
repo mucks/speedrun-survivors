@@ -16,16 +16,6 @@ pub enum AppState {
     GameRunning,
     GameOver,
 }
-impl AppState {
-    pub const GAME_STATES: &[AppState; 3] = &[
-        AppState::GameCreate,
-        AppState::GameRunning,
-        AppState::GameOver,
-    ];
-    pub fn is_game_state(&self) -> bool {
-        AppState::GAME_STATES.contains(self)
-    }
-}
 
 pub struct StatesPlugin;
 

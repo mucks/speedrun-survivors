@@ -18,13 +18,6 @@ impl Plugin for CombatTextPlugin {
     }
 }
 
-fn on_status_effect_event(
-    mut health_change: EventReader<HealthChangeEvent>,
-    mut health_query: Query<&StatusEffectController, With<StatusEffectController>>,
-    mut commands: Commands,
-) {
-}
-
 fn on_health_change_event(
     mut health_change: EventReader<HealthChangeEvent>,
     mut health_query: Query<&Transform, With<Health>>,

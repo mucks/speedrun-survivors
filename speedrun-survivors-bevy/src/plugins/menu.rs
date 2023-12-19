@@ -11,6 +11,7 @@ use bevy::app::AppExit;
 use bevy::input::mouse::{MouseScrollUnit, MouseWheel};
 use bevy::prelude::*;
 use leafwing_input_manager::action_state::ActionState;
+use strum::IntoEnumIterator;
 
 const TEXT_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
 const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
@@ -76,7 +77,7 @@ fn menu_splash_screen(mut commands: Commands, assets: ResMut<UiAssets>) {
                 text: Text::from_section(
                     GAME_NAME,
                     TextStyle {
-                        font: assets.font.clone(),
+                        font: assets.font_expanse.clone(),
                         font_size: 100.0,
                         color: font_color,
                     },
@@ -89,7 +90,7 @@ fn menu_splash_screen(mut commands: Commands, assets: ResMut<UiAssets>) {
                     text: Text::from_section(
                         "enter",
                         TextStyle {
-                            font: assets.font.clone(),
+                            font: assets.font_expanse.clone(),
                             font_size: 50.0,
                             color: font_color,
                         },
@@ -208,7 +209,7 @@ fn on_button_interaction(
                         if checkbox.checked {
                             event_stream.send(GameplayEffectEvent::NFTEquipped(
                                 checkbox.nft_id.clone(),
-                                ItemType::BonkInuBattleBracers,//TODO depends on NFT
+                                ItemType::BonkInuBattleBracers, //TODO depends on NFT
                             ));
                             state.nft_list.push(checkbox.nft_id.clone());
                         } else {
@@ -405,7 +406,7 @@ fn wrapper_hero_selector(parent: &mut ChildBuilder, assets: &UiAssets) {
                     ..Default::default()
                 })
                 .with_children(|parent| {
-                    for hero in HeroType::into_iter() {
+                    for hero in HeroType::iter() {
                         let ui_img = assets.heroes.get(&hero).unwrap();
                         spawn_bordered_button_with_bundle(
                             parent,
@@ -459,7 +460,7 @@ fn wrapper_map_selector(parent: &mut ChildBuilder, assets: &UiAssets) {
                     ..Default::default()
                 })
                 .with_children(|parent| {
-                    for map in MapId::into_iter() {
+                    for map in MapId::iter() {
                         let ui_img = assets.maps.get(&map).unwrap();
                         spawn_bordered_button_with_bundle(
                             parent,
@@ -834,7 +835,7 @@ fn menu_game_over(mut commands: Commands, assets: Res<UiAssets>) {
                 text: Text::from_section(
                     "Game Over",
                     TextStyle {
-                        font: assets.font.clone(),
+                        font: assets.font_expanse.clone(),
                         font_size: 100.0,
                         color: Color::rgb_u8(0xAA, 0x22, 0x22),
                     },
@@ -847,7 +848,7 @@ fn menu_game_over(mut commands: Commands, assets: Res<UiAssets>) {
                     text: Text::from_section(
                         "enter",
                         TextStyle {
-                            font: assets.font.clone(),
+                            font: assets.font_expanse.clone(),
                             font_size: 50.0,
                             color: Color::rgb_u8(0x88, 0x22, 0x22),
                         },
