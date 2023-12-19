@@ -1,4 +1,5 @@
 use crate::data::hero::HeroType;
+use crate::data::item::ItemType;
 use crate::data::level::Level;
 use crate::data::map::MapId;
 use crate::state::AppState;
@@ -57,10 +58,10 @@ fn on_update(
 pub enum GameplayEffectEvent {
     HeroSelected(HeroType),
     MapSelected(MapId),
-    NFTEquipped(String, u64),
-    NFTUnEquipped(String, u64),
-    ItemEquipped(Entity, u64),
-    ItemUnEquipped(Entity, u64),
+    NFTEquipped(String, ItemType),
+    NFTUnEquipped(String, ItemType),
+    ItemEquipped(Entity, ItemType),
+    ItemUnEquipped(Entity, ItemType),
     LevelUp(Level),
 }
 
@@ -133,10 +134,34 @@ impl GameplayEffect {
         }
     }
 
+    pub fn new_add(stat: GameplayStat, val: f64) -> Self {
+        Self {
+            stat,
+            op: GameplayEffectOperation::Add,
+            val,
+        }
+    }
+
+    pub fn new_sub(stat: GameplayStat, val: f64) -> Self {
+        Self {
+            stat,
+            op: GameplayEffectOperation::Sub,
+            val,
+        }
+    }
+
     pub fn new_mul(stat: GameplayStat, val: f64) -> Self {
         Self {
             stat,
             op: GameplayEffectOperation::Mul,
+            val,
+        }
+    }
+
+    pub fn new_div(stat: GameplayStat, val: f64) -> Self {
+        Self {
+            stat,
+            op: GameplayEffectOperation::Div,
             val,
         }
     }
@@ -148,11 +173,11 @@ pub struct GameplayEffectContainer {
     pub hero: Vec<GameplayEffect>,
     /// The map can also modify the stats
     pub map: Vec<GameplayEffect>,
-    /// The NFTs that were equipped
-    pub nfts: Vec<(String, GameplayEffect)>, //TODO think this though.. could be good to display stats in the mnu screen - then we need this here and messages from the UI
+    /// The NFTs that were equipped TODO good to display stats in the mnu screen; then we need this here and messages from the UI
+    pub nfts: Vec<(String, GameplayEffect)>,
     /// Each equipped item has effects
     pub items: Vec<(Entity, GameplayEffect)>,
-    /// With each maps up, additional effects can be added
+    /// With each level up, additional effects can be added
     pub levels: Vec<GameplayEffect>, //TODO implement below
 
     /// Used for fast access of final values
@@ -245,7 +270,7 @@ impl GameplayEffectContainer {
 
 impl std::fmt::Debug for GameplayEffectContainer {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "GameplayEffectContainer packed: {}", {
+        write!(f, "GameplayEffectContainer packed:\r\n{}", {
             let stat_repr: Vec<String> = GameplayStat::into_iter()
                 .map(|stat| {
                     format!(

@@ -46,7 +46,7 @@ pub struct MenuGameConfig {
     pub hero: HeroType,
     pub map: MapId,
     pub nft_list: Vec<String>,
-} //TODO not sure if we need this at all, as most is handled by gameplay effect plugin now
+}
 
 fn menu_splash_screen(mut commands: Commands, assets: ResMut<UiAssets>) {
     let font_color = Color::rgb_u8(0x92, 0xA6, 0x8A);

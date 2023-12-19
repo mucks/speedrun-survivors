@@ -38,7 +38,7 @@ fn on_enter_game_running(mut commands: Commands) {
         .insert(EnemySpawner {
             cooldown: 1.,
             timer: 1.,
-        }); //TODO: there should be some way to say this is for gamestate... so it auto unspawns
+        });
 }
 fn on_exit_game_running(mut _commands: Commands) {
     // The bundle will be auto deleted at is tagged ForState
@@ -156,8 +156,5 @@ pub fn update_spawning(
             })
             .insert(StatusEffectController { effects: vec![] })
             .insert(enemy_type.health());
-
-        //TODO lets not have healthbars for enemies as there will be hundreds and they mostly die in 1 hit probably...
-        // add_health_bar(&mut commands, entity, spawn_transform.translation, 1.);
     }
 }

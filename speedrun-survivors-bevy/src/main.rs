@@ -94,6 +94,10 @@ fn main() {
             (on_enter_game_running, spawn_ldtk_map),
         )
         .add_systems(OnExit(AppState::GameRunning), (on_exit_game_running,))
+        .insert_resource(LdtkSettings {
+            level_background: LevelBackground::Nonexistent, // Fixes an issue with Chrome not rendering the map
+            ..default()
+        })
         .run();
 }
 
