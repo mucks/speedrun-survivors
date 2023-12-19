@@ -1,4 +1,4 @@
-use crate::plugins::gameplay_effects::{GameplayEffect, GameplayEffectOperation, GameplayStat};
+use crate::plugins::gameplay_effects::{GameplayEffect, GameplayStat};
 
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
 pub enum MapId {
@@ -10,20 +10,20 @@ pub enum MapId {
 }
 
 impl MapId {
-    pub fn get_level_path(&self) -> &str {
+    pub fn get_map_path(&self) -> &str {
         match self {
-            _ => "level/level.ldtk",
+            _ => "maps/map_1.ldtk",
         }
     }
 
     pub fn get_ui_image_name(&self) -> &str {
         match self {
-            MapId::Map1 => "ui/level/level_1.png",
-            _ => "ui/level/level_unk.png",
+            MapId::Map1 => "ui/map/map_1.png",
+            _ => "ui/map/map_default.png",
         }
     }
 
-    /// Each level can have a set of game play effects (such as faster spawn rates)
+    /// Each maps can have a set of game play effects (such as faster spawn rates)
     pub fn get_gameplay_effects(&self) -> Vec<GameplayEffect> {
         match self {
             MapId::Map1 => {
@@ -32,7 +32,7 @@ impl MapId {
             _ => {
                 vec![
                     GameplayEffect::new_abs(GameplayStat::SpawnRate, 3.0),
-                    GameplayEffect::new(GameplayStat::Health, GameplayEffectOperation::Mul, 1.5),
+                    GameplayEffect::new_mul(GameplayStat::Health, 1.5),
                 ]
             }
         }

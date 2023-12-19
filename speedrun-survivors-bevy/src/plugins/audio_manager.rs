@@ -32,7 +32,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 }
 
 fn on_enter_game_running(mut commands: Commands, assets: Res<AudioPluginAssets>) {
-    // Play music when the level starts
+    // Play music when the maps starts
     commands.spawn((
         AudioBundle {
             source: assets.music_combat.clone(),

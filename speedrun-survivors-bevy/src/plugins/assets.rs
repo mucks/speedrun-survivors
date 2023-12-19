@@ -100,7 +100,7 @@ fn setup(
         );
     }
 
-    let map_asset = asset_server.load("level/level.ldtk");
+    let map_asset = asset_server.load("maps/map_1.ldtk");
 
     let mut weapons = HashMap::new();
 

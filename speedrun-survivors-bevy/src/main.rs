@@ -91,7 +91,7 @@ fn main() {
         )
         .add_systems(
             OnEnter(AppState::GameRunning),
-            (on_enter_game_running, spawn_ldtk_level),
+            (on_enter_game_running, spawn_ldtk_map),
         )
         .add_systems(OnExit(AppState::GameRunning), (on_exit_game_running,))
         .run();
@@ -112,13 +112,13 @@ fn on_exit_game_running(mut commands: Commands) {
     commands.insert_resource(LevelSelection::Index(1));
 }
 
-fn spawn_ldtk_level(game_assets: Res<GameAssets>, mut commands: Commands) {
-    let level_scale = 5.;
-    let level_witdh = 512. * level_scale;
-    let level_height = 512. * level_scale;
+fn spawn_ldtk_map(game_assets: Res<GameAssets>, mut commands: Commands) {
+    let map_scale = 5.;
+    let map_witdh = 512. * map_scale;
+    let map_height = 512. * map_scale;
 
-    let mut transform = Transform::from_scale(Vec3::new(level_scale, level_scale, 0.1));
-    transform.translation = Vec3::new(-level_witdh / 2., -level_height / 2., -10.);
+    let mut transform = Transform::from_scale(Vec3::new(map_scale, map_scale, 0.1));
+    transform.translation = Vec3::new(-map_witdh / 2., -map_height / 2., -10.);
 
     commands.spawn((
         LdtkWorldBundle {

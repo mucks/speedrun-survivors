@@ -1,4 +1,5 @@
 use crate::data::hero::HeroType;
+use crate::data::level::Level;
 use crate::data::map::MapId;
 use crate::state::AppState;
 use bevy::prelude::*;
@@ -35,6 +36,10 @@ fn on_update(
                 debug_count += 1;
                 state.player.equip_map(map.get_gameplay_effects())
             }
+            GameplayEffectEvent::LevelUp(level) => {
+                debug_count += 1;
+                state.player.level_up(level.get_gameplay_effects())
+            }
             _ => {
                 eprintln!(
                     "ERROR UNHANDLED: Gameplay Effect Plugin read event {:?}",
@@ -56,7 +61,7 @@ pub enum GameplayEffectEvent {
     NFTUnEquipped(String, u64),
     ItemEquipped(Entity, u64),
     ItemUnEquipped(Entity, u64),
-    LevelUp(u64),
+    LevelUp(Level),
 }
 
 #[derive(Default, Resource)]
@@ -127,6 +132,14 @@ impl GameplayEffect {
             val,
         }
     }
+
+    pub fn new_mul(stat: GameplayStat, val: f64) -> Self {
+        Self {
+            stat,
+            op: GameplayEffectOperation::Mul,
+            val,
+        }
+    }
 }
 
 #[derive(Default)]
@@ -139,7 +152,7 @@ pub struct GameplayEffectContainer {
     pub nfts: Vec<(String, GameplayEffect)>, //TODO think this though.. could be good to display stats in the mnu screen - then we need this here and messages from the UI
     /// Each equipped item has effects
     pub items: Vec<(Entity, GameplayEffect)>,
-    /// With each level up, additional effects can be added
+    /// With each maps up, additional effects can be added
     pub levels: Vec<GameplayEffect>, //TODO implement below
 
     /// Used for fast access of final values
@@ -180,6 +193,13 @@ impl GameplayEffectContainer {
         self.recalculate();
     }
 
+    /// For every level up we may add additional effects
+    pub fn level_up(&mut self, effects: Vec<GameplayEffect>) {
+        self.levels.extend(effects.into_iter());
+
+        self.recalculate();
+    }
+
     /// This function will iterate through all effects and store final stat values for lookup operations
     fn recalculate(&mut self) {
         self.reset_flat_packed();
@@ -205,6 +225,12 @@ impl GameplayEffectContainer {
         }
 
         for (_itm, effect) in &self.items {
+            self.flat_packed
+                .entry(effect.stat)
+                .and_modify(|e| effect.op.apply(e, effect.val));
+        }
+
+        for effect in &self.levels {
             self.flat_packed
                 .entry(effect.stat)
                 .and_modify(|e| effect.op.apply(e, effect.val));
