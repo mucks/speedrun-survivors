@@ -28,29 +28,31 @@ fn on_update(
 ) {
     let mut debug_count = 0;
     for ev in event_reader.iter() {
+        debug_count += 1;
         match ev {
             GameplayEffectEvent::HeroSelected(hero) => {
-                debug_count += 1;
                 state.player.equip_hero(hero.get_gameplay_effects())
             }
             GameplayEffectEvent::MapSelected(map) => {
-                debug_count += 1;
                 state.player.equip_map(map.get_gameplay_effects())
             }
-            GameplayEffectEvent::LevelUp(level) => {
-                debug_count += 1;
-                state.player.level_up(level.get_gameplay_effects())
+            GameplayEffectEvent::NFTEquipped(id, item) => {
+                state.player.equip_nft(id, item.get_gameplay_effects())
             }
-            _ => {
-                eprintln!(
-                    "ERROR UNHANDLED: Gameplay Effect Plugin read event {:?}",
-                    ev
-                )
+            GameplayEffectEvent::NFTUnEquipped(id) => state.player.unequip_nft(id),
+            GameplayEffectEvent::ItemEquipped(entity, item) => state
+                .player
+                .equip_item(entity.clone(), item.get_gameplay_effects()),
+            GameplayEffectEvent::ItemUnEquipped(entity) => {
+                state.player.unequip_item(entity.clone())
+            }
+            GameplayEffectEvent::LevelUp(level) => {
+                state.player.level_up(level.get_gameplay_effects())
             }
         }
     }
     if debug_count > 0 {
-        eprintln!("CALC DEBUG {:?}", state.player)
+        eprintln!("DEBUG EFFECTS {:?}", state.player)
     }
 }
 
@@ -59,9 +61,9 @@ pub enum GameplayEffectEvent {
     HeroSelected(HeroType),
     MapSelected(MapId),
     NFTEquipped(String, ItemType),
-    NFTUnEquipped(String, ItemType),
+    NFTUnEquipped(String),
     ItemEquipped(Entity, ItemType),
-    ItemUnEquipped(Entity, ItemType),
+    ItemUnEquipped(Entity),
     LevelUp(Level),
 }
 
@@ -173,7 +175,7 @@ pub struct GameplayEffectContainer {
     pub hero: Vec<GameplayEffect>,
     /// The map can also modify the stats
     pub map: Vec<GameplayEffect>,
-    /// The NFTs that were equipped TODO good to display stats in the mnu screen; then we need this here and messages from the UI
+    /// The NFTs that were equipped TODO good to display stats in the menu screen; then we need this here and messages from the UI
     pub nfts: Vec<(String, GameplayEffect)>,
     /// Each equipped item has effects
     pub items: Vec<(Entity, GameplayEffect)>,
@@ -197,6 +199,26 @@ impl GameplayEffectContainer {
         self.recalculate();
     }
 
+    /// Apply the effects of an item into this container
+    pub fn equip_nft(&mut self, id: &String, effects: Vec<GameplayEffect>) {
+        // Check if already equipped
+        if self.nfts.iter().any(|(e, _)| e == id) {
+            eprintln!("NFT was already equipped {:?}", id);
+            return;
+        }
+
+        // Add effects of this NFT
+        self.nfts
+            .extend(effects.into_iter().map(|effect| (id.clone(), effect)));
+
+        self.recalculate();
+    }
+
+    /// Un-apply the effects of some NFT from this container
+    pub fn unequip_nft(&mut self, id: &String) {
+        self.nfts.retain(|&(ref e, _)| e != id);
+        self.recalculate();
+    }
     /// Apply the effects of an item into this container
     pub fn equip_item(&mut self, entity: Entity, effects: Vec<GameplayEffect>) {
         // Check if already equipped
@@ -244,6 +266,12 @@ impl GameplayEffectContainer {
         // }
 
         for effect in &self.map {
+            self.flat_packed
+                .entry(effect.stat)
+                .and_modify(|e| effect.op.apply(e, effect.val));
+        }
+
+        for (_itm, effect) in &self.nfts {
             self.flat_packed
                 .entry(effect.stat)
                 .and_modify(|e| effect.op.apply(e, effect.val));

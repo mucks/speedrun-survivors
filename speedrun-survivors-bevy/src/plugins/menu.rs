@@ -1,4 +1,5 @@
 use crate::data::hero::HeroType;
+use crate::data::item::ItemType;
 use crate::data::map::MapId;
 use crate::plugins::assets::UiAssets;
 use crate::plugins::gameplay_effects::GameplayEffectEvent;
@@ -17,6 +18,7 @@ const BTN_BORDER_DEFAULT: Color = Color::INDIGO;
 const BTN_BORDER_HOVER: Color = Color::PINK;
 const BTN_BORDER_SELECTED: Color = Color::RED;
 const GAME_NAME: &str = "Speedrun Survivors";
+const MAX_NUM_NFT: usize = 6;
 
 #[derive(Component)]
 pub struct DrawBlinkTimer(pub Timer);
@@ -129,7 +131,7 @@ struct SelectedElement {}
 fn on_button_interaction(
     mut commands: Commands,
     mut query_action_button: Query<(&Interaction, &mut MenuButtonAction), Changed<Interaction>>,
-    mut query_hero_button: Query<
+    mut query_btn: Query<
         (
             &Interaction,
             Entity,
@@ -161,6 +163,7 @@ fn on_button_interaction(
     >,
     mut event_stream: EventWriter<GameplayEffectEvent>,
 ) {
+    // Check for Quit & Play button interaction
     for (interaction, mut action) in query_action_button.iter_mut() {
         match *interaction {
             Interaction::Pressed => match *action {
@@ -171,9 +174,7 @@ fn on_button_interaction(
         }
     }
 
-    for (interaction, entity, mut border, mut map, mut hero, mut checkbox) in
-        query_hero_button.iter_mut()
-    {
+    for (interaction, entity, mut border, mut map, mut hero, mut checkbox) in query_btn.iter_mut() {
         match *interaction {
             Interaction::Pressed => {
                 if let Some(map) = map {
@@ -183,6 +184,7 @@ fn on_button_interaction(
                     }
                     state.map = map.map_id.clone();
                     event_stream.send(GameplayEffectEvent::MapSelected(map.map_id.clone()));
+                    commands.entity(entity).insert(SelectedElement {});
                 }
                 if let Some(hero) = hero {
                     for (entity, mut border) in selected_hero.iter_mut() {
@@ -191,21 +193,45 @@ fn on_button_interaction(
                     }
                     state.hero = hero.hero_type.clone();
                     event_stream.send(GameplayEffectEvent::HeroSelected(hero.hero_type.clone()));
+                    commands.entity(entity).insert(SelectedElement {});
                 }
                 if let Some(mut checkbox) = checkbox {
-                    // TODO count the number of active cNFTs and cap at some limit
-                    checkbox.checked = !checkbox.checked;
-                    eprintln!("Checkbox clicked {}", checkbox.nft_id);
+                    // Limit the number of wearable NFTs
+                    if state.nft_list.len() > (MAX_NUM_NFT - 1) && !checkbox.checked {
+                        eprintln!(
+                            "CAN NOT EQUIP ANY MORE NFTs. Current count: {}",
+                            state.nft_list.len()
+                        );
+                    } else {
+                        //TODO too many indentations, refactor this
+                        checkbox.checked = !checkbox.checked;
+                        if checkbox.checked {
+                            event_stream.send(GameplayEffectEvent::NFTEquipped(
+                                checkbox.nft_id.clone(),
+                                ItemType::BonkInuBattleBracers,//TODO depends on NFT
+                            ));
+                            state.nft_list.push(checkbox.nft_id.clone());
+                        } else {
+                            event_stream
+                                .send(GameplayEffectEvent::NFTUnEquipped(checkbox.nft_id.clone()));
+                            state.nft_list.retain(|id| id != &checkbox.nft_id)
+                        }
+                    }
                 }
 
                 // Attach or remove the SelectedElement tag from this entity
                 border.0 = BTN_BORDER_SELECTED;
-                commands.entity(entity).insert(SelectedElement {});
             }
             Interaction::Hovered => {
-                border.0 = BTN_BORDER_HOVER;
+                if !checkbox.is_some() || !checkbox.unwrap().checked {
+                    border.0 = BTN_BORDER_HOVER;
+                }
             }
-            Interaction::None => border.0 = BTN_BORDER_DEFAULT,
+            Interaction::None => {
+                if !checkbox.is_some() || !checkbox.unwrap().checked {
+                    border.0 = BTN_BORDER_DEFAULT
+                }
+            }
         }
     }
 }
