@@ -6,9 +6,7 @@ use leafwing_input_manager::action_state::ActionState;
 use crate::data::hero::HeroType;
 use crate::data::level::Level;
 use crate::plugins::assets::GameAssets;
-use crate::plugins::gameplay_effects::{
-    GameplayEffectEvent, GameplayEffectPluginState, GameplayStat,
-};
+use crate::plugins::gameplay_effects::{GameplayEffectEvent, GameplayEffectPluginState};
 use crate::plugins::health::{add_health_bar, Health};
 use crate::plugins::menu::MenuGameConfig;
 use crate::plugins::status_effect::{StatusEffect, StatusEffectController, StatusEffectType};

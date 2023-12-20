@@ -1,5 +1,4 @@
 use crate::data::hero::HeroType;
-use crate::data::hero::HeroType::MysteryHero2;
 use crate::data::item::ItemType;
 use crate::data::level::Level;
 use crate::data::map::MapId;

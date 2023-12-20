@@ -7,7 +7,6 @@ use crate::player::Player;
 use crate::plugins::assets::GameAssets;
 use crate::plugins::audio_manager::{PlaySFX, SFX};
 use crate::plugins::camera_shake::{CameraImpact, CameraImpactStrength};
-use crate::plugins::health::{self, Health};
 use crate::plugins::menu::MenuGameConfig;
 use crate::plugins::status_effect::{
     StatusEffect, StatusEffectEvent, StatusEffectEventType, StatusEffectType,

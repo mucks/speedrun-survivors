@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::state::{AppState, ForState};
+use crate::state::AppState;
 
 pub struct CoinRewardsPlugin;
 

@@ -2,10 +2,7 @@ use bevy::prelude::*;
 
 use crate::state::{AppState, ForState};
 
-use super::{
-    health::{Health, HealthUpdateEvent, TargetType},
-    status_effect::StatusEffectController,
-};
+use super::health::{Health, HealthUpdateEvent, TargetType};
 
 pub struct CombatTextPlugin;
 

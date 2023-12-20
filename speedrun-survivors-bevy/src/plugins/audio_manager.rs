@@ -6,7 +6,7 @@ use bevy::prelude::*;
 //  https://bevyengine.org/examples/Audio/spatial-audio-2d/
 //  https://github.com/bevyengine/bevy/blob/main/examples/audio/spatial_audio_2d.rs
 //  Maybe for spawning bosses to indicate where they come from or so
-const AUDIO_SCALE: f32 = 1. / 100.0;
+// const AUDIO_SCALE: f32 = 1. / 100.0;
 
 pub struct AudioManagerPlugin;
 
