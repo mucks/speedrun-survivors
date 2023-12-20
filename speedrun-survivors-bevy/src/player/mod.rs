@@ -5,6 +5,7 @@ use leafwing_input_manager::action_state::ActionState;
 
 use crate::data::hero::HeroType;
 use crate::data::level::Level;
+use crate::data::map::MapId;
 use crate::plugins::assets::GameAssets;
 use crate::plugins::gameplay_effects::{GameplayEffectEvent, GameplayEffectPluginState};
 use crate::plugins::health::{add_health_bar, Health};
@@ -222,6 +223,7 @@ pub fn move_player(
         (With<WeaponAnimationEffect>, Without<WeaponType>),
     >,
     gameplay: Res<GameplayEffectPluginState>,
+    game_assets: Res<GameAssets>,
 ) {
     let action = actions.single();
 
@@ -267,8 +269,15 @@ pub fn move_player(
         }
 
         // Move player at a constant speed
-        transform.translation.x += movement.x * gameplay.player.move_speed * time.delta_seconds();
-        transform.translation.y += movement.y * gameplay.player.move_speed * time.delta_seconds();
+        let mut new_transform = transform.clone();
+        new_transform.translation.x +=
+            movement.x * gameplay.player.move_speed * time.delta_seconds();
+        new_transform.translation.y +=
+            movement.y * gameplay.player.move_speed * time.delta_seconds();
+
+        if !game_assets.map.0.is_at_border(new_transform) {
+            transform.translation = new_transform.translation;
+        }
 
         // If the vector has a length, the player is moving
         if movement.length() > 0. {

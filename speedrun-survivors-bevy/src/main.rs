@@ -111,17 +111,12 @@ fn on_exit_game_running(mut commands: Commands) {
 }
 
 fn spawn_ldtk_map(game_assets: Res<GameAssets>, mut commands: Commands) {
-    let map_scale = 5.;
-    let map_witdh = 512. * map_scale;
-    let map_height = 512. * map_scale;
-
-    let mut transform = Transform::from_scale(Vec3::new(map_scale, map_scale, 0.1));
-    transform.translation = Vec3::new(-map_witdh / 2., -map_height / 2., -10.);
+    let (map_id, map_asset) = game_assets.map.clone();
 
     commands.spawn((
         LdtkWorldBundle {
-            ldtk_handle: game_assets.map.clone(),
-            transform,
+            ldtk_handle: map_asset,
+            transform: map_id.get_map_transform(),
             ..Default::default()
         },
         ForState {

@@ -1,7 +1,7 @@
 use crate::data::hero::HeroType;
 use crate::data::map::MapId;
 use crate::enemy::enemy_type::EnemyType;
-use crate::weapon::weapon_animation_effect::{self, WeaponAnimationEffect};
+use crate::weapon::weapon_animation_effect::WeaponAnimationEffect;
 use crate::weapon::weapon_type::WeaponType;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
@@ -22,7 +22,7 @@ pub struct UiAssets {
 #[derive(Resource)]
 pub struct GameAssets {
     pub heroes: HashMap<HeroType, Handle<Image>>,
-    pub map: Handle<LdtkAsset>,
+    pub map: (MapId, Handle<LdtkAsset>),
     pub weapons: HashMap<WeaponType, Handle<TextureAtlas>>,
     pub weapon_animation_effects: HashMap<WeaponAnimationEffect, Handle<TextureAtlas>>,
     pub enemies: HashMap<EnemyType, Handle<TextureAtlas>>,
@@ -72,7 +72,8 @@ fn setup(
         .map(|hero| (hero, asset_server.load(hero.get_sprite_name()).into()))
         .collect();
 
-    let map_asset = asset_server.load(MapId::Map1.get_map_path());
+    let map_id = MapId::Map1;
+    let map_asset = asset_server.load(map_id.get_map_path());
 
     // Load texture atlases for each weapons
     let weapons: HashMap<WeaponType, Handle<TextureAtlas>> = WeaponType::iter()
@@ -111,7 +112,7 @@ fn setup(
 
     commands.insert_resource(GameAssets {
         heroes,
-        map: map_asset,
+        map: (map_id, map_asset),
         weapons,
         weapon_animation_effects,
         enemies,
