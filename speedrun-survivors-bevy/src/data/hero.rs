@@ -114,12 +114,18 @@ impl HeroType {
                 vec![
                     GameplayEffect::new_abs(GameplayStat::Health, 100.0),
                     GameplayEffect::new_abs(GameplayStat::HealthRegen, 10.0),
+                    GameplayEffect::new_abs(GameplayStat::Damage, 5.0),
+                    GameplayEffect::new_abs(GameplayStat::AttackRate, 5.0),
+                    GameplayEffect::new_abs(GameplayStat::MovementSpeed, 100.0),
                 ]
             }
             _ => {
                 vec![
                     GameplayEffect::new_abs(GameplayStat::Health, 120.0),
                     GameplayEffect::new_abs(GameplayStat::HealthRegen, 5.0),
+                    GameplayEffect::new_abs(GameplayStat::Damage, 5.0),
+                    GameplayEffect::new_abs(GameplayStat::AttackRate, 5.0),
+                    GameplayEffect::new_abs(GameplayStat::MovementSpeed, 120.0),
                 ]
             }
         }

@@ -1,7 +1,7 @@
 use crate::enemy::enemy_type::EnemyType;
 use bevy::prelude::*;
 
-use crate::player::{PlayerEvent, PlayerMovement};
+use crate::player::{Player, PlayerEvent};
 use crate::plugins::coin_rewards::CoinAccumulated;
 use crate::plugins::health::{self, Health};
 use crate::state::AppState;
@@ -17,7 +17,7 @@ impl Plugin for EnemyPlugin {
             .add_systems(OnExit(AppState::GameRunning), on_exit_game_running)
             .add_systems(
                 Update,
-                (message_processor, update_enemies, update_enemy_hits)
+                (process_events, update_enemies, update_enemy_hits)
                     .run_if(in_state(AppState::GameRunning)),
             )
             .add_event::<EnemyEvent>();
@@ -42,7 +42,7 @@ pub enum EnemyEvent {
     Ability2(EnemyType),
 }
 
-pub fn message_processor(
+pub fn process_events(
     mut commands: Commands,
     mut rx_enemy: EventReader<EnemyEvent>,
     mut tx_coin: EventWriter<CoinAccumulated>,
@@ -68,10 +68,10 @@ pub fn message_processor(
 
 pub fn update_enemies(
     time: Res<Time>,
-    mut enemy_query: Query<(&Enemy, &mut Transform, Entity, &Health), Without<PlayerMovement>>,
-    player_query: Query<(&PlayerMovement, &Transform), Without<Enemy>>,
+    mut enemy_query: Query<(&Enemy, &mut Transform, Entity, &Health), Without<Player>>,
+    player_query: Query<&Transform, (With<Player>, Without<Enemy>)>,
 ) {
-    if let Ok((_, player_transform)) = player_query.get_single() {
+    if let Ok(player_transform) = player_query.get_single() {
         for (enemy, mut transform, entity, health) in enemy_query.iter_mut() {
             let moving = Vec3::normalize(player_transform.translation - transform.translation)
                 * enemy.speed
@@ -90,7 +90,7 @@ pub struct EnemyInfo {
 }
 
 pub fn update_enemy_hits(
-    enemy_query: Query<(&Transform, Entity, &Enemy), (With<Enemy>, Without<PlayerMovement>)>,
+    enemy_query: Query<(&Transform, Entity, &Enemy), (With<Enemy>, Without<Player>)>,
     mut player_query: Query<(&mut Transform, &mut Health, Entity), Without<Enemy>>,
     mut tx_health: EventWriter<health::HealthUpdateEvent>,
 ) {

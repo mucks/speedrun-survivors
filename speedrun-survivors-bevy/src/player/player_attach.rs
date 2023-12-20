@@ -1,6 +1,5 @@
+use crate::player::Player;
 use bevy::prelude::*;
-
-use crate::{animation::Animator, player::PlayerMovement};
 
 #[derive(Component)]
 pub struct PlayerAttach {
@@ -20,10 +19,10 @@ impl PlayerAttach {
 }
 
 pub fn attach_objects(
-    player_query: Query<(&PlayerMovement, &mut Transform), Without<PlayerAttach>>,
-    mut objects_query: Query<(&PlayerAttach, &mut Transform), Without<PlayerMovement>>,
+    player_query: Query<&mut Transform, (With<Player>, Without<PlayerAttach>)>,
+    mut objects_query: Query<(&PlayerAttach, &mut Transform), Without<Player>>,
 ) {
-    if let Ok((_movement_data, player_transform)) = player_query.get_single() {
+    if let Ok(player_transform) = player_query.get_single() {
         for (attach, mut transform) in objects_query.iter_mut() {
             let mut offset_x = attach.offset.x;
             let mut offset_y = attach.offset.y;

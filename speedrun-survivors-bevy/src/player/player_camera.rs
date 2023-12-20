@@ -1,12 +1,11 @@
+use crate::player::Player;
 use bevy::prelude::*;
-
-use crate::player::PlayerMovement;
 
 const CAMERA_SPEED: f32 = 5.0;
 
 pub fn sync_player_camera(
-    player: Query<&Transform, With<PlayerMovement>>,
-    mut camera: Query<(&mut Camera2d, &mut Transform), Without<PlayerMovement>>,
+    player: Query<&Transform, With<Player>>,
+    mut camera: Query<(&mut Camera2d, &mut Transform), Without<Player>>,
     time: Res<Time>,
 ) {
     let Ok(player) = player.get_single() else {

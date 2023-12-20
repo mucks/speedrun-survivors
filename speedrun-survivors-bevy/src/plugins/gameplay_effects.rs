@@ -1,4 +1,5 @@
 use crate::data::hero::HeroType;
+use crate::data::hero::HeroType::MysteryHero2;
 use crate::data::item::ItemType;
 use crate::data::level::Level;
 use crate::data::map::MapId;
@@ -18,7 +19,14 @@ impl Plugin for GameplayEffectsPlugin {
     }
 }
 
-fn on_enter_game_running(mut state: ResMut<GameplayEffectPluginState>) {}
+fn on_enter_game_running(mut state: ResMut<GameplayEffectPluginState>) {
+    // If the menu was skipped, we do not have stats, so we call select hero here
+    if state.player.move_speed <= 0. {
+        state
+            .player
+            .equip_hero(HeroType::Pepe.get_gameplay_effects())
+    }
+}
 
 fn on_exit_game_running(mut state: ResMut<GameplayEffectPluginState>) {}
 
@@ -184,6 +192,8 @@ pub struct GameplayEffectContainer {
 
     /// Used for fast access of final values
     flat_packed: HashMap<GameplayStat, f64>,
+
+    pub move_speed: f32,
 }
 
 impl GameplayEffectContainer {
@@ -288,11 +298,22 @@ impl GameplayEffectContainer {
                 .entry(effect.stat)
                 .and_modify(|e| effect.op.apply(e, effect.val));
         }
+
+        // Cache additional values we might need every tick
+        self.move_speed = *self
+            .flat_packed
+            .get(&GameplayStat::MovementSpeed)
+            .unwrap_or(&100.) as f32;
     }
 
     /// Delete the cached values to recalculate from scratch
     fn reset_flat_packed(&mut self) {
         self.flat_packed = HashMap::from_iter(GameplayStat::into_iter().map(|stat| (stat, 0.)));
+    }
+
+    /// Get some stat
+    pub fn get_stat(&self, stat: GameplayStat) -> f64 {
+        *self.flat_packed.get(&stat).unwrap_or(&0.)
     }
 }
 

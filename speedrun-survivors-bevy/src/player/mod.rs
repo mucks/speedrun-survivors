@@ -4,7 +4,11 @@ use bevy::prelude::*;
 use leafwing_input_manager::action_state::ActionState;
 
 use crate::data::hero::HeroType;
+use crate::data::level::Level;
 use crate::plugins::assets::GameAssets;
+use crate::plugins::gameplay_effects::{
+    GameplayEffectEvent, GameplayEffectPluginState, GameplayStat,
+};
 use crate::plugins::health::{add_health_bar, Health};
 use crate::plugins::menu::MenuGameConfig;
 use crate::plugins::status_effect::{StatusEffect, StatusEffectController, StatusEffectType};
@@ -34,27 +38,30 @@ impl Plugin for PlayerPlugin {
         .add_systems(
             Update,
             (
-                message_processor,
+                process_events,
                 move_player,
                 player_attach::attach_objects,
                 player_camera::sync_player_camera,
             )
                 .run_if(in_state(AppState::GameRunning)),
         )
-        .add_event::<PlayerEvent>();
+        .add_event::<PlayerEvent>()
+        .insert_resource(PlayerStats::default());
     }
 }
 
 fn on_enter_game_running(mut commands: Commands) {}
 fn on_exit_game_running(mut commands: Commands) {}
 
-pub fn message_processor(
+pub fn process_events(
     mut rx_player: EventReader<PlayerEvent>,
     mut commands: Commands,
     mut status_query: Query<(&mut StatusEffectController, &Transform, &mut Health), With<Player>>,
     mut next_state: ResMut<NextState<AppState>>,
     mut tx_stomp: EventWriter<HammerStomp>,
     game_assets: Res<GameAssets>,
+    mut player_stats: ResMut<PlayerStats>,
+    mut tx_gameplay: EventWriter<GameplayEffectEvent>,
 ) {
     for ev in rx_player.iter() {
         match ev {
@@ -97,6 +104,22 @@ pub fn message_processor(
                     );
                 }
             }
+            PlayerEvent::ExpGained(exp) => {
+                // Add experience
+                player_stats.total_exp += exp;
+
+                // Check if the player leveled up
+                if let Some(new_level) = player_stats.level.has_leveled_up(player_stats.total_exp) {
+                    player_stats.level = new_level;
+                    tx_gameplay.send(GameplayEffectEvent::LevelUp(new_level));
+                    eprintln!("Player leveled up: {:?}", player_stats.level);
+                }
+
+                // Calculate progress towards the next level
+                player_stats.level_progress = player_stats
+                    .level
+                    .percent_to_level_up(player_stats.total_exp);
+            }
             _ => {
                 eprintln!("PLAYER EVENT {ev:?} NOT IMPLEMENTED");
             }
@@ -112,9 +135,21 @@ pub enum PlayerEvent {
     Ability2,
 }
 
-#[derive(Debug, Clone, Component)]
-pub struct PlayerMovement {
-    pub speed: f32,
+#[derive(Resource)]
+pub struct PlayerStats {
+    pub total_exp: u64,
+    pub level: Level,
+    pub level_progress: f32,
+}
+
+impl Default for PlayerStats {
+    fn default() -> Self {
+        Self {
+            total_exp: 0,
+            level: Level(1),
+            level_progress: 0.,
+        }
+    }
 }
 
 #[derive(Component)]
@@ -171,7 +206,6 @@ pub fn spawn_player(
             destroy_on_end: false,
         })
         .insert(Player {})
-        .insert(PlayerMovement { speed: 100. })
         .insert(Health::new(200., 200., 10.0, Some(health_bar)))
         .insert(StatusEffectController { effects: vec![] });
 }
@@ -179,24 +213,21 @@ pub fn spawn_player(
 pub fn move_player(
     time: Res<Time>,
     actions: Query<&ActionState<GameAction>>,
-    mut query: Query<(&PlayerMovement, &mut Transform, &mut Animator)>,
+    mut query: Query<(&mut Transform, &mut Animator), With<Player>>,
     mut weapon_query: Query<
         (&mut TextureAtlasSprite, &mut PlayerAttach, &WeaponType),
-        (Without<PlayerMovement>, Without<WeaponAnimationEffect>),
+        (Without<Player>, Without<WeaponAnimationEffect>),
     >,
     // TODO: refactor this, probably better to use WeaponAttack for the effects
     mut weapon_animation_effect_query: Query<
         &mut TextureAtlasSprite,
-        (
-            With<WeaponAnimationEffect>,
-            Without<PlayerMovement>,
-            Without<WeaponType>,
-        ),
+        (With<WeaponAnimationEffect>, Without<WeaponType>),
     >,
+    gameplay: Res<GameplayEffectPluginState>,
 ) {
     let action = actions.single();
 
-    for (player_movement, mut transform, mut animator) in query.iter_mut() {
+    for (mut transform, mut animator) in query.iter_mut() {
         let mut movement = Vec2::ZERO;
 
         if action.pressed(GameAction::MoveUp) {
@@ -238,8 +269,8 @@ pub fn move_player(
         }
 
         // Move player at a constant speed
-        transform.translation.x += movement.x * player_movement.speed * time.delta_seconds();
-        transform.translation.y += movement.y * player_movement.speed * time.delta_seconds();
+        transform.translation.x += movement.x * gameplay.player.move_speed * time.delta_seconds();
+        transform.translation.y += movement.y * gameplay.player.move_speed * time.delta_seconds();
 
         // If the vector has a length, the player is moving
         if movement.length() > 0. {

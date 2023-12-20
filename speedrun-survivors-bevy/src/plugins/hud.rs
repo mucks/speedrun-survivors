@@ -1,11 +1,10 @@
+use crate::player::PlayerStats;
 use crate::plugins::coin_rewards::CoinAccumulator;
 use crate::weapon::switch_weapon::SwitchWeaponEvent;
 use crate::{plugins::assets::UiAssets, weapon::weapon_type::WeaponType};
 use bevy::prelude::*;
 
 use crate::state::{AppState, ForState};
-
-use super::combat_text::CombatText;
 
 #[derive(Debug, Component)]
 pub struct WeaponButton {
@@ -51,12 +50,23 @@ fn on_enter_game_running(mut commands: Commands) {}
 fn on_exit_game_running(mut commands: Commands) {}
 
 fn on_update(
-    mut query: Query<&mut Text, Without<CombatText>>,
+    mut query_coin: Query<&mut Text, (With<CoinText>, Without<ExpBar>)>,
     coin_accumulator: Res<CoinAccumulator>,
+    mut query_exp: Query<&mut Style, (With<ExpBar>, Without<CoinText>)>,
+    player_stats: Res<PlayerStats>,
 ) {
-    let mut text = query.single_mut();
+    let mut text = query_coin.single_mut();
     text.sections[0].value = format!("Coins: {}", coin_accumulator.total_coin);
+
+    let mut text = query_exp.single_mut();
+    text.width = Val::Percent(100. * player_stats.level_progress);
 }
+
+#[derive(Component)]
+pub struct CoinText {}
+
+#[derive(Component)]
+pub struct ExpBar {}
 
 fn spawn_layout(mut commands: Commands, assets: ResMut<UiAssets>) {
     let img_buff = assets.buff_1.clone();
@@ -86,22 +96,53 @@ fn spawn_layout(mut commands: Commands, assets: ResMut<UiAssets>) {
                 ..Default::default()
             });
 
-            parent.spawn(
-                TextBundle::from_section(
-                    "Coins:",
-                    TextStyle {
-                        font_size: 40.0,
-                        color: Color::rgb(0.5, 0.5, 1.0),
+            parent
+                .spawn(
+                    TextBundle::from_section(
+                        "Coins:",
+                        TextStyle {
+                            font_size: 40.0,
+                            color: Color::rgb(0.5, 0.5, 1.0),
+                            ..default()
+                        },
+                    )
+                    .with_style(Style {
+                        position_type: PositionType::Absolute,
+                        top: Val::Px(5.0),
+                        right: Val::Px(100.0),
                         ..default()
-                    },
+                    }),
                 )
-                .with_style(Style {
-                    position_type: PositionType::Absolute,
-                    top: Val::Px(5.0),
-                    right: Val::Px(100.0),
-                    ..default()
-                }),
-            );
+                .insert(CoinText {});
+
+            parent
+                .spawn(NodeBundle {
+                    style: Style {
+                        width: Val::Px(250.),
+                        height: Val::Px(40.),
+                        flex_direction: FlexDirection::Row,
+                        position_type: PositionType::Absolute,
+                        border: UiRect::all(Val::Px(3.)),
+                        top: Val::Px(55.0),
+                        right: Val::Px(50.0),
+                        ..Default::default()
+                    },
+                    border_color: BorderColor(Color::INDIGO),
+                    ..Default::default()
+                })
+                .with_children(|parent| {
+                    parent
+                        .spawn(NodeBundle {
+                            style: Style {
+                                width: Val::Percent(0.),
+                                height: Val::Percent(100.),
+                                ..Default::default()
+                            },
+                            background_color: Color::PURPLE.into(),
+                            ..Default::default()
+                        })
+                        .insert(ExpBar {});
+                });
 
             parent
                 .spawn(NodeBundle {
