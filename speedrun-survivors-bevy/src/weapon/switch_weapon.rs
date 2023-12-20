@@ -26,31 +26,31 @@ pub struct SwitchWeaponEvent {
 }
 
 fn switch_weapon_controls(
-    mut switch_weapon_events: EventWriter<SwitchWeaponEvent>,
+    mut tx_switch: EventWriter<SwitchWeaponEvent>,
     actions: Query<&ActionState<GameAction>>,
 ) {
     let action = actions.single();
 
     if action.just_pressed(GameAction::Slot1) {
-        switch_weapon_events.send(SwitchWeaponEvent {
+        tx_switch.send(SwitchWeaponEvent {
             weapon_type: WeaponType::Sword,
         });
     }
 
     if action.just_pressed(GameAction::Slot2) {
-        switch_weapon_events.send(SwitchWeaponEvent {
+        tx_switch.send(SwitchWeaponEvent {
             weapon_type: WeaponType::Hammer,
         });
     }
 
     if action.just_pressed(GameAction::Slot3) {
-        switch_weapon_events.send(SwitchWeaponEvent {
+        tx_switch.send(SwitchWeaponEvent {
             weapon_type: WeaponType::Gun,
         });
     }
 
     if action.just_pressed(GameAction::Slot4) {
-        switch_weapon_events.send(SwitchWeaponEvent {
+        tx_switch.send(SwitchWeaponEvent {
             weapon_type: WeaponType::FlameThrower,
         });
     }
@@ -58,13 +58,13 @@ fn switch_weapon_controls(
 
 fn on_switch_weapon(
     mut commands: Commands,
-    mut switch_weapon_event_reader: EventReader<SwitchWeaponEvent>,
+    mut rx_switch: EventReader<SwitchWeaponEvent>,
     mut weapon_query: Query<(&mut Transform, Entity), With<WeaponType>>,
     asset_server: Res<AssetServer>,
     game_config: Res<MenuGameConfig>,
     game_assets: Res<GameAssets>,
 ) {
-    for switch_weapon_event in switch_weapon_event_reader.iter() {
+    for switch_weapon_event in rx_switch.iter() {
         println!("Switching weapon to {:?}", switch_weapon_event.weapon_type);
 
         // delete all weapons

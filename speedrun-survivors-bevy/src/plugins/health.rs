@@ -1,4 +1,6 @@
-use crate::player::Player;
+use crate::enemy::enemy_type::EnemyType;
+use crate::enemy::EnemyEvent;
+use crate::player::{Player, PlayerEvent};
 use crate::state::{AppState, ForState};
 use bevy::prelude::*;
 
@@ -10,8 +12,7 @@ pub struct HealthPlugin;
 
 impl Plugin for HealthPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<HealthChangeEvent>();
-        app.add_event::<ActiveHealthReachedZeroEvent>();
+        app.add_event::<HealthUpdateEvent>();
         app.add_systems(
             Update,
             (on_health_change_event, update_health_bar).run_if(in_state(AppState::GameRunning)),
@@ -28,40 +29,41 @@ pub struct Health {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub enum HealthChangeTargetType {
+pub enum TargetType {
     Player,
-    Enemy,
+    Enemy(EnemyType),
 }
 
 #[derive(Debug, Event)]
-pub struct ActiveHealthReachedZeroEvent {
+pub struct HealthUpdateEvent {
+    /// The entity who's health changed
     pub entity: Entity,
-    pub target_type: HealthChangeTargetType,
-}
-
-#[derive(Debug, Event)]
-pub struct HealthChangeEvent {
-    // negative for damage, positive for healing
+    /// The amount the health changed by. Negative for damage, positive for healing
     pub health_change: f32,
-    pub entity: Entity,
-    pub target_type: HealthChangeTargetType,
+    /// What type of
+    pub target_type: TargetType,
 }
 
 fn on_health_change_event(
-    mut health_change: EventReader<HealthChangeEvent>,
+    mut rx_health: EventReader<HealthUpdateEvent>,
     mut health_query: Query<&mut Health>,
-    mut active_health_reached_zero_event: EventWriter<ActiveHealthReachedZeroEvent>,
+    mut tx_player: EventWriter<PlayerEvent>,
+    mut tx_enemy: EventWriter<EnemyEvent>,
 ) {
-    for ev in health_change.iter() {
+    for ev in rx_health.iter() {
         let Ok(mut health) = health_query.get_mut(ev.entity) else {
-            return;
+            continue;
         };
         health.active_health += ev.health_change;
         if health.active_health <= 0. {
-            active_health_reached_zero_event.send(ActiveHealthReachedZeroEvent {
-                entity: ev.entity,
-                target_type: ev.target_type,
-            });
+            match ev.target_type {
+                TargetType::Player => {
+                    tx_player.send(PlayerEvent::Died);
+                }
+                TargetType::Enemy(kind) => {
+                    tx_enemy.send(EnemyEvent::Died(ev.entity, kind));
+                }
+            }
         }
     }
 }

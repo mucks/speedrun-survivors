@@ -24,10 +24,10 @@ fn on_exit_game_running(mut state: ResMut<GameplayEffectPluginState>) {}
 
 fn on_update(
     mut state: ResMut<GameplayEffectPluginState>,
-    mut event_reader: EventReader<GameplayEffectEvent>,
+    mut rx_gameplay: EventReader<GameplayEffectEvent>,
 ) {
     let mut debug_count = 0;
-    for ev in event_reader.iter() {
+    for ev in rx_gameplay.iter() {
         debug_count += 1;
         match ev {
             GameplayEffectEvent::HeroSelected(hero) => {

@@ -27,10 +27,10 @@ fn on_update(
     mut shake: ResMut<Shake>,
     mut query_camera: Query<(&Camera2d, &mut Transform)>,
     time: Res<Time>,
-    mut impact_events: EventReader<CameraImpact>,
+    mut rx_impact: EventReader<CameraImpact>,
 ) {
     // If there is a new impact event, reset our data from that, will cancel out the current shake
-    if let Some(impact) = impact_events.iter().last() {
+    if let Some(impact) = rx_impact.iter().last() {
         *shake = Shake::create_shake(&impact.strength);
     }
 

@@ -102,7 +102,7 @@ pub fn gun_controls(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     query_camera: Query<(&Camera, &GlobalTransform)>,
-    mut sfx_tx: EventWriter<PlaySFX>,
+    mut tx_sfx: EventWriter<PlaySFX>,
 ) {
     let action = actions.single();
 
@@ -166,7 +166,7 @@ pub fn gun_controls(
                         speed: BULLET_SPEED,
                         direction: diff.normalize(),
                     });
-                sfx_tx.send(PlaySFX {
+                tx_sfx.send(PlaySFX {
                     sfx: SFX::AttackGun,
                     location: None,
                 })

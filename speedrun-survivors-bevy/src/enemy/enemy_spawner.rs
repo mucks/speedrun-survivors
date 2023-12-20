@@ -153,6 +153,7 @@ pub fn update_spawning(
             .insert(Enemy {
                 speed: 100.,
                 attack: 1.,
+                kind: enemy_type,
             })
             .insert(StatusEffectController { effects: vec![] })
             .insert(enemy_type.health());

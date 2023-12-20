@@ -32,12 +32,12 @@ impl Plugin for HudPlugin {
 
 fn on_weapon_button_click(
     mut query: Query<(&Interaction, &WeaponButton), (With<WeaponButton>, Changed<Interaction>)>,
-    mut ev: EventWriter<SwitchWeaponEvent>,
+    mut tx_switch: EventWriter<SwitchWeaponEvent>,
 ) {
     for (interaction, weapon_button) in query.iter_mut() {
         match *interaction {
             Interaction::Pressed => {
-                ev.send(SwitchWeaponEvent {
+                tx_switch.send(SwitchWeaponEvent {
                     weapon_type: weapon_button.weapon_type,
                 });
             }

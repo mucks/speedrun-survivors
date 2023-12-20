@@ -5,6 +5,7 @@ use crate::state::{AppState, ForState};
 pub struct CoinRewardsPlugin;
 
 impl Plugin for CoinRewardsPlugin {
+    // TODO maybe merge this into Player Plugin? nothing else gains coins; (Debateable)
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(AppState::GameRunning), on_enter_game_running)
             .add_systems(OnExit(AppState::GameRunning), on_exit_game_running)
@@ -25,12 +26,12 @@ fn on_enter_game_running(mut coin_accumulator: ResMut<CoinAccumulator>) {
 fn on_exit_game_running(mut commands: Commands) {}
 
 fn on_update(
-    mut event_reader: EventReader<CoinAccumulated>,
+    mut rx_coin: EventReader<CoinAccumulated>,
     mut coin_accumulator: ResMut<CoinAccumulator>,
     time: Res<Time>,
 ) {
     let mut coins_gained: u64 = 0;
-    for ev in event_reader.iter() {
+    for ev in rx_coin.iter() {
         coins_gained += ev.coin;
     }
 

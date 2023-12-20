@@ -62,7 +62,6 @@ fn setup(
         buff_1: asset_server.load("ui/buff_1.png").into(),
         checkbox_o: asset_server.load("ui/checkbox_o.png").into(),
         checkbox_x: asset_server.load("ui/checkbox_x.png").into(),
-        //TODO refactor this to hashmap as well with an iter() as the hero images above?
         weapons,
         heroes,
         maps,

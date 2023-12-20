@@ -41,18 +41,22 @@ impl EnemyType {
             EnemyType::Spider => Enemy {
                 speed: 100.,
                 attack: 1.,
+                kind: EnemyType::Spider,
             },
             EnemyType::Snake => Enemy {
                 speed: 75.,
                 attack: 2.,
+                kind: EnemyType::Snake,
             },
             EnemyType::Golem => Enemy {
                 speed: 50.,
                 attack: 3.,
+                kind: EnemyType::Golem,
             },
             EnemyType::Slime => Enemy {
                 speed: 25.,
                 attack: 4.,
+                kind: EnemyType::Slime,
             },
         }
     }
@@ -99,5 +103,13 @@ impl EnemyType {
             Some(Vec2::new(1., 1.)),
             None,
         )
+    }
+
+    pub fn get_coin_reward(&self) -> u64 {
+        100
+    }
+
+    pub fn get_exp_reward(&self) -> u64 {
+        77
     }
 }

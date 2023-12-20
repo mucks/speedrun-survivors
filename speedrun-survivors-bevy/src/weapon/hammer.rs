@@ -95,16 +95,16 @@ fn spawn_hammer_effect(
 }
 
 fn on_hammer_stomp(
-    mut hammer_stomp: EventReader<HammerStomp>,
+    mut rx_stomp: EventReader<HammerStomp>,
     mut enemy_query: Query<(&Transform, Entity), (With<Enemy>, Without<Player>)>,
-    mut ev_status: EventWriter<StatusEffectEvent>,
+    mut tx_status: EventWriter<StatusEffectEvent>,
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
-    mut impact_tx: EventWriter<CameraImpact>,
-    mut sfx_tx: EventWriter<PlaySFX>,
+    mut tx_impact: EventWriter<CameraImpact>,
+    mut tx_sfx: EventWriter<PlaySFX>,
 ) {
-    for ev in hammer_stomp.iter() {
+    for ev in rx_stomp.iter() {
         spawn_hammer_effect(
             &mut commands,
             &asset_server,
@@ -121,7 +121,7 @@ fn on_hammer_stomp(
                     * ev.knockback
                     * (1. - distance / ev.hitbox);
 
-                ev_status.send(StatusEffectEvent {
+                tx_status.send(StatusEffectEvent {
                     effect: StatusEffect {
                         effect_type: StatusEffectType::Knockback(knockback),
                         duration: 0.5,
@@ -134,15 +134,15 @@ fn on_hammer_stomp(
         }
 
         if hit_count > 0 {
-            impact_tx.send(CameraImpact {
+            tx_impact.send(CameraImpact {
                 strength: CameraImpactStrength::Medium,
             });
-            sfx_tx.send(PlaySFX {
+            tx_sfx.send(PlaySFX {
                 sfx: SFX::AttackHammerHit,
                 location: None,
             })
         } else {
-            sfx_tx.send(PlaySFX {
+            tx_sfx.send(PlaySFX {
                 sfx: SFX::AttackHammerMiss,
                 location: None,
             })
@@ -231,7 +231,7 @@ pub fn spawn_hammer(
 pub fn hammer_controls(
     mut hammer_query: Query<(&mut HammerController, &Transform, &mut Animator)>,
     actions: Query<&ActionState<GameAction>>,
-    mut ev_stomp: EventWriter<HammerStomp>,
+    mut tx_stomp: EventWriter<HammerStomp>,
 ) {
     let action = actions.single();
 
@@ -246,7 +246,7 @@ pub fn hammer_controls(
             hammer.is_stomping = true;
 
             if hammer.stomp_time <= 0. {
-                ev_stomp.send(HammerStomp {
+                tx_stomp.send(HammerStomp {
                     hitbox: hammer.hitbox,
                     knockback: hammer.knockback,
                     translation: transform.translation,

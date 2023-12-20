@@ -41,10 +41,10 @@ pub enum StatusEffectType {
 }
 
 fn on_status_effect_event(
-    mut status_effect_event: EventReader<StatusEffectEvent>,
+    mut rx_status: EventReader<StatusEffectEvent>,
     mut status_effect_query: Query<&mut StatusEffectController>,
 ) {
-    for ev in status_effect_event.iter() {
+    for ev in rx_status.iter() {
         let Ok(mut status_effect_cont) = status_effect_query.get_mut(ev.entity) else {
             return;
         };
@@ -65,7 +65,7 @@ fn on_status_effect_event(
 pub fn apply_status_effects(
     time: Res<Time>,
     mut query: Query<(&mut StatusEffectController, &mut Transform, Entity)>,
-    mut ev: EventWriter<StatusEffectEvent>,
+    mut tx_status: EventWriter<StatusEffectEvent>,
 ) {
     for (mut status_effect_cont, mut transform, ent) in query.iter_mut() {
         for status_effect in status_effect_cont.effects.iter_mut() {
@@ -78,7 +78,7 @@ pub fn apply_status_effects(
                     status_effect.current_duration -= time.delta_seconds();
 
                     if status_effect.current_duration <= 0. {
-                        ev.send(StatusEffectEvent {
+                        tx_status.send(StatusEffectEvent {
                             effect: *status_effect,
                             entity: ent,
                             event_type: StatusEffectEventType::Remove,

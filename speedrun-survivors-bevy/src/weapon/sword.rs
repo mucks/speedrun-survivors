@@ -229,22 +229,22 @@ fn update_sword_effect_hits(
         (&Transform, Entity, &SwordEffect),
         (With<SwordEffect>, Without<Enemy>),
     >,
-    mut enemy_query: Query<(&mut Enemy, &mut Transform, Entity), Without<SwordEffect>>,
-    mut ev_health_change: EventWriter<health::HealthChangeEvent>,
+    mut enemy_query: Query<(&Enemy, &mut Transform, Entity), Without<SwordEffect>>,
+    mut tx_health: EventWriter<health::HealthUpdateEvent>,
 ) {
     if let Some((transform, _, sword_effect)) = sword_effect_query.iter().next() {
         let s = Vec2::new(transform.translation.x, transform.translation.y);
 
-        for (mut _enemy, transform, ent) in enemy_query.iter_mut() {
+        for (enemy, transform, ent) in enemy_query.iter_mut() {
             if Vec2::distance(
                 s,
                 Vec2::new(transform.translation.x, transform.translation.y),
             ) <= sword_effect.hitbox
             {
-                ev_health_change.send(health::HealthChangeEvent {
+                tx_health.send(health::HealthUpdateEvent {
                     entity: ent,
                     health_change: -SWORD_DAMAGE,
-                    target_type: health::HealthChangeTargetType::Enemy,
+                    target_type: health::TargetType::Enemy(enemy.kind),
                 });
             }
         }

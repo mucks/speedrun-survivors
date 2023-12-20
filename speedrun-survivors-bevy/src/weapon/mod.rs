@@ -10,8 +10,8 @@ pub mod sword;
 pub mod weapon_animation_effect;
 pub mod weapon_type;
 
-fn spawn_initial_weapon(mut switch_weapon_events: EventWriter<SwitchWeaponEvent>) {
-    switch_weapon_events.send(SwitchWeaponEvent {
+fn spawn_initial_weapon(mut tx_switch: EventWriter<SwitchWeaponEvent>) {
+    tx_switch.send(SwitchWeaponEvent {
         weapon_type: WeaponType::default(),
     });
 }

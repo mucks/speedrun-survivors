@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use crate::state::{AppState, ForState};
 
 use super::{
-    health::{Health, HealthChangeEvent, HealthChangeTargetType},
+    health::{Health, HealthUpdateEvent, TargetType},
     status_effect::StatusEffectController,
 };
 
@@ -19,18 +19,18 @@ impl Plugin for CombatTextPlugin {
 }
 
 fn on_health_change_event(
-    mut health_change: EventReader<HealthChangeEvent>,
+    mut rx_health: EventReader<HealthUpdateEvent>,
     mut health_query: Query<&Transform, With<Health>>,
     mut commands: Commands,
 ) {
-    for ev in health_change.iter() {
+    for ev in rx_health.iter() {
         let Ok(health_tr) = health_query.get_mut(ev.entity) else {
             return;
         };
 
         let mut color = match ev.target_type {
-            HealthChangeTargetType::Player => Color::RED,
-            HealthChangeTargetType::Enemy => Color::YELLOW,
+            TargetType::Player => Color::RED,
+            TargetType::Enemy(_) => Color::YELLOW,
         };
 
         if ev.health_change > 0.0 {

@@ -62,9 +62,9 @@ fn on_exit_game_running(mut commands: Commands, assets: Res<AudioPluginAssets>) 
 fn on_update(
     mut commands: Commands,
     assets: Res<AudioPluginAssets>,
-    mut sfx_events: EventReader<PlaySFX>,
+    mut rx_sfx: EventReader<PlaySFX>,
 ) {
-    for event in sfx_events.iter() {
+    for event in rx_sfx.iter() {
         commands.spawn((
             AudioBundle {
                 source: assets.get_asset_by_sfx(&event.sfx),

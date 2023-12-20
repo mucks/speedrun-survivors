@@ -9,7 +9,7 @@ use crate::{
     player::player_attach,
     plugins::{
         assets::GameAssets,
-        health::{HealthChangeEvent, HealthChangeTargetType},
+        health::{HealthUpdateEvent, TargetType},
         menu::MenuGameConfig,
     },
     state::{AppState, ForState},
@@ -48,20 +48,20 @@ pub struct Flame {
 
 fn update_flame_hits(
     mut query: Query<(&Flame, &Transform)>,
-    mut enemy_query: Query<(Entity, &Transform), With<Enemy>>,
-    mut ev: EventWriter<HealthChangeEvent>,
+    mut enemy_query: Query<(&Enemy, Entity, &Transform)>,
+    mut tx_health: EventWriter<HealthUpdateEvent>,
 ) {
     for (flame, flame_transform) in query.iter_mut() {
-        for (enemy_entity, enemy_transform) in enemy_query.iter_mut() {
+        for (enemy, entity, transform) in enemy_query.iter_mut() {
             if Vec2::distance(
                 Vec2::new(flame_transform.translation.x, flame_transform.translation.y),
-                Vec2::new(enemy_transform.translation.x, enemy_transform.translation.y),
+                Vec2::new(transform.translation.x, transform.translation.y),
             ) <= flame.hitbox
             {
-                ev.send(HealthChangeEvent {
-                    entity: enemy_entity,
+                tx_health.send(HealthUpdateEvent {
+                    entity,
                     health_change: -flame.damage,
-                    target_type: HealthChangeTargetType::Enemy,
+                    target_type: TargetType::Enemy(enemy.kind),
                 });
             }
         }

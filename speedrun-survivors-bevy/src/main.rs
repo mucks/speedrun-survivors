@@ -16,7 +16,6 @@ use leafwing_input_manager::prelude::*;
 use leafwing_input_manager::user_input::InputKind;
 use plugins::assets::GameAssets;
 use plugins::combat_text::CombatTextPlugin;
-use plugins::death::DeathPlugin;
 use plugins::health::HealthPlugin;
 use plugins::status_effect::StatusEffectPlugin;
 use weapon::WeaponPlugin;
@@ -81,7 +80,6 @@ fn main() {
             CombatTextPlugin,
             WeaponPlugin,
             StatusEffectPlugin,
-            DeathPlugin,
         ))
         .add_plugins(GameplayEffectsPlugin)
         .add_systems(Startup, (setup_camera, setup_key_bindings))

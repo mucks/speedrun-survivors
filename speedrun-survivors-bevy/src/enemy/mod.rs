@@ -1,6 +1,8 @@
+use crate::enemy::enemy_type::EnemyType;
 use bevy::prelude::*;
 
-use crate::player::PlayerMovement;
+use crate::player::{PlayerEvent, PlayerMovement};
+use crate::plugins::coin_rewards::CoinAccumulated;
 use crate::plugins::health::{self, Health};
 use crate::state::AppState;
 
@@ -15,8 +17,10 @@ impl Plugin for EnemyPlugin {
             .add_systems(OnExit(AppState::GameRunning), on_exit_game_running)
             .add_systems(
                 Update,
-                (update_enemies, update_enemy_hits).run_if(in_state(AppState::GameRunning)),
-            );
+                (message_processor, update_enemies, update_enemy_hits)
+                    .run_if(in_state(AppState::GameRunning)),
+            )
+            .add_event::<EnemyEvent>();
     }
 }
 
@@ -27,6 +31,39 @@ fn on_exit_game_running(mut commands: Commands) {}
 pub struct Enemy {
     pub speed: f32,
     pub attack: f32,
+    pub kind: EnemyType,
+}
+
+#[derive(Debug, Event)]
+pub enum EnemyEvent {
+    Spawned(EnemyType),
+    Died(Entity, EnemyType),
+    Ability1(EnemyType),
+    Ability2(EnemyType),
+}
+
+pub fn message_processor(
+    mut commands: Commands,
+    mut rx_enemy: EventReader<EnemyEvent>,
+    mut tx_coin: EventWriter<CoinAccumulated>,
+    mut tx_exp: EventWriter<PlayerEvent>,
+) {
+    for ev in rx_enemy.iter() {
+        match ev {
+            EnemyEvent::Died(entity, kind) => {
+                tx_coin.send(CoinAccumulated {
+                    coin: kind.get_coin_reward(),
+                });
+                tx_exp.send(PlayerEvent::ExpGained(kind.get_exp_reward()));
+                commands
+                    .get_entity(*entity)
+                    .and_then(|entity| Some(entity.despawn_recursive()));
+            }
+            _ => {
+                eprintln!("EnemyEvent message of type {ev:?} not implemented!");
+            }
+        }
+    }
 }
 
 pub fn update_enemies(
@@ -54,11 +91,8 @@ pub struct EnemyInfo {
 
 pub fn update_enemy_hits(
     enemy_query: Query<(&Transform, Entity, &Enemy), (With<Enemy>, Without<PlayerMovement>)>,
-    mut player_query: Query<
-        (&mut PlayerMovement, &mut Transform, &mut Health, Entity),
-        Without<Enemy>,
-    >,
-    mut ev_health_change: EventWriter<health::HealthChangeEvent>,
+    mut player_query: Query<(&mut Transform, &mut Health, Entity), Without<Enemy>>,
+    mut tx_health: EventWriter<health::HealthUpdateEvent>,
 ) {
     let mut enemy_list = Vec::new();
     for (transform, entity, enemy) in enemy_query.iter() {
@@ -69,17 +103,17 @@ pub fn update_enemy_hits(
         });
     }
 
-    for (mut _player, transform, mut health, ent) in player_query.iter_mut() {
+    for (transform, mut health, entity) in player_query.iter_mut() {
         for enemy in enemy_list.iter() {
             if Vec2::distance(
                 enemy.translation,
                 Vec2::new(transform.translation.x, transform.translation.y),
             ) <= 36.
             {
-                ev_health_change.send(health::HealthChangeEvent {
-                    entity: ent,
+                tx_health.send(health::HealthUpdateEvent {
+                    entity,
                     health_change: -enemy.attack,
-                    target_type: health::HealthChangeTargetType::Player,
+                    target_type: health::TargetType::Player,
                 });
             }
         }

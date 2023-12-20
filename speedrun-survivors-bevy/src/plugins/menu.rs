@@ -144,7 +144,7 @@ fn on_button_interaction(
         (Changed<Interaction>, Without<SelectedElement>),
     >,
     mut next_state: ResMut<NextState<AppState>>,
-    mut app_exit_events: EventWriter<AppExit>,
+    mut tx_exit: EventWriter<AppExit>,
     mut state: ResMut<MenuGameConfig>,
     mut selected_hero: Query<
         (Entity, &mut BorderColor),
@@ -162,14 +162,14 @@ fn on_button_interaction(
             Without<HeroSelectButton>,
         ),
     >,
-    mut event_stream: EventWriter<GameplayEffectEvent>,
+    mut tx_gameplay: EventWriter<GameplayEffectEvent>,
 ) {
     // Check for Quit & Play button interaction
     for (interaction, mut action) in query_action_button.iter_mut() {
         match *interaction {
             Interaction::Pressed => match *action {
                 MenuButtonAction::Play => next_state.set(AppState::GameRunning),
-                MenuButtonAction::Quit => app_exit_events.send(AppExit),
+                MenuButtonAction::Quit => tx_exit.send(AppExit),
             },
             _ => {}
         }
@@ -184,7 +184,7 @@ fn on_button_interaction(
                         commands.entity(entity).remove::<SelectedElement>();
                     }
                     state.map = map.map_id.clone();
-                    event_stream.send(GameplayEffectEvent::MapSelected(map.map_id.clone()));
+                    tx_gameplay.send(GameplayEffectEvent::MapSelected(map.map_id.clone()));
                     commands.entity(entity).insert(SelectedElement {});
                 }
                 if let Some(hero) = hero {
@@ -193,7 +193,7 @@ fn on_button_interaction(
                         commands.entity(entity).remove::<SelectedElement>();
                     }
                     state.hero = hero.hero_type.clone();
-                    event_stream.send(GameplayEffectEvent::HeroSelected(hero.hero_type.clone()));
+                    tx_gameplay.send(GameplayEffectEvent::HeroSelected(hero.hero_type.clone()));
                     commands.entity(entity).insert(SelectedElement {});
                 }
                 if let Some(mut checkbox) = checkbox {
@@ -207,13 +207,13 @@ fn on_button_interaction(
                         //TODO too many indentations, refactor this
                         checkbox.checked = !checkbox.checked;
                         if checkbox.checked {
-                            event_stream.send(GameplayEffectEvent::NFTEquipped(
+                            tx_gameplay.send(GameplayEffectEvent::NFTEquipped(
                                 checkbox.nft_id.clone(),
                                 ItemType::BonkInuBattleBracers, //TODO depends on NFT
                             ));
                             state.nft_list.push(checkbox.nft_id.clone());
                         } else {
-                            event_stream
+                            tx_gameplay
                                 .send(GameplayEffectEvent::NFTUnEquipped(checkbox.nft_id.clone()));
                             state.nft_list.retain(|id| id != &checkbox.nft_id)
                         }
@@ -883,7 +883,7 @@ fn menu_blink_system(
 fn menu_input_system(
     state: ResMut<State<AppState>>,
     mut next_state: ResMut<NextState<AppState>>,
-    mut app_exit_events: EventWriter<AppExit>,
+    mut tx_exit: EventWriter<AppExit>,
     actions: Query<&ActionState<GameAction>>,
 ) {
     let action = actions.single();
@@ -897,7 +897,7 @@ fn menu_input_system(
                     next_state.set(AppState::GameCreate);
                 }
                 if action.just_pressed(GameAction::Cancel) {
-                    app_exit_events.send(AppExit);
+                    tx_exit.send(AppExit);
                 }
             }
             AppState::GameCreate => {
@@ -917,11 +917,11 @@ fn menu_input_system(
 
 /// Scroll handler for the cNFT list
 fn mouse_scroll(
-    mut mouse_wheel_events: EventReader<MouseWheel>,
+    mut rx_mouse: EventReader<MouseWheel>,
     mut query_list: Query<(&mut ScrollingList, &mut Style, &Parent, &Node)>,
     query_node: Query<&Node>,
 ) {
-    for mouse_wheel_event in mouse_wheel_events.iter() {
+    for mouse_wheel_event in rx_mouse.iter() {
         for (mut scrolling_list, mut style, parent, list_node) in &mut query_list {
             let items_height = list_node.size().y;
             let container_height = query_node.get(parent.get()).unwrap().size().y;

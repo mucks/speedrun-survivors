@@ -7,8 +7,9 @@ use crate::data::hero::HeroType;
 use crate::plugins::assets::GameAssets;
 use crate::plugins::health::{add_health_bar, Health};
 use crate::plugins::menu::MenuGameConfig;
-use crate::plugins::status_effect::StatusEffectController;
+use crate::plugins::status_effect::{StatusEffect, StatusEffectController, StatusEffectType};
 use crate::state::{AppState, ForState};
+use crate::weapon::hammer::HammerStomp;
 use crate::weapon::weapon_animation_effect::WeaponAnimationEffect;
 use crate::{
     animation::{self, Animator},
@@ -33,17 +34,83 @@ impl Plugin for PlayerPlugin {
         .add_systems(
             Update,
             (
+                message_processor,
                 move_player,
                 player_attach::attach_objects,
                 player_camera::sync_player_camera,
             )
                 .run_if(in_state(AppState::GameRunning)),
-        );
+        )
+        .add_event::<PlayerEvent>();
     }
 }
 
 fn on_enter_game_running(mut commands: Commands) {}
 fn on_exit_game_running(mut commands: Commands) {}
+
+pub fn message_processor(
+    mut rx_player: EventReader<PlayerEvent>,
+    mut commands: Commands,
+    mut status_query: Query<(&mut StatusEffectController, &Transform, &mut Health), With<Player>>,
+    mut next_state: ResMut<NextState<AppState>>,
+    mut tx_stomp: EventWriter<HammerStomp>,
+    game_assets: Res<GameAssets>,
+) {
+    for ev in rx_player.iter() {
+        match ev {
+            PlayerEvent::Died => {
+                let test = status_query.iter().len();
+                let Ok((mut status_cont, player_tr, mut player_health)) =
+                    status_query.get_single_mut()
+                else {
+                    return;
+                };
+
+                // Player died but has death is temporary status effect
+                if status_cont
+                    .effects
+                    .iter()
+                    .find(|effect| effect.effect_type == StatusEffectType::DeathIsTemporary)
+                    .is_some()
+                {
+                    status_cont.effects = vec![];
+                    next_state.set(AppState::GameOver);
+                    return; // Unspawn will happen due to state change
+                } else {
+                    player_health.active_health = player_health.max_health / 2.;
+
+                    tx_stomp.send(HammerStomp {
+                        hitbox: 200.,
+                        knockback: 2000.,
+                        translation: player_tr.translation,
+                    });
+
+                    status_cont.effects.push(StatusEffect {
+                        effect_type: StatusEffectType::DeathIsTemporary,
+                        duration: 10.,
+                        current_duration: 10.,
+                    });
+                    spawn_skull_on_player(
+                        &mut commands,
+                        Vec2::new(player_tr.translation.x, player_tr.translation.y),
+                        &game_assets,
+                    );
+                }
+            }
+            _ => {
+                eprintln!("PLAYER EVENT {ev:?} NOT IMPLEMENTED");
+            }
+        }
+    }
+}
+
+#[derive(Debug, Event)]
+pub enum PlayerEvent {
+    Died,
+    ExpGained(u64),
+    Ability1,
+    Ability2,
+}
 
 #[derive(Debug, Clone, Component)]
 pub struct PlayerMovement {
@@ -160,7 +227,7 @@ pub fn move_player(
                 weapon.flip_x = false;
                 pa.flip_x = false;
             }
-            for (mut weapon) in weapon_animation_effect_query.iter_mut() {
+            for mut weapon in weapon_animation_effect_query.iter_mut() {
                 weapon.flip_x = false;
             }
         }
@@ -181,4 +248,23 @@ pub fn move_player(
             animator.current_animation = "Idle".to_string();
         }
     }
+}
+
+fn spawn_skull_on_player(commands: &mut Commands, position: Vec2, game_assets: &Res<GameAssets>) {
+    commands
+        .spawn((
+            SpriteSheetBundle {
+                texture_atlas: game_assets.skull.clone(),
+                transform: Transform {
+                    scale: Vec3::splat(0.5),
+                    translation: Vec3::new(position.x, position.y, 5.),
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
+            ForState {
+                states: vec![AppState::GameRunning],
+            },
+        ))
+        .insert(player_attach::PlayerAttach::new(Vec2::ZERO));
 }
