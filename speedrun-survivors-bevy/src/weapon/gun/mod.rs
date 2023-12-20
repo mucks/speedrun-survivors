@@ -107,6 +107,13 @@ pub fn gun_controls(
     let action = actions.single();
 
     for (mut gun_controller, mut transform, mut animator) in gun_query.iter_mut() {
+        let Ok(window) = primary_query.get_single() else {
+            return;
+        };
+        let Ok((camera, camera_transform)) = query_camera.get_single() else {
+            return;
+        };
+
         gun_controller.shoot_timer -= time.delta_seconds();
 
         if gun_controller.shoot_timer > 0. {
@@ -114,13 +121,6 @@ pub fn gun_controls(
         } else {
             animator.current_animation = "Idle".to_string();
         }
-
-        let Ok(window) = primary_query.get_single() else {
-            return;
-        };
-        let Ok((camera, camera_transform)) = query_camera.get_single() else {
-            return;
-        };
 
         // Aim gun at world location
         let Some(cursor_world_position) = window

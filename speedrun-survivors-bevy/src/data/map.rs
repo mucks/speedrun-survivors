@@ -11,12 +11,14 @@ pub enum MapId {
 }
 
 impl MapId {
+    /// Returns the path for this maps ldtk path
     pub fn get_map_path(&self) -> &str {
         match self {
             _ => "maps/map_1.ldtk",
         }
     }
 
+    /// Returns the path for this maps ui image
     pub fn get_ui_image_name(&self) -> &str {
         match self {
             MapId::Map1 => "ui/map/map_1.png",

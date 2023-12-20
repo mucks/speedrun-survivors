@@ -27,13 +27,11 @@ impl Level {
         }
     }
 
+    /// Returns the progress towards the next level
     pub fn percent_to_level_up(&self, total_xp: u64) -> f32 {
-        let exp_required_for_current_level = Self::exp_required_for_next_level(&Level(self.0 - 1));
-        let exp_required_for_next_level = Self::exp_required_for_next_level(self);
+        let lvl_current = Self::exp_required_for_next_level(&Level(self.0 - 1));
+        let lvl_next = Self::exp_required_for_next_level(self);
 
-        let progress = (total_xp - exp_required_for_current_level) as f32
-            / (exp_required_for_next_level - exp_required_for_current_level) as f32;
-
-        progress
+        (total_xp - lvl_current) as f32 / (lvl_next - lvl_current) as f32
     }
 }

@@ -21,7 +21,6 @@ use plugins::status_effect::StatusEffectPlugin;
 use weapon::WeaponPlugin;
 
 mod animation;
-mod cursor_info;
 mod data;
 mod enemy;
 mod player;
@@ -50,7 +49,6 @@ enum GameAction {
 fn main() {
     App::new()
         .add_state::<AppState>()
-        .insert_resource(cursor_info::OffsetedCursorPosition { x: 0., y: 0. })
         .insert_resource(ClearColor(Color::rgb_u8(0, 0, 0)))
         .add_plugins(
             DefaultPlugins
@@ -105,12 +103,10 @@ fn on_enter_game_running(mut commands: Commands, mut volume: ResMut<GlobalVolume
         volume.volume = VolumeLevel::new(0.)
     }
 
-    //TODO run logic when a new game starts
     commands.insert_resource(LevelSelection::Index(0));
 }
 
 fn on_exit_game_running(mut commands: Commands) {
-    //TODO run logic when game ends
     commands.insert_resource(LevelSelection::Index(1));
 }
 
