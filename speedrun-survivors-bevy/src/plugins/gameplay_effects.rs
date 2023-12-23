@@ -20,9 +20,9 @@ impl Plugin for GameplayEffectsPlugin {
 
 fn on_enter_game_running(mut state: ResMut<GameplayEffectPluginState>) {
     // If the menu was skipped, we do not have stats, so we call select hero here
-    if state.player.move_speed <= 0. {
+    if state.player_effects.move_speed <= 0. {
         state
-            .player
+            .player_effects
             .equip_hero(HeroType::Pepe.get_gameplay_effects())
     }
 }
@@ -30,6 +30,7 @@ fn on_enter_game_running(mut state: ResMut<GameplayEffectPluginState>) {
 fn on_exit_game_running(mut state: ResMut<GameplayEffectPluginState>) {}
 
 fn on_update(
+    time: Res<Time>,
     mut state: ResMut<GameplayEffectPluginState>,
     mut rx_gameplay: EventReader<GameplayEffectEvent>,
 ) {
@@ -38,29 +39,32 @@ fn on_update(
         debug_count += 1;
         match ev {
             GameplayEffectEvent::HeroSelected(hero) => {
-                state.player.equip_hero(hero.get_gameplay_effects())
+                state.player_effects.equip_hero(hero.get_gameplay_effects())
             }
             GameplayEffectEvent::MapSelected(map) => {
-                state.player.equip_map(map.get_gameplay_effects())
+                state.player_effects.equip_map(map.get_gameplay_effects())
             }
-            GameplayEffectEvent::NFTEquipped(id, item) => {
-                state.player.equip_nft(id, item.get_gameplay_effects())
-            }
-            GameplayEffectEvent::NFTUnEquipped(id) => state.player.unequip_nft(id),
+            GameplayEffectEvent::NFTEquipped(id, item) => state
+                .player_effects
+                .equip_nft(id, item.get_gameplay_effects()),
+            GameplayEffectEvent::NFTUnEquipped(id) => state.player_effects.unequip_nft(id),
             GameplayEffectEvent::ItemEquipped(entity, item) => state
-                .player
+                .player_effects
                 .equip_item(entity.clone(), item.get_gameplay_effects()),
             GameplayEffectEvent::ItemUnEquipped(entity) => {
-                state.player.unequip_item(entity.clone())
+                state.player_effects.unequip_item(entity.clone())
             }
             GameplayEffectEvent::LevelUp(level) => {
-                state.player.level_up(level.get_gameplay_effects())
+                state.player_effects.level_up(level.get_gameplay_effects())
             }
         }
     }
     if debug_count > 0 {
-        eprintln!("DEBUG EFFECTS {:?}", state.player)
+        eprintln!("DEBUG EFFECTS {:?}", state.player_effects)
     }
+
+    // Update gameplay tags
+    state.player_tags.tick(time.delta_seconds())
 }
 
 #[derive(Debug, Event)]
@@ -76,7 +80,8 @@ pub enum GameplayEffectEvent {
 
 #[derive(Default, Resource)]
 pub struct GameplayEffectPluginState {
-    pub player: GameplayEffectContainer,
+    pub player_effects: GameplayEffectContainer,
+    pub player_tags: GameplayTagContainer,
 }
 
 #[derive(PartialEq)]
@@ -331,5 +336,61 @@ impl std::fmt::Debug for GameplayEffectContainer {
 
             stat_repr.join("\r\n")
         })
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum GameplayTag {
+    Ability1,
+    Dodge,
+}
+
+impl GameplayTag {
+    /// Returns a list of tags that prevent this one from being applied
+    pub fn blocked_by(&self) -> Vec<GameplayTag> {
+        vec![self.clone()]
+    }
+}
+
+#[derive(Debug)]
+struct GameplayTagWrapped {
+    tag: GameplayTag,
+    cooldown: f32,
+}
+
+type Cooldown = f32;
+
+#[derive(Default)]
+pub struct GameplayTagContainer {
+    tags: Vec<GameplayTagWrapped>,
+}
+
+impl GameplayTagContainer {
+    pub fn hasTag(&self, search_tag: &GameplayTag) -> bool {
+        for tag in &self.tags {
+            if tag.tag == *search_tag {
+                return true;
+            }
+        }
+
+        false
+    }
+
+    pub fn addTag(&mut self, tag: GameplayTag, cooldown: Cooldown) -> bool {
+        if self.hasTag(&tag) {
+            //TODO use GameplayTag::blocked_by or some new invention
+            return false;
+        }
+
+        self.tags.push(GameplayTagWrapped { tag, cooldown });
+
+        true
+    }
+
+    pub fn tick(&mut self, delta: f32) {
+        for tag in self.tags.iter_mut() {
+            tag.cooldown -= delta;
+        }
+        self.tags.retain(|tag| tag.cooldown > 0.0);
     }
 }

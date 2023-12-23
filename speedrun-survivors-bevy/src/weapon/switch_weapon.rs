@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use leafwing_input_manager::action_state::ActionState;
 
+use crate::plugins::gameplay_effects::{GameplayEffectPluginState, GameplayTag};
 use crate::{
     plugins::{assets::GameAssets, menu::MenuGameConfig},
     state::AppState,
@@ -28,28 +29,45 @@ pub struct SwitchWeaponEvent {
 fn switch_weapon_controls(
     mut tx_switch: EventWriter<SwitchWeaponEvent>,
     actions: Query<&ActionState<GameAction>>,
+    mut gameplay_state: ResMut<GameplayEffectPluginState>,
 ) {
     let action = actions.single();
 
-    if action.just_pressed(GameAction::Slot1) {
+    if action.just_pressed(GameAction::Slot1)
+        && gameplay_state
+            .player_tags
+            .addTag(GameplayTag::Ability1, 0.5)
+    {
         tx_switch.send(SwitchWeaponEvent {
             weapon_type: WeaponType::Sword,
         });
     }
 
-    if action.just_pressed(GameAction::Slot2) {
+    if action.just_pressed(GameAction::Slot2)
+        && gameplay_state
+            .player_tags
+            .addTag(GameplayTag::Ability1, 0.5)
+    {
         tx_switch.send(SwitchWeaponEvent {
             weapon_type: WeaponType::Hammer,
         });
     }
 
-    if action.just_pressed(GameAction::Slot3) {
+    if action.just_pressed(GameAction::Slot3)
+        && gameplay_state
+            .player_tags
+            .addTag(GameplayTag::Ability1, 0.5)
+    {
         tx_switch.send(SwitchWeaponEvent {
             weapon_type: WeaponType::Gun,
         });
     }
 
-    if action.just_pressed(GameAction::Slot4) {
+    if action.just_pressed(GameAction::Slot4)
+        && gameplay_state
+            .player_tags
+            .addTag(GameplayTag::Ability1, 0.5)
+    {
         tx_switch.send(SwitchWeaponEvent {
             weapon_type: WeaponType::FlameThrower,
         });

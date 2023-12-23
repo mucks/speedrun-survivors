@@ -4,6 +4,7 @@ use bevy::prelude::*;
 use leafwing_input_manager::action_state::ActionState;
 
 use crate::plugins::assets::GameAssets;
+use crate::plugins::gameplay_effects::{GameplayEffectPluginState, GameplayTag};
 use crate::plugins::health::{self};
 use crate::plugins::menu::MenuGameConfig;
 use crate::state::{AppState, ForState};
@@ -19,7 +20,7 @@ use super::weapon_type::WeaponType;
 
 const SWORD_DAMAGE: f32 = 1.;
 const SWORD_SWING_TIME: f32 = 8.5;
-const SWORD_COOLDOWN: f32 = 5.;
+const SWORD_COOLDOWN: f32 = 0.9;
 
 const SWORD_EFFECT_HITBOX: f32 = 50.;
 const SWORD_EFFECT_SPEED: f32 = 15.;
@@ -45,7 +46,6 @@ impl Plugin for SwordPlugin {
 pub struct SwordController {
     pub hitbox: f32,
     pub swing_time: f32,
-    pub cooldown: f32,
     pub is_swinging: bool,
 }
 
@@ -173,7 +173,6 @@ pub fn spawn_sword(
         .insert(SwordController {
             hitbox: 40.,
             swing_time: 0.,
-            cooldown: 0.,
             is_swinging: false,
         })
         .insert(WeaponType::Sword);
@@ -189,14 +188,11 @@ pub fn sword_controls(
     actions: Query<&ActionState<GameAction>>,
     mut commands: Commands,
     game_assets: Res<GameAssets>,
+    mut gameplay_state: ResMut<GameplayEffectPluginState>,
 ) {
     let action = actions.single();
 
     for (mut sword_controller, transform, mut animator, ta) in sword_query.iter_mut() {
-        if sword_controller.cooldown > 0. {
-            sword_controller.cooldown -= 0.1;
-        }
-
         if sword_controller.swing_time > 0. {
             // this if clause is run once on swing start
             if !sword_controller.is_swinging {
@@ -216,11 +212,13 @@ pub fn sword_controls(
             sword_controller.is_swinging = false;
         }
 
-        if sword_controller.swing_time <= 0. && sword_controller.cooldown <= 0. {
-            if action.just_pressed(GameAction::Action1) {
-                sword_controller.swing_time = SWORD_SWING_TIME;
-                sword_controller.cooldown = SWORD_COOLDOWN;
-            }
+        if sword_controller.swing_time <= 0.
+            && action.just_pressed(GameAction::Action1)
+            && gameplay_state
+                .player_tags
+                .addTag(GameplayTag::Ability1, SWORD_COOLDOWN)
+        {
+            sword_controller.swing_time = SWORD_SWING_TIME;
         }
     }
 }

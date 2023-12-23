@@ -271,9 +271,9 @@ pub fn move_player(
         // Move player at a constant speed
         let mut new_transform = transform.clone();
         new_transform.translation.x +=
-            movement.x * gameplay.player.move_speed * time.delta_seconds();
+            movement.x * gameplay.player_effects.move_speed * time.delta_seconds();
         new_transform.translation.y +=
-            movement.y * gameplay.player.move_speed * time.delta_seconds();
+            movement.y * gameplay.player_effects.move_speed * time.delta_seconds();
 
         if !game_assets.map.0.is_at_border(new_transform) {
             transform.translation = new_transform.translation;

@@ -103,7 +103,7 @@ pub fn update_spawning(
             .set_duration(current_duration - Duration::from_millis(1));
     }
 
-    eprintln!("SPAWN TIMER NOW: {current_duration:?}");
+    // eprintln!("SPAWN TIMER NOW: {current_duration:?}");
 
     let mut rng = rand::thread_rng();
 

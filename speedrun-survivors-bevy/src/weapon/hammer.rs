@@ -7,6 +7,7 @@ use crate::player::Player;
 use crate::plugins::assets::GameAssets;
 use crate::plugins::audio_manager::{PlaySFX, SFX};
 use crate::plugins::camera_shake::{CameraImpact, CameraImpactStrength};
+use crate::plugins::gameplay_effects::{GameplayEffectPluginState, GameplayTag};
 use crate::plugins::menu::MenuGameConfig;
 use crate::plugins::status_effect::{
     StatusEffect, StatusEffectEvent, StatusEffectEventType, StatusEffectType,
@@ -54,7 +55,6 @@ pub struct HammerStomp {
 pub struct HammerController {
     pub hitbox: f32,
     pub stomp_time: f32,
-    pub cooldown: f32,
     pub knockback: f32,
     pub is_stomping: bool,
 }
@@ -220,7 +220,6 @@ pub fn spawn_hammer(
         .insert(HammerController {
             hitbox: HAMMER_HITBOX,
             stomp_time: 0.,
-            cooldown: 0.,
             knockback: HAMMER_KNOCKBACK,
             is_stomping: false,
         })
@@ -231,14 +230,11 @@ pub fn hammer_controls(
     mut hammer_query: Query<(&mut HammerController, &Transform, &mut Animator)>,
     actions: Query<&ActionState<GameAction>>,
     mut tx_stomp: EventWriter<HammerStomp>,
+    mut gameplay_state: ResMut<GameplayEffectPluginState>,
 ) {
     let action = actions.single();
 
     for (mut hammer, transform, mut animator) in hammer_query.iter_mut() {
-        if hammer.cooldown > 0. {
-            hammer.cooldown -= 0.1;
-        }
-
         if hammer.stomp_time > 0. {
             animator.current_animation = "Stomp".to_string();
             hammer.stomp_time -= 0.15;
@@ -256,11 +252,13 @@ pub fn hammer_controls(
             hammer.is_stomping = false;
         }
 
-        if hammer.stomp_time <= 0. && hammer.cooldown <= 0. {
-            if action.pressed(GameAction::Action1) {
-                hammer.stomp_time = 3.5;
-                hammer.cooldown = 5.;
-            }
+        if hammer.stomp_time <= 0.
+            && action.pressed(GameAction::Action1)
+            && gameplay_state
+                .player_tags
+                .addTag(GameplayTag::Ability1, 0.9)
+        {
+            hammer.stomp_time = 3.5;
         }
     }
 }
