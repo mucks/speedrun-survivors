@@ -63,8 +63,9 @@ fn on_update(
         eprintln!("DEBUG EFFECTS {:?}", state.player_effects)
     }
 
-    // Update gameplay tags
-    state.player_tags.tick(time.delta_seconds())
+    // Update gameplay tags & temporary effects
+    state.player_tags.tick(time.delta_seconds());
+    state.player_effects.update_temporary(time.delta_seconds());
 }
 
 #[derive(Debug, Event)]
@@ -181,18 +182,31 @@ impl GameplayEffect {
     }
 }
 
+struct TemporaryGameplayEffectStack {
+    effects: Vec<GameplayEffect>,
+    duration: f32,
+}
+
+impl TemporaryGameplayEffectStack {
+    pub fn new(effects: Vec<GameplayEffect>, duration: f32) -> Self {
+        Self { effects, duration }
+    }
+}
+
 #[derive(Default)]
 pub struct GameplayEffectContainer {
     /// The heroes stats serve as the base stat and must be absolute values
-    pub hero: Vec<GameplayEffect>,
+    hero: Vec<GameplayEffect>,
     /// The map can also modify the stats
-    pub map: Vec<GameplayEffect>,
+    map: Vec<GameplayEffect>,
     /// The NFTs that were equipped
-    pub nfts: Vec<(String, GameplayEffect)>,
+    nfts: Vec<(String, GameplayEffect)>,
     /// Each equipped item has effects
-    pub items: Vec<(Entity, GameplayEffect)>,
+    items: Vec<(Entity, GameplayEffect)>,
     /// With each level up, additional effects can be added
-    pub levels: Vec<GameplayEffect>,
+    levels: Vec<GameplayEffect>,
+    /// Temporary effects from abilities or shrines
+    temporary: Vec<TemporaryGameplayEffectStack>,
 
     /// Used for fast access of final values
     flat_packed: HashMap<GameplayStat, f64>,
@@ -261,6 +275,26 @@ impl GameplayEffectContainer {
         self.recalculate();
     }
 
+    /// Adds a stack of temporary effects with the given duration
+    pub fn apply_temporary(&mut self, effects: Vec<GameplayEffect>, duration: f32) {
+        self.temporary
+            .push(TemporaryGameplayEffectStack::new(effects, duration));
+        self.recalculate();
+    }
+
+    /// Update temporary effects and remove if applicable
+    pub fn update_temporary(&mut self, delta: f32) {
+        let before = self.temporary.len();
+        for stack in self.temporary.iter_mut() {
+            stack.duration -= delta;
+        }
+        self.temporary.retain(|stack| stack.duration > 0.0);
+
+        if self.temporary.len() != before {
+            self.recalculate();
+        }
+    }
+
     /// This function will iterate through all effects and store final stat values for lookup operations
     fn recalculate(&mut self) {
         self.reset_flat_packed();
@@ -303,6 +337,14 @@ impl GameplayEffectContainer {
                 .and_modify(|e| effect.op.apply(e, effect.val));
         }
 
+        for stack in &self.temporary {
+            for effect in &stack.effects {
+                self.flat_packed
+                    .entry(effect.stat)
+                    .and_modify(|e| effect.op.apply(e, effect.val));
+            }
+        }
+
         // Cache additional values we might need every tick
         self.move_speed = *self
             .flat_packed
@@ -341,7 +383,7 @@ impl std::fmt::Debug for GameplayEffectContainer {
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum GameplayTag {
-    Ability1,
+    Attack,
     Dodge,
 }
 

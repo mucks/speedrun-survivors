@@ -254,9 +254,7 @@ pub fn hammer_controls(
 
         if hammer.stomp_time <= 0.
             && action.pressed(GameAction::Action1)
-            && gameplay_state
-                .player_tags
-                .addTag(GameplayTag::Ability1, 0.9)
+            && gameplay_state.player_tags.addTag(GameplayTag::Attack, 0.9)
         {
             hammer.stomp_time = 3.5;
         }

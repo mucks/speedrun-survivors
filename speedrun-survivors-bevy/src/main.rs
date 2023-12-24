@@ -5,7 +5,8 @@ use crate::plugins::assets::AssetsPlugin;
 use crate::plugins::audio_manager::AudioManagerPlugin;
 use crate::plugins::camera_shake::CameraShakePlugin;
 use crate::plugins::coin_rewards::CoinRewardsPlugin;
-use crate::plugins::gameplay_effects::{GameplayEffect, GameplayEffectsPlugin};
+use crate::plugins::dodge::DodgePlugin;
+use crate::plugins::gameplay_effects::GameplayEffectsPlugin;
 use crate::plugins::hud::HudPlugin;
 use crate::plugins::menu::MenuPlugin;
 use crate::state::{AppState, ForState, StatesPlugin};
@@ -42,6 +43,7 @@ enum GameAction {
     Slot6,
     Action1,
     Action2,
+    Action3,
     Cancel,
     Confirm,
 }
@@ -77,6 +79,7 @@ fn main() {
             HealthPlugin,
             CombatTextPlugin,
             WeaponPlugin,
+            DodgePlugin,
             StatusEffectPlugin,
         ))
         .add_plugins(GameplayEffectsPlugin)
@@ -153,13 +156,14 @@ fn setup_key_bindings(mut commands: Commands) {
         (KeyCode::Key4, GameAction::Slot4),
         (KeyCode::Key5, GameAction::Slot5),
         (KeyCode::Key6, GameAction::Slot6),
+        (KeyCode::Space, GameAction::Action3),
         (KeyCode::Return, GameAction::Confirm),
         (KeyCode::Escape, GameAction::Cancel),
     ]);
 
     // Mouse bindings
     input_map.insert(InputKind::Mouse(MouseButton::Left), GameAction::Action1);
-    input_map.insert(InputKind::Mouse(MouseButton::Left), GameAction::Action2);
+    input_map.insert(InputKind::Mouse(MouseButton::Right), GameAction::Action2);
 
     // Gamepad bindings
     input_map.insert(GamepadButtonType::DPadUp, GameAction::MoveUp);
@@ -190,12 +194,14 @@ fn setup_key_bindings(mut commands: Commands) {
     input_map.insert(GamepadButtonType::Mode, GameAction::Cancel);
 
     input_map.insert(GamepadButtonType::West, GameAction::Slot1);
-    input_map.insert(GamepadButtonType::North, GameAction::Slot1);
-    input_map.insert(GamepadButtonType::East, GameAction::Slot1);
-    input_map.insert(GamepadButtonType::South, GameAction::Slot1);
+    input_map.insert(GamepadButtonType::North, GameAction::Slot2);
+    input_map.insert(GamepadButtonType::East, GameAction::Slot3);
+    input_map.insert(GamepadButtonType::South, GameAction::Slot4);
 
     input_map.insert(GamepadButtonType::LeftTrigger, GameAction::Action1);
     input_map.insert(GamepadButtonType::RightTrigger, GameAction::Action2);
+
+    input_map.insert(GamepadButtonType::RightThumb, GameAction::Action3);
 
     commands.spawn(InputManagerBundle::<GameAction> {
         action_state: ActionState::default(),
