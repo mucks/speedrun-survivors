@@ -9,7 +9,7 @@ pub enum HeroType {
     Pepe,
     #[default]
     BonkInu,
-    PudgyPenguin,
+    Orca,
     MadLad,
     MysteryHero1,
     MysteryHero2,
@@ -103,6 +103,8 @@ impl HeroType {
         match self {
             HeroType::Pepe => "ui/heroes/pepe.png",
             HeroType::BonkInu => "ui/heroes/bonk_inu.png",
+            HeroType::Orca => "ui/heroes/orca.png",
+            HeroType::MadLad => "ui/heroes/madlad.png",
             _ => "ui/heroes/mystery.png",
         }
     }
