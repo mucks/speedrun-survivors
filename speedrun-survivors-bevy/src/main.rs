@@ -5,7 +5,7 @@ use crate::plugins::assets::AssetsPlugin;
 use crate::plugins::audio_manager::AudioManagerPlugin;
 use crate::plugins::camera_shake::CameraShakePlugin;
 use crate::plugins::coin_rewards::CoinRewardsPlugin;
-use crate::plugins::dodge::DodgePlugin;
+use crate::plugins::dash::DashPlugin;
 use crate::plugins::gameplay_effects::GameplayEffectsPlugin;
 use crate::plugins::hud::HudPlugin;
 use crate::plugins::menu::MenuPlugin;
@@ -79,7 +79,7 @@ fn main() {
             HealthPlugin,
             CombatTextPlugin,
             WeaponPlugin,
-            DodgePlugin,
+            DashPlugin,
             StatusEffectPlugin,
         ))
         .add_plugins(GameplayEffectsPlugin)

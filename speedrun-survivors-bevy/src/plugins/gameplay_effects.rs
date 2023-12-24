@@ -384,7 +384,7 @@ impl std::fmt::Debug for GameplayEffectContainer {
 #[derive(Clone, Debug, PartialEq)]
 pub enum GameplayTag {
     Attack,
-    Dodge,
+    Dash,
 }
 
 impl GameplayTag {
