@@ -1,15 +1,16 @@
 use crate::enemy::enemy_spawner::SpawnEnemiesPlugin;
 use crate::enemy::EnemyPlugin;
+use crate::passives::orca_chopper::OrcaChopperPlugin;
 use crate::player::PlayerPlugin;
 use crate::plugins::assets::AssetsPlugin;
 use crate::plugins::audio_manager::AudioManagerPlugin;
 use crate::plugins::camera_shake::CameraShakePlugin;
 use crate::plugins::coin_rewards::CoinRewardsPlugin;
-use crate::plugins::dash::DashPlugin;
 use crate::plugins::gameplay_effects::GameplayEffectsPlugin;
 use crate::plugins::hud::HudPlugin;
 use crate::plugins::menu::MenuPlugin;
 use crate::state::{AppState, ForState, StatesPlugin};
+use actives::dash::DashPlugin;
 use bevy::audio::VolumeLevel;
 use bevy::prelude::*;
 use bevy_ecs_ldtk::prelude::*;
@@ -21,9 +22,11 @@ use plugins::health::HealthPlugin;
 use plugins::status_effect::StatusEffectPlugin;
 use weapon::WeaponPlugin;
 
+mod actives;
 mod animation;
 mod data;
 mod enemy;
+mod passives;
 mod player;
 mod plugins;
 mod state;
@@ -82,7 +85,7 @@ fn main() {
             DashPlugin,
             StatusEffectPlugin,
         ))
-        .add_plugins(GameplayEffectsPlugin)
+        .add_plugins((GameplayEffectsPlugin, OrcaChopperPlugin))
         .add_systems(Startup, (setup_camera, setup_key_bindings))
         .add_systems(
             Update,

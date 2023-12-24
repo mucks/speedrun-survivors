@@ -27,6 +27,7 @@ pub struct GameAssets {
     pub weapon_animation_effects: HashMap<WeaponAnimationEffect, Handle<TextureAtlas>>,
     pub enemies: HashMap<EnemyType, Handle<TextureAtlas>>,
     pub skull: Handle<TextureAtlas>,
+    pub orca: Handle<Image>,
 }
 
 pub struct AssetsPlugin;
@@ -117,5 +118,6 @@ fn setup(
         weapon_animation_effects,
         enemies,
         skull: texture_atlases.add(skull),
+        orca: asset_server.load("sprites/passives/orca.png"),
     });
 }

@@ -408,7 +408,7 @@ pub struct GameplayTagContainer {
 }
 
 impl GameplayTagContainer {
-    pub fn hasTag(&self, search_tag: &GameplayTag) -> bool {
+    pub fn has_tag(&self, search_tag: &GameplayTag) -> bool {
         for tag in &self.tags {
             if tag.tag == *search_tag {
                 return true;
@@ -418,8 +418,8 @@ impl GameplayTagContainer {
         false
     }
 
-    pub fn addTag(&mut self, tag: GameplayTag, cooldown: Cooldown) -> bool {
-        if self.hasTag(&tag) {
+    pub fn add_tag(&mut self, tag: GameplayTag, cooldown: Cooldown) -> bool {
+        if self.has_tag(&tag) {
             //TODO use GameplayTag::blocked_by or some new invention
             return false;
         }

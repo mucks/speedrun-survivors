@@ -71,15 +71,17 @@ pub fn update_enemies(
     mut enemy_query: Query<(&Enemy, &mut Transform, Entity, &Health), Without<Player>>,
     player_query: Query<&Transform, (With<Player>, Without<Enemy>)>,
 ) {
-    if let Ok(player_transform) = player_query.get_single() {
-        for (enemy, mut transform, entity, health) in enemy_query.iter_mut() {
-            let moving = Vec3::normalize(player_transform.translation - transform.translation)
-                * enemy.speed
-                * time.delta_seconds();
+    let Ok(player_transform) = player_query.get_single() else {
+        return;
+    };
 
-            transform.translation += moving;
-            transform.scale.x = moving.x.signum() * -f32::abs(transform.scale.x);
-        }
+    for (enemy, mut transform, entity, health) in enemy_query.iter_mut() {
+        let moving = Vec3::normalize(player_transform.translation - transform.translation)
+            * enemy.speed
+            * time.delta_seconds();
+
+        transform.translation += moving;
+        transform.scale.x = moving.x.signum() * -f32::abs(transform.scale.x);
     }
 }
 

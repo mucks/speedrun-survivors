@@ -22,7 +22,7 @@ fn on_update(
     let action = actions.single();
 
     if action.pressed(GameAction::Action3)
-        && gameplay_state.player_tags.addTag(GameplayTag::Dash, 2.5)
+        && gameplay_state.player_tags.add_tag(GameplayTag::Dash, 2.5)
     {
         gameplay_state.player_effects.apply_temporary(
             vec![GameplayEffect::new_mul(GameplayStat::MovementSpeed, 3.0)],

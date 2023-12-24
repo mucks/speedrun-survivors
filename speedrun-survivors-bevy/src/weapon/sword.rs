@@ -216,7 +216,7 @@ pub fn sword_controls(
             && action.just_pressed(GameAction::Action1)
             && gameplay_state
                 .player_tags
-                .addTag(GameplayTag::Attack, SWORD_COOLDOWN)
+                .add_tag(GameplayTag::Attack, SWORD_COOLDOWN)
         {
             sword_controller.swing_time = SWORD_SWING_TIME;
         }

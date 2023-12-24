@@ -34,7 +34,7 @@ fn switch_weapon_controls(
     let action = actions.single();
 
     if action.just_pressed(GameAction::Slot1)
-        && gameplay_state.player_tags.addTag(GameplayTag::Attack, 0.5)
+        && gameplay_state.player_tags.add_tag(GameplayTag::Attack, 0.5)
     {
         tx_switch.send(SwitchWeaponEvent {
             weapon_type: WeaponType::Sword,
@@ -42,7 +42,7 @@ fn switch_weapon_controls(
     }
 
     if action.just_pressed(GameAction::Slot2)
-        && gameplay_state.player_tags.addTag(GameplayTag::Attack, 0.5)
+        && gameplay_state.player_tags.add_tag(GameplayTag::Attack, 0.5)
     {
         tx_switch.send(SwitchWeaponEvent {
             weapon_type: WeaponType::Hammer,
@@ -50,7 +50,7 @@ fn switch_weapon_controls(
     }
 
     if action.just_pressed(GameAction::Slot3)
-        && gameplay_state.player_tags.addTag(GameplayTag::Attack, 0.5)
+        && gameplay_state.player_tags.add_tag(GameplayTag::Attack, 0.5)
     {
         tx_switch.send(SwitchWeaponEvent {
             weapon_type: WeaponType::Gun,
@@ -58,7 +58,7 @@ fn switch_weapon_controls(
     }
 
     if action.just_pressed(GameAction::Slot4)
-        && gameplay_state.player_tags.addTag(GameplayTag::Attack, 0.5)
+        && gameplay_state.player_tags.add_tag(GameplayTag::Attack, 0.5)
     {
         tx_switch.send(SwitchWeaponEvent {
             weapon_type: WeaponType::FlameThrower,
