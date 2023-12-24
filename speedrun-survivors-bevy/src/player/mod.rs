@@ -295,7 +295,7 @@ fn spawn_skull_on_player(commands: &mut Commands, position: Vec2, game_assets: &
                 texture_atlas: game_assets.skull.clone(),
                 transform: Transform {
                     scale: Vec3::splat(0.5),
-                    translation: Vec3::new(position.x, position.y, 5.),
+                    translation: Vec3::new(position.x, position.y, 50.),
                     ..Default::default()
                 },
                 ..Default::default()

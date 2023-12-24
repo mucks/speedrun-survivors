@@ -1,7 +1,9 @@
 use crate::enemy::Enemy;
 use crate::player::Player;
 use crate::plugins::assets::GameAssets;
-use crate::plugins::gameplay_effects::GameplayEffectPluginState;
+use crate::plugins::gameplay_effects::{
+    GameplayEffectPluginState, GameplayStat, GameplayStatsRecalculatedEvent,
+};
 use crate::plugins::health::{HealthUpdateEvent, TargetType};
 use crate::state::{AppState, ForState};
 use bevy::prelude::*;
@@ -31,28 +33,42 @@ fn on_update(
     mut orca_state: ResMut<OrcaChopperPluginState>,
     player: Query<&Transform, With<Player>>,
     game_assets: Res<GameAssets>,
+    mut rx_gameplay: EventReader<GameplayStatsRecalculatedEvent>,
+    gameplay_state: Res<GameplayEffectPluginState>,
 ) {
+    // There was some recalculate event
+    if rx_gameplay.iter().len() < 1 {
+        return;
+    }
+
+    // Make sure we got a player
     let Ok(player_location) = player.get_single() else {
         return;
     };
 
-    // Check if we need to spawn more orcas
-    // TODO this would be better with messages
-    //  not sure how to do this atm - some SpawnOrcas(total_required) - compare against OrcaChopperPluginState::total_spawned
-    //  could be send by gameplay effect system if certain stats ares update
-    if orca_state.total_spawned < 1
-    /*TODO gameplay_state.player_effects.orca_chopper_num*/
-    {
+    // Get the number of total orcas we should have
+    let expected = gameplay_state
+        .player_effects
+        .get_stat(GameplayStat::OrcaCount) as u32;
+
+    // Update local stats from gameplay state
+    orca_state.speed = gameplay_state
+        .player_effects
+        .get_stat(GameplayStat::OrcaSpeed) as f32;
+    orca_state.damage = gameplay_state
+        .player_effects
+        .get_stat(GameplayStat::OrcaDamage) as f32;
+
+    // No need to spawn none
+    if expected <= 0 {
+        return;
+    }
+
+    // Spawn in the required number of orcas
+    for i in orca_state.total_spawned..expected {
         orca_state.total_spawned += 1;
         spawn_orca_chopper(&mut commands, &player_location.translation, &game_assets);
     }
-
-    // TODO gameplay stats:
-    //  - number
-    //  - speed
-    //  - damage
-
-    // TODO orca hacks deal damage when touching enemies
 }
 
 /// Move and rotate each orca chopper
@@ -60,7 +76,7 @@ fn orca_move(
     time: Res<Time>,
     camera_query: Query<(&Camera, &GlobalTransform)>,
     mut orcas: Query<(&mut OrcaChopper, &mut Transform)>,
-    gameplay_state: Res<GameplayEffectPluginState>,
+    orca_state: Res<OrcaChopperPluginState>,
 ) {
     // Project camera viewport to world space
     let Ok((camera, camera_transform)) = camera_query.get_single() else {
@@ -76,8 +92,8 @@ fn orca_move(
         return;
     };
 
-    // Get the orca speed from the gameplay system TODO
-    let move_by = 400.0 * time.delta_seconds();
+    // Get the orca speed from the gameplay system
+    let move_by = orca_state.speed * time.delta_seconds();
 
     for (mut orca, mut transform) in orcas.iter_mut() {
         // Distance to camera location
@@ -93,6 +109,8 @@ fn orca_move(
         // The orca might leave the screen by such a distance,
         // that every future tick would only flip flop the heading around
         // So we need to make sure it is getting closer
+        // TODO this is not fully foolproof - might get stuck bouncing up and down with a permanent X location
+        //  might have to add some angle towards center of screen
         let moving_away = distance_before
             < transform
                 .translation
@@ -114,6 +132,7 @@ fn orca_attack(
     mut orcas: Query<(&OrcaChopper, &Transform)>,
     mut enemies: Query<(Entity, &Enemy, &Transform)>,
     mut tx_health: EventWriter<HealthUpdateEvent>,
+    orca_state: Res<OrcaChopperPluginState>,
 ) {
     for (orca, orca_transform) in orcas.iter() {
         for (entity, enemy, transform) in enemies.iter_mut() {
@@ -124,7 +143,7 @@ fn orca_attack(
             {
                 tx_health.send(HealthUpdateEvent {
                     entity,
-                    health_change: -0.2, //TODO get from gameplay system
+                    health_change: orca_state.damage,
                     target_type: TargetType::Enemy(enemy.kind),
                 });
             }
@@ -162,6 +181,8 @@ fn spawn_orca_chopper(
 #[derive(Default, Resource)]
 struct OrcaChopperPluginState {
     total_spawned: u32,
+    speed: f32,
+    damage: f32,
 }
 
 #[derive(Component)]

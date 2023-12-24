@@ -15,8 +15,7 @@ Gold obtained can be traded for heroes, weapons and buffs of all kinds.
 ### Player Character
 - Pepe
 - Bonk Inu
-- Pudgy Penguin
-- Crypto Kitties
+- Orcanaut
 - Mad Lads
 - will add different NFT hero characters over time
   - each with different base stats
@@ -108,21 +107,13 @@ Gold obtained can be traded for heroes, weapons and buffs of all kinds.
 
 
 ### Bugs
-- LDTK
-  - maps does not appear in wasm+chrome
+
 
 ### TODO
-- XP system
-  - could be similar to coin_reward (or even use that)
-  - should we have enemy drop XP crystals as in Vamp Survivor?
 - Level up system
-- Gameplay Effect System
-  - need some gameplay data
-  - items should have Gameplay Effect stacks
-  - need to gather this data and attach it to the player
 - UI
   - TIME ELAPSED
-  - LEVEL PROGRESS
+  - Total kills
 - REPLAY / recording system
     - playback system
     - headless server playback

@@ -5,6 +5,7 @@ use crate::data::map::MapId;
 use crate::state::AppState;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
+use strum::{EnumIter, IntoEnumIterator};
 
 pub struct GameplayEffectsPlugin;
 
@@ -14,6 +15,7 @@ impl Plugin for GameplayEffectsPlugin {
             .add_systems(OnExit(AppState::GameRunning), on_exit_game_running)
             .add_systems(Update, on_update)
             .add_event::<GameplayEffectEvent>()
+            .add_event::<GameplayStatsRecalculatedEvent>()
             .insert_resource(GameplayEffectPluginState::default());
     }
 }
@@ -33,6 +35,7 @@ fn on_update(
     time: Res<Time>,
     mut state: ResMut<GameplayEffectPluginState>,
     mut rx_gameplay: EventReader<GameplayEffectEvent>,
+    mut tx_recalculated: EventWriter<GameplayStatsRecalculatedEvent>,
 ) {
     let mut debug_count = 0;
     for ev in rx_gameplay.iter() {
@@ -66,6 +69,9 @@ fn on_update(
     // Update gameplay tags & temporary effects
     state.player_tags.tick(time.delta_seconds());
     state.player_effects.update_temporary(time.delta_seconds());
+
+    // Emit a recalculated event
+    tx_recalculated.send(GameplayStatsRecalculatedEvent {});
 }
 
 #[derive(Debug, Event)]
@@ -78,6 +84,9 @@ pub enum GameplayEffectEvent {
     ItemUnEquipped(Entity),
     LevelUp(Level),
 }
+
+#[derive(Event)]
+pub struct GameplayStatsRecalculatedEvent {}
 
 #[derive(Default, Resource)]
 pub struct GameplayEffectPluginState {
@@ -106,7 +115,7 @@ impl GameplayEffectOperation {
     }
 }
 
-#[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, EnumIter, Hash, Eq, PartialEq)]
 pub enum GameplayStat {
     MovementSpeed,
     AttackRate,
@@ -114,20 +123,9 @@ pub enum GameplayStat {
     HealthRegen,
     SpawnRate,
     Damage,
-}
-
-impl GameplayStat {
-    pub fn into_iter() -> core::array::IntoIter<GameplayStat, 6> {
-        [
-            Self::MovementSpeed,
-            Self::AttackRate,
-            Self::Health,
-            Self::HealthRegen,
-            Self::SpawnRate,
-            Self::Damage,
-        ]
-        .into_iter()
-    }
+    OrcaCount,
+    OrcaSpeed,
+    OrcaDamage,
 }
 
 pub struct GameplayEffect {
@@ -212,6 +210,8 @@ pub struct GameplayEffectContainer {
     flat_packed: HashMap<GameplayStat, f64>,
 
     pub move_speed: f32,
+    pub orca_speed: f32,
+    pub orca_damage: f32,
 }
 
 impl GameplayEffectContainer {
@@ -297,7 +297,11 @@ impl GameplayEffectContainer {
 
     /// This function will iterate through all effects and store final stat values for lookup operations
     fn recalculate(&mut self) {
-        self.reset_flat_packed();
+        // Can use this for change detection
+        let _before = std::mem::replace(
+            &mut self.flat_packed,
+            HashMap::from_iter(GameplayStat::iter().map(|stat| (stat, 0.))),
+        );
 
         for effect in &self.hero {
             if effect.op != GameplayEffectOperation::Abs {
@@ -352,11 +356,6 @@ impl GameplayEffectContainer {
             .unwrap_or(&100.) as f32;
     }
 
-    /// Delete the cached values to recalculate from scratch
-    fn reset_flat_packed(&mut self) {
-        self.flat_packed = HashMap::from_iter(GameplayStat::into_iter().map(|stat| (stat, 0.)));
-    }
-
     /// Get some stat
     pub fn get_stat(&self, stat: GameplayStat) -> f64 {
         *self.flat_packed.get(&stat).unwrap_or(&0.)
@@ -366,7 +365,7 @@ impl GameplayEffectContainer {
 impl std::fmt::Debug for GameplayEffectContainer {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "GameplayEffectContainer packed:\r\n{}", {
-            let stat_repr: Vec<String> = GameplayStat::into_iter()
+            let stat_repr: Vec<String> = GameplayStat::iter()
                 .map(|stat| {
                     format!(
                         " - {:?} -> {}",

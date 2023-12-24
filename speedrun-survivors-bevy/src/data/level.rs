@@ -8,7 +8,12 @@ impl Level {
     pub fn get_gameplay_effects(&self) -> Vec<GameplayEffect> {
         match self.0 {
             _ => {
-                vec![GameplayEffect::new_mul(GameplayStat::MovementSpeed, 1.2)]
+                vec![
+                    GameplayEffect::new_mul(GameplayStat::MovementSpeed, 1.1),
+                    GameplayEffect::new_add(GameplayStat::OrcaCount, 1.0),
+                    GameplayEffect::new_add(GameplayStat::OrcaSpeed, 50.0),
+                    GameplayEffect::new_add(GameplayStat::OrcaDamage, -0.1),
+                ]
             }
         }
     }
