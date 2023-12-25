@@ -84,12 +84,16 @@ pub enum CameraImpactStrength {
 impl CameraImpactStrength {
     /// Create some intensity based on a distance (TODO: should consider viewport size)
     pub fn strength_by_distance(distance: f32) -> Self {
-        match distance {
-            0.0..=50.0 => CameraImpactStrength::Absurd,
-            50.0..=200.0 => CameraImpactStrength::Heavy,
-            200.0..=600.0 => CameraImpactStrength::Medium,
-            _ => CameraImpactStrength::Light,
+        if distance < 50.0 {
+            return CameraImpactStrength::Absurd;
         }
+        if distance < 200.0 {
+            return CameraImpactStrength::Heavy;
+        }
+        if distance < 600.0 {
+            return CameraImpactStrength::Medium;
+        }
+        CameraImpactStrength::Light
     }
 }
 

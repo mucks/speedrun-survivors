@@ -5,7 +5,6 @@ use leafwing_input_manager::action_state::ActionState;
 
 use crate::data::hero::HeroType;
 use crate::data::level::Level;
-use crate::data::map::MapId;
 use crate::plugins::assets::GameAssets;
 use crate::plugins::gameplay_effects::{
     GameplayEffectEvent, GameplayEffectPluginState, GameplayStat, GameplayStatsRecalculatedEvent,

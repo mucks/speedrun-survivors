@@ -6,7 +6,6 @@ use crate::plugins::gameplay_effects::{
 };
 use crate::state::{AppState, ForState};
 use bevy::prelude::*;
-use leafwing_input_manager::orientation::Orientation;
 use rand::Rng;
 
 const CONSUME_DISTANCE: f32 = 50.;

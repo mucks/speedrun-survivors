@@ -12,7 +12,6 @@ pub struct GameplayEffectsPlugin;
 impl Plugin for GameplayEffectsPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(AppState::GameRunning), on_enter_game_running)
-            .add_systems(OnExit(AppState::GameRunning), on_exit_game_running)
             .add_systems(Update, on_update)
             .add_event::<GameplayEffectEvent>()
             .add_event::<GameplayStatsRecalculatedEvent>()
@@ -28,8 +27,6 @@ fn on_enter_game_running(mut state: ResMut<GameplayEffectPluginState>) {
             .equip_hero(HeroType::Pepe.get_gameplay_effects())
     }
 }
-
-fn on_exit_game_running(mut state: ResMut<GameplayEffectPluginState>) {}
 
 fn on_update(
     time: Res<Time>,
