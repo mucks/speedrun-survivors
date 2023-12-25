@@ -121,6 +121,9 @@ impl HeroType {
                     GameplayEffect::new_abs(GameplayStat::MovementSpeed, 100.0),
                     GameplayEffect::new_abs(GameplayStat::OrcaSpeed, 400.0),
                     GameplayEffect::new_abs(GameplayStat::PickupDistance, 40.0),
+                    GameplayEffect::new_abs(GameplayStat::WhaleDamage, 1.0),
+                    GameplayEffect::new_abs(GameplayStat::WhaleInterval, 5.0),
+                    GameplayEffect::new_abs(GameplayStat::WhaleArea, 70.0),
                 ]
             }
             _ => {
@@ -132,6 +135,9 @@ impl HeroType {
                     GameplayEffect::new_abs(GameplayStat::MovementSpeed, 120.0),
                     GameplayEffect::new_abs(GameplayStat::OrcaSpeed, 400.0),
                     GameplayEffect::new_abs(GameplayStat::PickupDistance, 40.0),
+                    GameplayEffect::new_abs(GameplayStat::WhaleDamage, 1.0),
+                    GameplayEffect::new_abs(GameplayStat::WhaleInterval, 5.0),
+                    GameplayEffect::new_abs(GameplayStat::WhaleArea, 70.0),
                 ]
             }
         }

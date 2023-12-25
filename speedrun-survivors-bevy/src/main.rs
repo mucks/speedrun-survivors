@@ -1,6 +1,7 @@
 use crate::enemy::enemy_spawner::SpawnEnemiesPlugin;
 use crate::enemy::EnemyPlugin;
 use crate::passives::orca_chopper::OrcaChopperPlugin;
+use crate::passives::whale::WhaleDumpPlugin;
 use crate::player::PlayerPlugin;
 use crate::plugins::assets::AssetsPlugin;
 use crate::plugins::audio_manager::AudioManagerPlugin;
@@ -86,7 +87,12 @@ fn main() {
             DashPlugin,
             StatusEffectPlugin,
         ))
-        .add_plugins((GameplayEffectsPlugin, OrcaChopperPlugin, PickupPlugin))
+        .add_plugins((
+            GameplayEffectsPlugin,
+            OrcaChopperPlugin,
+            WhaleDumpPlugin,
+            PickupPlugin,
+        ))
         .add_systems(Startup, (setup_camera, setup_key_bindings))
         .add_systems(
             Update,

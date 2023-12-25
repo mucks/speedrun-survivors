@@ -128,6 +128,7 @@ fn orca_move(
     }
 }
 
+/// Deal damage to enemies in contact
 fn orca_attack(
     mut orcas: Query<(&OrcaChopper, &Transform)>,
     mut enemies: Query<(Entity, &Enemy, &Transform)>,
@@ -151,13 +152,12 @@ fn orca_attack(
     }
 }
 
-/// Add a new orca chopper on the player
+/// Spawn a new orca chopper on top of the player
 fn spawn_orca_chopper(
     commands: &mut Commands,
     player_location: &Vec3,
     game_assets: &Res<GameAssets>,
 ) {
-    // Spawn a new orca on top of the player with a random heading
     let mut rng = rand::thread_rng();
 
     let mut spawn_transform = Transform::from_translation(player_location.clone());

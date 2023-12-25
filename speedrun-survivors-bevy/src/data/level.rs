@@ -16,6 +16,9 @@ impl Level {
                     GameplayEffect::new_add(GameplayStat::OrcaSpeed, 50.0),
                     GameplayEffect::new_add(GameplayStat::OrcaDamage, -0.1),
                     GameplayEffect::new_add(GameplayStat::PickupDistance, 50.0),
+                    GameplayEffect::new_mul(GameplayStat::WhaleDamage, 1.1),
+                    GameplayEffect::new_div(GameplayStat::WhaleInterval, 1.05),
+                    GameplayEffect::new_mul(GameplayStat::WhaleArea, 1.1),
                 ]
             }
         }
