@@ -100,6 +100,7 @@ fn on_health_change_event(
                 }
                 TargetType::Enemy(kind) => {
                     tx_enemy.send(EnemyEvent::Died(ev.entity, kind));
+                    tx_player.send(PlayerEvent::EnemyDefeated);
                 }
             }
         }

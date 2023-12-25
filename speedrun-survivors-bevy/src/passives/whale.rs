@@ -34,10 +34,12 @@ impl Plugin for WhaleDumpPlugin {
     }
 }
 
+/// Reset plugin state
 fn on_enter_game_running(mut whale_state: ResMut<WhaleDumpPluginState>) {
     *whale_state = Default::default();
 }
 
+/// Update stats when required, spawn whales
 fn on_update(
     time: Res<Time>,
     mut commands: Commands,
@@ -90,6 +92,8 @@ fn spawn_location(camera_query: Query<(&Camera, &GlobalTransform)>) -> Option<Ve
         top_left.y - WHALE_Y_OFFSET,
     ))
 }
+
+/// Spawn a whale at the given location
 fn spawn_whale(commands: &mut Commands, location: Option<Vec2>, game_assets: &Res<GameAssets>) {
     let Some(location) = location else {
         return;
@@ -114,6 +118,7 @@ fn spawn_whale(commands: &mut Commands, location: Option<Vec2>, game_assets: &Re
         });
 }
 
+/// Let the whales fall
 fn whale_move(
     time: Res<Time>,
     mut commands: Commands,
@@ -132,6 +137,7 @@ fn whale_move(
     }
 }
 
+/// Compress the whales on impact and deal damage
 fn whale_impact(
     mut commands: Commands,
     mut whales: Query<(Entity, &mut WhaleFlattens, &mut Transform), Without<Enemy>>,
@@ -181,6 +187,7 @@ fn whale_impact(
     }
 }
 
+/// Whale Dump Plugin state
 #[derive(Default, Resource)]
 struct WhaleDumpPluginState {
     time_last_spawn: f32,
@@ -189,10 +196,12 @@ struct WhaleDumpPluginState {
     area: f32,
 }
 
+/// State for a falling whale
 #[derive(Component)]
 struct Whale {
     time_till_boom: f32,
 }
 
+/// A tag to identify whales that hit th ground
 #[derive(Default, Component)]
 struct WhaleFlattens {}

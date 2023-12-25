@@ -134,8 +134,8 @@ pub fn process_events(
                     .level
                     .percent_to_level_up(player_state.total_exp);
             }
-            _ => {
-                eprintln!("PLAYER EVENT {ev:?} NOT IMPLEMENTED");
+            PlayerEvent::EnemyDefeated => {
+                player_state.total_kills += 1;
             }
         }
     }
@@ -145,8 +145,7 @@ pub fn process_events(
 pub enum PlayerEvent {
     Died,
     ExpGained(u64),
-    Ability1,
-    Ability2,
+    EnemyDefeated,
 }
 
 #[derive(Resource)]
@@ -154,6 +153,7 @@ pub struct PlayerState {
     pub total_exp: u64,
     pub level: Level,
     pub level_progress: f32,
+    pub total_kills: u64,
 }
 
 impl Default for PlayerState {
@@ -162,6 +162,7 @@ impl Default for PlayerState {
             total_exp: 0,
             level: Level(1),
             level_progress: 0.,
+            total_kills: 0,
         }
     }
 }
