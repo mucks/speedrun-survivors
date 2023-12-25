@@ -7,7 +7,9 @@ use crate::data::hero::HeroType;
 use crate::data::level::Level;
 use crate::data::map::MapId;
 use crate::plugins::assets::GameAssets;
-use crate::plugins::gameplay_effects::{GameplayEffectEvent, GameplayEffectPluginState};
+use crate::plugins::gameplay_effects::{
+    GameplayEffectEvent, GameplayEffectPluginState, GameplayStat, GameplayStatsRecalculatedEvent,
+};
 use crate::plugins::health::{add_health_bar, Health};
 use crate::plugins::menu::MenuGameConfig;
 use crate::plugins::status_effect::{StatusEffect, StatusEffectController, StatusEffectType};
@@ -45,7 +47,7 @@ impl Plugin for PlayerPlugin {
                 .run_if(in_state(AppState::GameRunning)),
         )
         .add_event::<PlayerEvent>()
-        .insert_resource(PlayerStats::default());
+        .insert_resource(PlayerState::default());
     }
 }
 
@@ -54,70 +56,83 @@ fn on_exit_game_running(mut commands: Commands) {}
 
 pub fn process_events(
     mut rx_player: EventReader<PlayerEvent>,
+    mut rx_gameplay: EventReader<GameplayStatsRecalculatedEvent>,
     mut commands: Commands,
     mut status_query: Query<(&mut StatusEffectController, &Transform, &mut Health), With<Player>>,
     mut next_state: ResMut<NextState<AppState>>,
     mut tx_stomp: EventWriter<HammerStomp>,
     game_assets: Res<GameAssets>,
-    mut player_stats: ResMut<PlayerStats>,
+    mut player_state: ResMut<PlayerState>,
+    gameplay_state: Res<GameplayEffectPluginState>,
     mut tx_gameplay: EventWriter<GameplayEffectEvent>,
 ) {
+    let Ok((mut control, player_tf, mut player_health)) = status_query.get_single_mut() else {
+        return;
+    };
+
+    // There was some recalculate event, so update stats
+    if rx_gameplay.iter().len() > 0 {
+        player_health.set_cap(
+            gameplay_state
+                .player_effects
+                .get_stat(GameplayStat::HealthCap) as f32,
+        );
+        player_health.set_regen(
+            gameplay_state
+                .player_effects
+                .get_stat(GameplayStat::HealthRegen) as f32,
+        );
+    }
+
     for ev in rx_player.iter() {
         match ev {
             PlayerEvent::Died => {
-                let test = status_query.iter().len();
-                let Ok((mut status_cont, player_tr, mut player_health)) =
-                    status_query.get_single_mut()
-                else {
-                    return;
-                };
-
                 // Player died but has death is temporary status effect
-                if status_cont
+                if control
                     .effects
                     .iter()
                     .find(|effect| effect.effect_type == StatusEffectType::DeathIsTemporary)
                     .is_some()
                 {
-                    status_cont.effects = vec![];
+                    control.effects = vec![];
                     next_state.set(AppState::GameOver);
                     return; // Unspawn will happen due to state change
                 } else {
-                    player_health.active_health = player_health.max_health / 2.;
+                    player_health.set_health_half();
 
                     tx_stomp.send(HammerStomp {
                         hitbox: 200.,
                         knockback: 2000.,
-                        translation: player_tr.translation,
+                        translation: player_tf.translation,
                     });
 
-                    status_cont.effects.push(StatusEffect {
+                    control.effects.push(StatusEffect {
                         effect_type: StatusEffectType::DeathIsTemporary,
                         duration: 10.,
                         current_duration: 10.,
                     });
                     spawn_skull_on_player(
                         &mut commands,
-                        Vec2::new(player_tr.translation.x, player_tr.translation.y),
+                        Vec2::new(player_tf.translation.x, player_tf.translation.y),
                         &game_assets,
                     );
                 }
             }
             PlayerEvent::ExpGained(exp) => {
                 // Add experience
-                player_stats.total_exp += exp;
+                player_state.total_exp += exp;
 
                 // Check if the player leveled up
-                if let Some(new_level) = player_stats.level.has_leveled_up(player_stats.total_exp) {
-                    player_stats.level = new_level;
+                if let Some(new_level) = player_state.level.has_leveled_up(player_state.total_exp) {
+                    player_state.level = new_level;
                     tx_gameplay.send(GameplayEffectEvent::LevelUp(new_level));
-                    eprintln!("Player leveled up: {:?}", player_stats.level);
+                    eprintln!("Player leveled up: {:?}", player_state.level);
                 }
 
                 // Calculate progress towards the next level
-                player_stats.level_progress = player_stats
+                player_state.level_progress = player_state
                     .level
-                    .percent_to_level_up(player_stats.total_exp);
+                    .percent_to_level_up(player_state.total_exp);
             }
             _ => {
                 eprintln!("PLAYER EVENT {ev:?} NOT IMPLEMENTED");
@@ -135,13 +150,13 @@ pub enum PlayerEvent {
 }
 
 #[derive(Resource)]
-pub struct PlayerStats {
+pub struct PlayerState {
     pub total_exp: u64,
     pub level: Level,
     pub level_progress: f32,
 }
 
-impl Default for PlayerStats {
+impl Default for PlayerState {
     fn default() -> Self {
         Self {
             total_exp: 0,

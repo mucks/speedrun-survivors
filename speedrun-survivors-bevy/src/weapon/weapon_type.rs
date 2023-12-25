@@ -21,7 +21,6 @@ impl WeaponType {
     pub fn spawn(
         &self,
         commands: &mut Commands,
-        asset_server: &Res<AssetServer>,
         game_config: &Res<MenuGameConfig>,
         game_assets: &Res<GameAssets>,
     ) {

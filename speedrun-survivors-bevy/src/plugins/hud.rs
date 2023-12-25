@@ -1,4 +1,4 @@
-use crate::player::PlayerStats;
+use crate::player::PlayerState;
 use crate::plugins::coin_rewards::CoinAccumulator;
 use crate::weapon::switch_weapon::SwitchWeaponEvent;
 use crate::{plugins::assets::UiAssets, weapon::weapon_type::WeaponType};
@@ -17,15 +17,11 @@ const ITEMS_COLOR: Color = Color::BLACK;
 
 impl Plugin for HudPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(
-            OnEnter(AppState::GameRunning),
-            (spawn_layout, on_enter_game_running),
-        )
-        .add_systems(OnExit(AppState::GameRunning), on_exit_game_running)
-        .add_systems(
-            Update,
-            (on_update, on_weapon_button_click).run_if(in_state(AppState::GameRunning)),
-        );
+        app.add_systems(OnEnter(AppState::GameRunning), spawn_layout)
+            .add_systems(
+                Update,
+                (on_update, on_weapon_button_click).run_if(in_state(AppState::GameRunning)),
+            );
     }
 }
 
@@ -45,21 +41,17 @@ fn on_weapon_button_click(
     }
 }
 
-fn on_enter_game_running(mut commands: Commands) {}
-
-fn on_exit_game_running(mut commands: Commands) {}
-
 fn on_update(
     mut query_coin: Query<&mut Text, (With<CoinText>, Without<ExpBar>)>,
     coin_accumulator: Res<CoinAccumulator>,
     mut query_exp: Query<&mut Style, (With<ExpBar>, Without<CoinText>)>,
-    player_stats: Res<PlayerStats>,
+    player_state: Res<PlayerState>,
 ) {
     let mut text = query_coin.single_mut();
     text.sections[0].value = format!("Coins: {}", coin_accumulator.total_coin);
 
     let mut text = query_exp.single_mut();
-    text.width = Val::Percent(100. * player_stats.level_progress);
+    text.width = Val::Percent(100. * player_state.level_progress);
 }
 
 #[derive(Component)]

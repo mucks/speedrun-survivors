@@ -84,11 +84,8 @@ fn on_switch_weapon(
         }
 
         // spawn new weapon
-        switch_weapon_event.weapon_type.spawn(
-            &mut commands,
-            &asset_server,
-            &game_config,
-            &game_assets,
-        );
+        switch_weapon_event
+            .weapon_type
+            .spawn(&mut commands, &game_config, &game_assets);
     }
 }

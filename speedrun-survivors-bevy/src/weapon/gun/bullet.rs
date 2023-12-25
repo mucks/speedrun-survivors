@@ -31,7 +31,7 @@ pub struct BulletInfo {
 
 pub fn update_bullet_hits(
     bullet_query: Query<(&Transform, Entity), (With<Bullet>, Without<Enemy>)>,
-    mut enemy_query: Query<(&Enemy, &mut Transform, &health::Health, Entity), Without<Bullet>>,
+    mut enemy_query: Query<(&Enemy, &mut Transform, Entity), Without<Bullet>>,
     mut commands: Commands,
     mut tx_health: EventWriter<health::HealthUpdateEvent>,
 ) {
@@ -42,7 +42,7 @@ pub fn update_bullet_hits(
             entity,
         });
     }
-    for (enemy, transform, mut health, ent) in enemy_query.iter_mut() {
+    for (enemy, transform, ent) in enemy_query.iter_mut() {
         bullet_list.retain(|bullet| {
             let distance = Vec2::distance(bullet.translation, transform.translation.truncate());
             if distance <= 36. {

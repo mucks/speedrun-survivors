@@ -10,6 +10,8 @@ impl Level {
             _ => {
                 vec![
                     GameplayEffect::new_mul(GameplayStat::MovementSpeed, 1.1),
+                    GameplayEffect::new_add(GameplayStat::HealthCap, 5.0),
+                    GameplayEffect::new_add(GameplayStat::HealthRegen, 1.0),
                     GameplayEffect::new_add(GameplayStat::OrcaCount, 1.0),
                     GameplayEffect::new_add(GameplayStat::OrcaSpeed, 50.0),
                     GameplayEffect::new_add(GameplayStat::OrcaDamage, -0.1),

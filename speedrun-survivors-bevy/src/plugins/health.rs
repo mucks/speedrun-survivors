@@ -15,17 +15,55 @@ impl Plugin for HealthPlugin {
         app.add_event::<HealthUpdateEvent>();
         app.add_systems(
             Update,
-            (on_health_change_event, update_health_bar).run_if(in_state(AppState::GameRunning)),
+            (on_health_change_event, regenerate_health, update_health_bar)
+                .run_if(in_state(AppState::GameRunning)),
         );
     }
 }
 
 #[derive(Debug, Component)]
 pub struct Health {
-    pub active_health: f32,
-    pub max_health: f32,
-    pub regen: f32,
+    pub current: f32,
+    maximum: f32,
+    regen: f32,
     pub health_bar: Option<Entity>,
+}
+
+impl Health {
+    pub fn new(current: f32, maximum: f32, regen: f32, health_bar: Option<Entity>) -> Self {
+        Health {
+            current,
+            maximum,
+            regen,
+            health_bar,
+        }
+    }
+
+    pub fn set_cap(&mut self, cap: f32) {
+        self.maximum = cap;
+    }
+
+    pub fn set_regen(&mut self, regen: f32) {
+        self.regen = regen;
+    }
+
+    pub fn set_health_half(&mut self) {
+        self.current = self.maximum / 2.0;
+    }
+
+    pub fn apply_regen(&mut self, delta: f32) {
+        if self.regen <= 0.0 {
+            return;
+        }
+
+        // Increment health
+        self.current += self.regen * delta;
+
+        // Cap to max health
+        if self.current > self.maximum {
+            self.current = self.maximum;
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -54,8 +92,8 @@ fn on_health_change_event(
         let Ok(mut health) = health_query.get_mut(ev.entity) else {
             continue;
         };
-        health.active_health += ev.health_change;
-        if health.active_health <= 0. {
+        health.current += ev.health_change;
+        if health.current <= 0. {
             match ev.target_type {
                 TargetType::Player => {
                     tx_player.send(PlayerEvent::Died);
@@ -68,19 +106,10 @@ fn on_health_change_event(
     }
 }
 
-impl Health {
-    pub fn new(
-        active_health: f32,
-        max_health: f32,
-        regen: f32,
-        health_bar: Option<Entity>,
-    ) -> Self {
-        Health {
-            active_health,
-            max_health,
-            regen,
-            health_bar,
-        }
+/// Regenerate health, if applicable
+pub fn regenerate_health(time: Res<Time>, mut health: Query<&mut Health>) {
+    for mut health in health.iter_mut() {
+        health.apply_regen(time.delta_seconds());
     }
 }
 
@@ -144,8 +173,8 @@ pub fn update_health_bar(
     >,
     mut commands: Commands,
 ) {
-    for (health, mut entity, mut transform, player) in health_query.iter_mut() {
-        let health_percentage = health.active_health / health.max_health;
+    for (health, entity, transform, player) in health_query.iter_mut() {
+        let health_percentage = health.current / health.maximum;
 
         //TODO refactored that a bit; but I think we should move the healthbar into the UI.. no need to update this bar as a separate component
         if let Some(health_bar_entity) = health.health_bar {

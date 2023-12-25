@@ -119,7 +119,7 @@ impl GameplayEffectOperation {
 pub enum GameplayStat {
     MovementSpeed,
     AttackRate,
-    Health,
+    HealthCap,
     HealthRegen,
     SpawnRate,
     Damage,

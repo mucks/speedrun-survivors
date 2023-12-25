@@ -21,12 +21,12 @@ impl ItemType {
     pub fn get_gameplay_effects(&self) -> Vec<GameplayEffect> {
         match self {
             ItemType::RingOfPower => {
-                vec![GameplayEffect::new_add(GameplayStat::Health, 44.0)]
+                vec![GameplayEffect::new_add(GameplayStat::HealthCap, 44.0)]
             }
             _ => {
                 vec![
                     GameplayEffect::new_add(GameplayStat::Damage, 3.0),
-                    GameplayEffect::new_add(GameplayStat::Health, 13.5),
+                    GameplayEffect::new_add(GameplayStat::HealthCap, 13.5),
                 ]
             }
         }

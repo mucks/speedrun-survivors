@@ -101,7 +101,7 @@ impl MapId {
             _ => {
                 vec![
                     GameplayEffect::new_abs(GameplayStat::SpawnRate, 3.0),
-                    GameplayEffect::new_mul(GameplayStat::Health, 1.5),
+                    GameplayEffect::new_mul(GameplayStat::HealthCap, 1.5),
                 ]
             }
         }
