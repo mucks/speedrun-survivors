@@ -1,10 +1,9 @@
 use crate::enemy::enemy_type::EnemyType;
-use bevy::prelude::*;
-
-use crate::player::{Player, PlayerEvent};
-use crate::plugins::coin_rewards::CoinAccumulated;
+use crate::player::Player;
 use crate::plugins::health::{self, Health};
+use crate::plugins::pickup::PickupEvent;
 use crate::state::AppState;
+use bevy::prelude::*;
 
 pub mod enemy_spawner;
 pub mod enemy_type;
@@ -45,16 +44,21 @@ pub enum EnemyEvent {
 pub fn process_events(
     mut commands: Commands,
     mut rx_enemy: EventReader<EnemyEvent>,
-    mut tx_coin: EventWriter<CoinAccumulated>,
-    mut tx_exp: EventWriter<PlayerEvent>,
+    mut tx_pickup: EventWriter<PickupEvent>,
+    mut query_tf: Query<&Transform, With<Enemy>>,
 ) {
     for ev in rx_enemy.iter() {
         match ev {
             EnemyEvent::Died(entity, kind) => {
-                tx_coin.send(CoinAccumulated {
-                    coin: kind.get_coin_reward(),
-                });
-                tx_exp.send(PlayerEvent::ExpGained(kind.get_exp_reward()));
+                let Ok(tf) = query_tf.get(*entity) else {
+                    continue;
+                };
+
+                tx_pickup.send(PickupEvent::new(
+                    kind.get_coin_reward(),
+                    kind.get_exp_reward(),
+                    tf.translation,
+                ));
                 commands
                     .get_entity(*entity)
                     .and_then(|entity| Some(entity.despawn_recursive()));
@@ -107,11 +111,7 @@ pub fn update_enemy_hits(
 
     for (transform, mut health, entity) in player_query.iter_mut() {
         for enemy in enemy_list.iter() {
-            if Vec2::distance(
-                enemy.translation,
-                Vec2::new(transform.translation.x, transform.translation.y),
-            ) <= 36.
-            {
+            if Vec2::distance(enemy.translation, transform.translation.truncate()) <= 36. {
                 tx_health.send(health::HealthUpdateEvent {
                     entity,
                     health_change: -enemy.attack,

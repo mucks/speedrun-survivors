@@ -28,6 +28,8 @@ pub struct GameAssets {
     pub enemies: HashMap<EnemyType, Handle<TextureAtlas>>,
     pub skull: Handle<TextureAtlas>,
     pub orca: Handle<Image>,
+    pub pickup_exp: Handle<Image>,
+    pub pickup_coin: Handle<Image>,
 }
 
 pub struct AssetsPlugin;
@@ -119,5 +121,7 @@ fn setup(
         enemies,
         skull: texture_atlases.add(skull),
         orca: asset_server.load("sprites/passives/orca.png"),
+        pickup_exp: asset_server.load("sprites/misc/exp.png"),
+        pickup_coin: asset_server.load("sprites/misc/coin.png"),
     });
 }

@@ -54,8 +54,8 @@ fn update_flame_hits(
     for (flame, flame_transform) in query.iter_mut() {
         for (enemy, entity, transform) in enemy_query.iter_mut() {
             if Vec2::distance(
-                Vec2::new(flame_transform.translation.x, flame_transform.translation.y),
-                Vec2::new(transform.translation.x, transform.translation.y),
+                flame_transform.translation.truncate(),
+                transform.translation.truncate(),
             ) <= flame.hitbox
             {
                 tx_health.send(HealthUpdateEvent {

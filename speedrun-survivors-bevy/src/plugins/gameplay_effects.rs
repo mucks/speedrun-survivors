@@ -126,6 +126,7 @@ pub enum GameplayStat {
     OrcaCount,
     OrcaSpeed,
     OrcaDamage,
+    PickupDistance,
 }
 
 pub struct GameplayEffect {

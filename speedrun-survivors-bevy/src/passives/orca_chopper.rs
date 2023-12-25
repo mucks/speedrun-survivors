@@ -137,8 +137,8 @@ fn orca_attack(
     for (orca, orca_transform) in orcas.iter() {
         for (entity, enemy, transform) in enemies.iter_mut() {
             if Vec2::distance(
-                Vec2::new(orca_transform.translation.x, orca_transform.translation.y),
-                Vec2::new(transform.translation.x, transform.translation.y),
+                orca_transform.translation.truncate(),
+                transform.translation.truncate(),
             ) <= ORCA_HIT_DISTANCE
             {
                 tx_health.send(HealthUpdateEvent {

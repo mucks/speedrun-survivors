@@ -9,6 +9,7 @@ use crate::plugins::coin_rewards::CoinRewardsPlugin;
 use crate::plugins::gameplay_effects::GameplayEffectsPlugin;
 use crate::plugins::hud::HudPlugin;
 use crate::plugins::menu::MenuPlugin;
+use crate::plugins::pickup::PickupPlugin;
 use crate::state::{AppState, ForState, StatesPlugin};
 use actives::dash::DashPlugin;
 use bevy::audio::VolumeLevel;
@@ -85,7 +86,7 @@ fn main() {
             DashPlugin,
             StatusEffectPlugin,
         ))
-        .add_plugins((GameplayEffectsPlugin, OrcaChopperPlugin))
+        .add_plugins((GameplayEffectsPlugin, OrcaChopperPlugin, PickupPlugin))
         .add_systems(Startup, (setup_camera, setup_key_bindings))
         .add_systems(
             Update,

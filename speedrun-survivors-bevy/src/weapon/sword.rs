@@ -234,11 +234,7 @@ fn update_sword_effect_hits(
         let s = Vec2::new(transform.translation.x, transform.translation.y);
 
         for (enemy, transform, ent) in enemy_query.iter_mut() {
-            if Vec2::distance(
-                s,
-                Vec2::new(transform.translation.x, transform.translation.y),
-            ) <= sword_effect.hitbox
-            {
+            if Vec2::distance(s, transform.translation.truncate()) <= sword_effect.hitbox {
                 tx_health.send(health::HealthUpdateEvent {
                     entity: ent,
                     health_change: -SWORD_DAMAGE,

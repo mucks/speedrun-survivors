@@ -7,4 +7,5 @@ pub mod gameplay_effects;
 pub mod health;
 pub mod hud;
 pub mod menu;
+pub mod pickup;
 pub mod status_effect;

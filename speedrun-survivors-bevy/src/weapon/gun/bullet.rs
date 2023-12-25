@@ -44,10 +44,7 @@ pub fn update_bullet_hits(
     }
     for (enemy, transform, mut health, ent) in enemy_query.iter_mut() {
         bullet_list.retain(|bullet| {
-            let distance = Vec2::distance(
-                bullet.translation,
-                Vec2::new(transform.translation.x, transform.translation.y),
-            );
+            let distance = Vec2::distance(bullet.translation, transform.translation.truncate());
             if distance <= 36. {
                 tx_health.send(health::HealthUpdateEvent {
                     entity: ent,
