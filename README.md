@@ -110,7 +110,11 @@ Gold obtained can be traded for heroes, weapons and buffs of all kinds.
 
 
 ### TODO
-- Level up system
+- Many passive attacks
+- Level up screen & choice
+- VFX plugin
+  - can spawn explosions and other effects in a given location
+  - send message to add VFX
 - UI
   - TIME ELAPSED
   - Total kills

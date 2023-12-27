@@ -127,6 +127,9 @@ pub enum GameplayStat {
     WhaleInterval,
     WhaleDamage,
     WhaleArea,
+    ShitcoinInterval,
+    ShitcoinMunitions,
+    ShitcoinDamage,
 }
 
 pub struct GameplayEffect {

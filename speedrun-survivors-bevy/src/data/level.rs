@@ -19,6 +19,9 @@ impl Level {
                     GameplayEffect::new_mul(GameplayStat::WhaleDamage, 1.1),
                     GameplayEffect::new_div(GameplayStat::WhaleInterval, 1.05),
                     GameplayEffect::new_mul(GameplayStat::WhaleArea, 1.1),
+                    GameplayEffect::new_sub(GameplayStat::ShitcoinInterval, 0.1),
+                    GameplayEffect::new_add(GameplayStat::ShitcoinMunitions, 1.0),
+                    GameplayEffect::new_add(GameplayStat::ShitcoinDamage, 0.1),
                 ]
             }
         }

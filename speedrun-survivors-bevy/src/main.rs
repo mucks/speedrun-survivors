@@ -1,6 +1,7 @@
 use crate::enemy::enemy_spawner::SpawnEnemiesPlugin;
 use crate::enemy::EnemyPlugin;
 use crate::passives::orca_chopper::OrcaChopperPlugin;
+use crate::passives::shitcoin::ShitcoinClusterPlugin;
 use crate::passives::whale::WhaleDumpPlugin;
 use crate::player::PlayerPlugin;
 use crate::plugins::assets::AssetsPlugin;
@@ -91,6 +92,7 @@ fn main() {
             GameplayEffectsPlugin,
             OrcaChopperPlugin,
             WhaleDumpPlugin,
+            ShitcoinClusterPlugin,
             PickupPlugin,
         ))
         .add_systems(Startup, (setup_camera, setup_key_bindings))
