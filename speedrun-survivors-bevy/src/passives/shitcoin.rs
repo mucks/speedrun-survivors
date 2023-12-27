@@ -5,6 +5,7 @@ use crate::plugins::gameplay_effects::{
     GameplayEffectPluginState, GameplayStat, GameplayStatsRecalculatedEvent,
 };
 use crate::plugins::health::{HealthUpdateEvent, TargetType};
+use crate::plugins::vfx_manager::{PlayVFX, VFX};
 use crate::state::{AppState, ForState};
 use bevy::prelude::*;
 use rand::{thread_rng, Rng};
@@ -16,7 +17,7 @@ const CLUSTER_BOMB_GRAVITY_MULTIPLIER: f32 = 0.7;
 /// The cluster bomb will not detonate before this much time passed
 const CLUSTER_MIN_TIME_TO_BOOM: f32 = 0.30;
 /// The cluster bomb will detonate after no more than this time
-const CLUSTER_MAX_TIME_TO_BOOM: f32 = 1.5;
+const CLUSTER_MAX_TIME_TO_BOOM: f32 = 1.3;
 
 /// The scale for sub-munitions
 const SUB_MUNITION_SCALE: f32 = 0.3;
@@ -118,6 +119,7 @@ fn cluster_move(
     >,
     game_assets: Res<GameAssets>,
     shitcoin_state: Res<ShitcoinClusterPluginState>,
+    mut tx_vfx: EventWriter<PlayVFX>,
 ) {
     let delta = time.delta_seconds();
     let move_by = CLUSTER_BOMB_MOVE_SPEED * delta;
@@ -140,7 +142,10 @@ fn cluster_move(
             );
 
             // Spawn tiny explosion VFX?
-            //TODO
+            tx_vfx.send(PlayVFX {
+                vfx: VFX::ExplosionXL, //TODO small explosion xD
+                location: transform.translation,
+            });
 
             // No need to update location and heading
             return;
@@ -206,6 +211,7 @@ fn sub_munition_move(
         (Without<ShitcoinClusterBomb>, Without<ShitcoinSubMunition>),
     >,
     mut tx_health: EventWriter<HealthUpdateEvent>,
+    mut tx_vfx: EventWriter<PlayVFX>,
 ) {
     let delta = time.delta_seconds();
     let move_by = SUB_MUNITION_MOVE_SPEED * delta;
@@ -235,8 +241,11 @@ fn sub_munition_move(
                 });
             }
 
-            // Spawn tiny explosion VFX?
-            //TODO
+            // Spawn tiny explosion VFX
+            tx_vfx.send(PlayVFX {
+                vfx: VFX::ExplosionXS,
+                location: munition_tf.translation,
+            });
 
             // No need to update location
             return;

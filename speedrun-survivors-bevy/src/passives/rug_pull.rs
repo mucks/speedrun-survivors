@@ -14,3 +14,5 @@ rug impact(?) damage
 
 */
 pub struct RugPullPlugin;
+
+//         transform.rotation = Quat::from_rotation_z(heading);

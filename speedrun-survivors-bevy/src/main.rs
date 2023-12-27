@@ -5,13 +5,14 @@ use crate::passives::shitcoin::ShitcoinClusterPlugin;
 use crate::passives::whale::WhaleDumpPlugin;
 use crate::player::PlayerPlugin;
 use crate::plugins::assets::AssetsPlugin;
-use crate::plugins::audio_manager::AudioManagerPlugin;
 use crate::plugins::camera_shake::CameraShakePlugin;
 use crate::plugins::coin_rewards::CoinRewardsPlugin;
 use crate::plugins::gameplay_effects::GameplayEffectsPlugin;
 use crate::plugins::hud::HudPlugin;
 use crate::plugins::menu::MenuPlugin;
 use crate::plugins::pickup::PickupPlugin;
+use crate::plugins::sfx_manager::SFXManagerPlugin;
+use crate::plugins::vfx_manager::VFXManagerPlugin;
 use crate::state::{AppState, ForState, StatesPlugin};
 use actives::dash::DashPlugin;
 use bevy::audio::VolumeLevel;
@@ -73,7 +74,7 @@ fn main() {
         .add_plugins((LdtkPlugin, InputManagerPlugin::<GameAction>::default()))
         .add_plugins((
             AssetsPlugin,
-            AudioManagerPlugin,
+            SFXManagerPlugin,
             MenuPlugin,
             StatesPlugin,
             SpawnEnemiesPlugin,
@@ -94,6 +95,7 @@ fn main() {
             WhaleDumpPlugin,
             ShitcoinClusterPlugin,
             PickupPlugin,
+            VFXManagerPlugin,
         ))
         .add_systems(Startup, (setup_camera, setup_key_bindings))
         .add_systems(

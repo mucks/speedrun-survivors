@@ -5,10 +5,10 @@ use leafwing_input_manager::action_state::ActionState;
 
 use crate::player::Player;
 use crate::plugins::assets::GameAssets;
-use crate::plugins::audio_manager::{PlaySFX, SFX};
 use crate::plugins::camera_shake::{CameraImpact, CameraImpactStrength};
 use crate::plugins::gameplay_effects::{GameplayEffectPluginState, GameplayTag};
 use crate::plugins::menu::MenuGameConfig;
+use crate::plugins::sfx_manager::{PlaySFX, SFX};
 use crate::plugins::status_effect::{
     StatusEffect, StatusEffectEvent, StatusEffectEventType, StatusEffectType,
 };

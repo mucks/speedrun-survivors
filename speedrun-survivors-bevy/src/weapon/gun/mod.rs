@@ -3,7 +3,7 @@ use std::collections::HashMap;
 pub mod bullet;
 
 use crate::plugins::assets::GameAssets;
-use crate::plugins::audio_manager::{PlaySFX, SFX};
+use crate::plugins::sfx_manager::{PlaySFX, SFX};
 use crate::state::{AppState, ForState};
 use crate::{
     animation::{self, Animator},

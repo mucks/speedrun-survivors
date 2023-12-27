@@ -8,30 +8,29 @@ use bevy::prelude::*;
 //  Maybe for spawning bosses to indicate where they come from or so
 // const AUDIO_SCALE: f32 = 1. / 100.0;
 
-pub struct AudioManagerPlugin;
+pub struct SFXManagerPlugin;
 
-impl Plugin for AudioManagerPlugin {
+impl Plugin for SFXManagerPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_systems(Startup, setup)
             .add_systems(OnEnter(AppState::GameRunning), on_enter_game_running)
             .add_systems(OnExit(AppState::GameRunning), on_exit_game_running)
-            .add_systems(Update, on_update.run_if(in_state(AppState::GameRunning)))
+            .add_systems(Update, event_reader.run_if(in_state(AppState::GameRunning)))
             .add_event::<PlaySFX>();
     }
 }
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.insert_resource(AudioPluginAssets {
-        music_combat: asset_server.load("audio/neon_gaming_dopestuff.ogg").into(),
+    commands.insert_resource(SFXPluginAssets {
+        music_combat: asset_server.load("audio/music/neon_gaming_dopestuff.ogg").into(),
         sfx_sword_hit: asset_server.load("audio/sfx/sword_hit.ogg").into(),
         sfx_sword_miss: asset_server.load("audio/sfx/sword_miss.ogg").into(),
         sfx_gun_shot: asset_server.load("audio/sfx/gun_shot.ogg").into(),
         sfx_game_over: asset_server.load("audio/sfx/game_over.ogg").into(),
     });
-    commands.insert_resource(AudioPluginState::default());
 }
 
-fn on_enter_game_running(mut commands: Commands, assets: Res<AudioPluginAssets>) {
+fn on_enter_game_running(mut commands: Commands, assets: Res<SFXPluginAssets>) {
     // Play music when the maps starts
     commands.spawn((
         AudioBundle {
@@ -45,7 +44,7 @@ fn on_enter_game_running(mut commands: Commands, assets: Res<AudioPluginAssets>)
     ));
 }
 
-fn on_exit_game_running(mut commands: Commands, assets: Res<AudioPluginAssets>) {
+fn on_exit_game_running(mut commands: Commands, assets: Res<SFXPluginAssets>) {
     // Play the game over sound effect
     commands.spawn((
         AudioBundle {
@@ -59,9 +58,9 @@ fn on_exit_game_running(mut commands: Commands, assets: Res<AudioPluginAssets>) 
     ));
 }
 
-fn on_update(
+fn event_reader(
     mut commands: Commands,
-    assets: Res<AudioPluginAssets>,
+    assets: Res<SFXPluginAssets>,
     mut rx_sfx: EventReader<PlaySFX>,
 ) {
     for event in rx_sfx.iter() {
@@ -97,16 +96,7 @@ pub enum SFX {
 }
 
 #[derive(Resource)]
-struct AudioPluginState {}
-
-impl Default for AudioPluginState {
-    fn default() -> Self {
-        Self {}
-    }
-}
-
-#[derive(Resource)]
-struct AudioPluginAssets {
+struct SFXPluginAssets {
     music_combat: Handle<AudioSource>,
     sfx_sword_hit: Handle<AudioSource>,
     sfx_sword_miss: Handle<AudioSource>,
@@ -114,7 +104,7 @@ struct AudioPluginAssets {
     sfx_game_over: Handle<AudioSource>,
 }
 
-impl AudioPluginAssets {
+impl SFXPluginAssets {
     fn get_asset_by_sfx(&self, sfx: &SFX) -> Handle<AudioSource> {
         match sfx {
             SFX::AttackSwordMiss => self.sfx_sword_miss.clone(),
