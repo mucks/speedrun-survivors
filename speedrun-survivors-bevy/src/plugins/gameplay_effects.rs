@@ -130,6 +130,9 @@ pub enum GameplayStat {
     ShitcoinInterval,
     ShitcoinMunitions,
     ShitcoinDamage,
+    RugPullInterval,
+    RugPullSpeed,
+    RugPullTTL,
 }
 
 pub struct GameplayEffect {

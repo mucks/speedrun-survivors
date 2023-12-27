@@ -22,7 +22,9 @@ impl Plugin for SFXManagerPlugin {
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.insert_resource(SFXPluginAssets {
-        music_combat: asset_server.load("audio/music/neon_gaming_dopestuff.ogg").into(),
+        music_combat: asset_server
+            .load("audio/music/neon_gaming_dopestuff.ogg")
+            .into(),
         sfx_sword_hit: asset_server.load("audio/sfx/sword_hit.ogg").into(),
         sfx_sword_miss: asset_server.load("audio/sfx/sword_miss.ogg").into(),
         sfx_gun_shot: asset_server.load("audio/sfx/gun_shot.ogg").into(),

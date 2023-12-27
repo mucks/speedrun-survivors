@@ -19,7 +19,10 @@ fn setup(
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
 ) {
-    commands.insert_resource(VFXPluginAssets::default(&asset_server, &mut texture_atlases));
+    commands.insert_resource(VFXPluginAssets::default(
+        &asset_server,
+        &mut texture_atlases,
+    ));
 }
 
 fn event_reader(
@@ -64,7 +67,11 @@ pub enum VFX {
 }
 
 impl VFX {
-    fn make_texture_atlas(&self, asset_server: &Res<AssetServer>, texture_atlases: &mut ResMut<Assets<TextureAtlas>>) -> Handle<TextureAtlas> {
+    fn make_texture_atlas(
+        &self,
+        asset_server: &Res<AssetServer>,
+        texture_atlases: &mut ResMut<Assets<TextureAtlas>>,
+    ) -> Handle<TextureAtlas> {
         match self {
             VFX::ExplosionXS => texture_atlases.add(TextureAtlas::from_grid(
                 asset_server.load("sprites/vfx/explosion_xs.png"),
@@ -83,7 +90,6 @@ impl VFX {
                 None,
             )),
         }
-
     }
     fn make_scale(&self) -> Vec3 {
         match self {
@@ -165,15 +171,23 @@ impl VFXPluginAssets {
         self.effects[vfx].clone()
     }
 
-    fn default(asset_server: &Res<AssetServer>, texture_atlases: &mut ResMut<Assets<TextureAtlas>>) -> Self {
+    fn default(
+        asset_server: &Res<AssetServer>,
+        texture_atlases: &mut ResMut<Assets<TextureAtlas>>,
+    ) -> Self {
         let mut effects = HashMap::new();
 
         for vfx in VFX::iter() {
-            effects.insert(vfx.clone(), VFXData::new(vfx.make_texture_atlas(asset_server, texture_atlases), vfx.make_scale(), vfx.make_animation()));
+            effects.insert(
+                vfx.clone(),
+                VFXData::new(
+                    vfx.make_texture_atlas(asset_server, texture_atlases),
+                    vfx.make_scale(),
+                    vfx.make_animation(),
+                ),
+            );
         }
 
-        Self {
-            effects
-        }
+        Self { effects }
     }
 }

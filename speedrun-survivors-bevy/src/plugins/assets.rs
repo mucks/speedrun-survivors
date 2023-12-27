@@ -30,6 +30,7 @@ pub struct GameAssets {
     pub orca: Handle<Image>,
     pub whale: Handle<Image>,
     pub shitcoin: Handle<Image>,
+    pub rug: Handle<Image>,
     pub pickup_exp: Handle<Image>,
     pub pickup_coin: Handle<Image>,
 }
@@ -125,6 +126,7 @@ fn setup(
         orca: asset_server.load("sprites/passives/orca.png"),
         whale: asset_server.load("sprites/passives/whale.png"),
         shitcoin: asset_server.load("sprites/passives/shitcoin.png"),
+        rug: asset_server.load("sprites/passives/rug.png"),
         pickup_exp: asset_server.load("sprites/misc/exp.png"),
         pickup_coin: asset_server.load("sprites/misc/coin.png"),
     });

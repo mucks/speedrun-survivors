@@ -1,4 +1,5 @@
 use crate::enemy::enemy_type::EnemyType;
+use crate::passives::rug_pull::RugPulled;
 use crate::player::Player;
 use crate::plugins::health::{self, Health};
 use crate::plugins::pickup::PickupEvent;
@@ -16,7 +17,7 @@ impl Plugin for EnemyPlugin {
             .add_systems(OnExit(AppState::GameRunning), on_exit_game_running)
             .add_systems(
                 Update,
-                (process_events, update_enemies, update_enemy_hits)
+                (process_events, move_enemies, update_enemy_hits)
                     .run_if(in_state(AppState::GameRunning)),
             )
             .add_event::<EnemyEvent>();
@@ -70,9 +71,12 @@ pub fn process_events(
     }
 }
 
-pub fn update_enemies(
+pub fn move_enemies(
     time: Res<Time>,
-    mut enemy_query: Query<(&Enemy, &mut Transform, Entity, &Health), Without<Player>>,
+    mut enemy_query: Query<
+        (&Enemy, &mut Transform, Entity, &Health),
+        (Without<Player>, Without<RugPulled>),
+    >,
     player_query: Query<&Transform, (With<Player>, Without<Enemy>)>,
 ) {
     let Ok(player_transform) = player_query.get_single() else {

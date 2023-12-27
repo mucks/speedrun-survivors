@@ -1,6 +1,7 @@
 use crate::enemy::enemy_spawner::SpawnEnemiesPlugin;
 use crate::enemy::EnemyPlugin;
 use crate::passives::orca_chopper::OrcaChopperPlugin;
+use crate::passives::rug_pull::RugPullPlugin;
 use crate::passives::shitcoin::ShitcoinClusterPlugin;
 use crate::passives::whale::WhaleDumpPlugin;
 use crate::player::PlayerPlugin;
@@ -94,6 +95,7 @@ fn main() {
             OrcaChopperPlugin,
             WhaleDumpPlugin,
             ShitcoinClusterPlugin,
+            RugPullPlugin,
             PickupPlugin,
             VFXManagerPlugin,
         ))

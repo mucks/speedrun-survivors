@@ -22,6 +22,9 @@ impl Level {
                     GameplayEffect::new_sub(GameplayStat::ShitcoinInterval, 0.1),
                     GameplayEffect::new_add(GameplayStat::ShitcoinMunitions, 1.0),
                     GameplayEffect::new_add(GameplayStat::ShitcoinDamage, 0.1),
+                    GameplayEffect::new_sub(GameplayStat::RugPullInterval, 0.15),
+                    GameplayEffect::new_add(GameplayStat::RugPullSpeed, 5.0),
+                    GameplayEffect::new_add(GameplayStat::RugPullTTL, 0.08),
                 ]
             }
         }

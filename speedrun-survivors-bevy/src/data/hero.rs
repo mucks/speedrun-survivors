@@ -127,6 +127,9 @@ impl HeroType {
                     GameplayEffect::new_abs(GameplayStat::ShitcoinInterval, 7.0),
                     GameplayEffect::new_abs(GameplayStat::ShitcoinMunitions, 2.0),
                     GameplayEffect::new_abs(GameplayStat::ShitcoinDamage, 0.1),
+                    GameplayEffect::new_abs(GameplayStat::RugPullInterval, 6.0),
+                    GameplayEffect::new_abs(GameplayStat::RugPullSpeed, 280.0),
+                    GameplayEffect::new_abs(GameplayStat::RugPullTTL, 0.8),
                 ]
             }
             _ => {
@@ -144,6 +147,9 @@ impl HeroType {
                     GameplayEffect::new_abs(GameplayStat::ShitcoinInterval, 7.0),
                     GameplayEffect::new_abs(GameplayStat::ShitcoinMunitions, 2.0),
                     GameplayEffect::new_abs(GameplayStat::ShitcoinDamage, 0.1),
+                    GameplayEffect::new_abs(GameplayStat::RugPullInterval, 6.0),
+                    GameplayEffect::new_abs(GameplayStat::RugPullSpeed, 280.0),
+                    GameplayEffect::new_abs(GameplayStat::RugPullTTL, 0.8),
                 ]
             }
         }
