@@ -6,7 +6,7 @@ use crate::plugins::gameplay_effects::{
     GameplayEffectPluginState, GameplayStat, GameplayStatsRecalculatedEvent,
 };
 use crate::plugins::health::{HealthUpdateEvent, TargetType};
-use crate::state::{AppState, ForState};
+use crate::state::{for_game_states, AppState};
 use bevy::prelude::*;
 use rand::{thread_rng, Rng};
 
@@ -25,7 +25,7 @@ pub struct WhaleDumpPlugin;
 
 impl Plugin for WhaleDumpPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(AppState::GameRunning), on_enter_game_running)
+        app.add_systems(OnEnter(AppState::GameInitializing), on_enter_game_init)
             .add_systems(
                 Update,
                 (on_update, whale_move, whale_impact).run_if(in_state(AppState::GameRunning)),
@@ -35,7 +35,7 @@ impl Plugin for WhaleDumpPlugin {
 }
 
 /// Reset plugin state
-fn on_enter_game_running(mut whale_state: ResMut<WhaleDumpPluginState>) {
+fn on_enter_game_init(mut whale_state: ResMut<WhaleDumpPluginState>) {
     *whale_state = Default::default();
 }
 
@@ -109,9 +109,7 @@ fn spawn_whale(commands: &mut Commands, location: Option<Vec2>, game_assets: &Re
                 texture: game_assets.whale.clone(),
                 ..Default::default()
             },
-            ForState {
-                states: vec![AppState::GameRunning],
-            },
+            for_game_states(),
         ))
         .insert(Whale {
             time_till_boom: rng.gen_range(WHALE_MIN_TIME_TO_BOOM..WHALE_MAX_TIME_TO_BOOM),

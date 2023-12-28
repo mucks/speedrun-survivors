@@ -7,19 +7,14 @@ pub struct CameraShakePlugin;
 
 impl Plugin for CameraShakePlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_systems(OnEnter(AppState::GameRunning), on_enter_game_running)
-            .add_systems(OnExit(AppState::GameRunning), on_exit_game_running)
+        app.add_systems(OnEnter(AppState::GameInitializing), on_enter_game_init)
             .add_systems(Update, on_update.run_if(in_state(AppState::GameRunning)))
             .add_event::<CameraImpact>()
             .insert_resource(Shake::create_shake(&CameraImpactStrength::Idle));
     }
 }
 
-fn on_enter_game_running(mut shake: ResMut<Shake>) {
-    shake.trauma = 0f32;
-}
-
-fn on_exit_game_running(mut shake: ResMut<Shake>) {
+fn on_enter_game_init(mut shake: ResMut<Shake>) {
     shake.trauma = 0f32;
 }
 

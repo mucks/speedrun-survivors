@@ -1,7 +1,7 @@
 use crate::enemy::enemy_type::EnemyType;
 use crate::enemy::EnemyEvent;
 use crate::player::{Player, PlayerEvent};
-use crate::state::{AppState, ForState};
+use crate::state::{for_game_states, AppState};
 use bevy::prelude::*;
 
 const HEALTH_BAR_WIDTH: f32 = 100.0;
@@ -138,9 +138,7 @@ pub fn add_health_bar(commands: &mut Commands, translation: Vec3, z: f32) -> Ent
                 },
                 ..Default::default()
             },
-            ForState {
-                states: vec![AppState::GameRunning],
-            },
+            for_game_states(),
         ))
         .insert(HealthBar {
             offset: Vec2::new(0., HEALTH_BAR_OFFSET_Y),

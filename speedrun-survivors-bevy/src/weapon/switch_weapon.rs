@@ -1,12 +1,9 @@
 use bevy::prelude::*;
 use leafwing_input_manager::action_state::ActionState;
 
+use crate::menu::MenuGameConfig;
 use crate::plugins::gameplay_effects::{GameplayEffectPluginState, GameplayTag};
-use crate::{
-    plugins::{assets::GameAssets, menu::MenuGameConfig},
-    state::AppState,
-    GameAction,
-};
+use crate::{plugins::assets::GameAssets, state::AppState, GameAction};
 
 use super::weapon_type::WeaponType;
 

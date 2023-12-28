@@ -4,7 +4,7 @@ pub mod bullet;
 
 use crate::plugins::assets::GameAssets;
 use crate::plugins::sfx_manager::{PlaySFX, SFX};
-use crate::state::{AppState, ForState};
+use crate::state::{for_game_states, AppState};
 use crate::{
     animation::{self, Animator},
     player::player_attach,
@@ -74,9 +74,7 @@ pub fn spawn_gun(commands: &mut Commands, game_assets: &Res<GameAssets>) {
                 transform: Transform::from_scale(Vec3::splat(5.)),
                 ..Default::default()
             },
-            ForState {
-                states: vec![AppState::GameRunning],
-            },
+            for_game_states(),
         ))
         .insert(animation::Animator {
             timer: 0.,
@@ -157,9 +155,7 @@ pub fn gun_controls(
                             texture: asset_server.load("sprites/misc/bullet.png"),
                             ..Default::default()
                         },
-                        ForState {
-                            states: vec![AppState::GameRunning],
-                        },
+                        for_game_states(),
                     ))
                     .insert(Bullet {
                         lifetime: BULLET_LIFETIME,

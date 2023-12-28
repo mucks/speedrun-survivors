@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::state::{AppState, ForState};
+use crate::state::{for_game_states, AppState};
 
 use super::health::{Health, HealthUpdateEvent, TargetType};
 
@@ -72,9 +72,7 @@ pub fn spawn_combat_text(commands: &mut Commands, text: &str, position: Vec3, co
                 transform,
                 ..Default::default()
             },
-            ForState {
-                states: vec![AppState::GameRunning],
-            },
+            for_game_states(),
         ))
         .insert(CombatText {
             timer: Timer::from_seconds(1.0, TimerMode::Once),

@@ -4,7 +4,7 @@ use crate::weapon::switch_weapon::SwitchWeaponEvent;
 use crate::{plugins::assets::UiAssets, weapon::weapon_type::WeaponType};
 use bevy::prelude::*;
 
-use crate::state::{AppState, ForState};
+use crate::state::{for_game_states, AppState};
 
 #[derive(Debug, Component)]
 pub struct WeaponButton {
@@ -17,7 +17,7 @@ const ITEMS_COLOR: Color = Color::BLACK;
 
 impl Plugin for HudPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(AppState::GameRunning), spawn_layout)
+        app.add_systems(OnEnter(AppState::GameInitializing), on_enter_game_init)
             .add_systems(
                 Update,
                 (on_update, on_weapon_button_click).run_if(in_state(AppState::GameRunning)),
@@ -60,7 +60,7 @@ pub struct CoinText {}
 #[derive(Component)]
 pub struct ExpBar {}
 
-fn spawn_layout(mut commands: Commands, assets: ResMut<UiAssets>) {
+fn on_enter_game_init(mut commands: Commands, assets: ResMut<UiAssets>) {
     let img_buff = assets.buff_1.clone();
 
     commands
@@ -74,9 +74,7 @@ fn spawn_layout(mut commands: Commands, assets: ResMut<UiAssets>) {
                 },
                 ..Default::default()
             },
-            ForState {
-                states: vec![AppState::GameRunning],
-            },
+            for_game_states(),
         ))
         .with_children(|parent| {
             parent.spawn(NodeBundle {

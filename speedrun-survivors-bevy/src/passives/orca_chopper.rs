@@ -5,7 +5,7 @@ use crate::plugins::gameplay_effects::{
     GameplayEffectPluginState, GameplayStat, GameplayStatsRecalculatedEvent,
 };
 use crate::plugins::health::{HealthUpdateEvent, TargetType};
-use crate::state::{AppState, ForState};
+use crate::state::{for_game_states, AppState};
 use bevy::prelude::*;
 use rand::Rng;
 
@@ -15,7 +15,7 @@ const ORCA_HIT_DISTANCE: f32 = 50.;
 
 impl Plugin for OrcaChopperPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(AppState::GameRunning), on_enter_game_running)
+        app.add_systems(OnEnter(AppState::GameInitializing), on_enter_game_init)
             .add_systems(
                 Update,
                 (on_update, orca_move, orca_attack).run_if(in_state(AppState::GameRunning)),
@@ -24,7 +24,7 @@ impl Plugin for OrcaChopperPlugin {
     }
 }
 
-fn on_enter_game_running(mut orca_state: ResMut<OrcaChopperPluginState>) {
+fn on_enter_game_init(mut orca_state: ResMut<OrcaChopperPluginState>) {
     orca_state.total_spawned = 0;
 }
 
@@ -169,9 +169,7 @@ fn spawn_orca_chopper(
                 texture: game_assets.orca.clone(),
                 ..Default::default()
             },
-            ForState {
-                states: vec![AppState::GameRunning],
-            },
+            for_game_states(),
         ))
         .insert(OrcaChopper {
             heading: rng.gen_range(0.0..std::f32::consts::TAU),

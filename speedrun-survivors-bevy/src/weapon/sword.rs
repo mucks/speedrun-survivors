@@ -3,11 +3,11 @@ use std::collections::HashMap;
 use bevy::prelude::*;
 use leafwing_input_manager::action_state::ActionState;
 
+use crate::menu::MenuGameConfig;
 use crate::plugins::assets::GameAssets;
 use crate::plugins::gameplay_effects::{GameplayEffectPluginState, GameplayTag};
 use crate::plugins::health::{self};
-use crate::plugins::menu::MenuGameConfig;
-use crate::state::{AppState, ForState};
+use crate::state::{for_game_states, AppState};
 use crate::{
     animation::{self, Animator},
     enemy::Enemy,
@@ -155,9 +155,7 @@ pub fn spawn_sword(
                 transform: Transform::from_scale(Vec3::splat(2.5)),
                 ..Default::default()
             },
-            ForState {
-                states: vec![AppState::GameRunning],
-            },
+            for_game_states(),
         ))
         .insert(animation::Animator {
             timer: 0.,

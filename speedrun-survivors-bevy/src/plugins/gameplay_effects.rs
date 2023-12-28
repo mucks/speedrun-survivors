@@ -11,7 +11,7 @@ pub struct GameplayEffectsPlugin;
 
 impl Plugin for GameplayEffectsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(AppState::GameRunning), on_enter_game_running)
+        app.add_systems(OnEnter(AppState::GameInitializing), on_enter_game_init)
             .add_systems(Update, on_update)
             .add_event::<GameplayEffectEvent>()
             .add_event::<GameplayStatsRecalculatedEvent>()
@@ -19,7 +19,7 @@ impl Plugin for GameplayEffectsPlugin {
     }
 }
 
-fn on_enter_game_running(mut state: ResMut<GameplayEffectPluginState>) {
+fn on_enter_game_init(mut state: ResMut<GameplayEffectPluginState>) {
     // If the menu was skipped, we do not have stats, so we call select hero here
     if state.player_effects.move_speed <= 0. {
         state

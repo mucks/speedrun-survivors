@@ -3,6 +3,8 @@ use std::collections::HashMap;
 use bevy::prelude::*;
 use leafwing_input_manager::action_state::ActionState;
 
+use crate::menu::MenuGameConfig;
+use crate::state::for_game_states;
 use crate::{
     animation,
     enemy::Enemy,
@@ -10,9 +12,8 @@ use crate::{
     plugins::{
         assets::GameAssets,
         health::{HealthUpdateEvent, TargetType},
-        menu::MenuGameConfig,
     },
-    state::{AppState, ForState},
+    state::AppState,
     GameAction,
 };
 
@@ -98,9 +99,7 @@ fn spawn_flame_effect(commands: &mut Commands, game_assets: &Res<GameAssets>, tr
                 },
                 ..Default::default()
             },
-            ForState {
-                states: vec![AppState::GameRunning],
-            },
+            for_game_states(),
         ))
         .insert(animation::Animator {
             timer: 0.,
@@ -190,9 +189,7 @@ pub fn spawn_flame_thrower(
                 transform: Transform::from_scale(Vec3::splat(0.5)),
                 ..Default::default()
             },
-            ForState {
-                states: vec![AppState::GameRunning],
-            },
+            for_game_states(),
         ))
         .insert(animation::Animator {
             timer: 0.,

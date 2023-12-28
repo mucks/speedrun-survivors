@@ -6,7 +6,7 @@ use rand::Rng;
 
 use crate::plugins::assets::GameAssets;
 use crate::plugins::status_effect::StatusEffectController;
-use crate::state::{AppState, ForState};
+use crate::state::{for_game_states, AppState};
 use crate::{
     animation::{self, Animator},
     enemy::Enemy,
@@ -18,8 +18,7 @@ pub struct SpawnEnemiesPlugin;
 
 impl Plugin for SpawnEnemiesPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(AppState::GameRunning), on_enter_game_running)
-            .add_systems(OnExit(AppState::GameRunning), on_exit_game_running)
+        app.add_systems(OnEnter(AppState::GameInitializing), on_enter_game_init)
             .add_systems(
                 Update,
                 (update_spawning).run_if(in_state(AppState::GameRunning)),
@@ -28,10 +27,9 @@ impl Plugin for SpawnEnemiesPlugin {
     }
 }
 
-fn on_enter_game_running(mut spawner: ResMut<EnemySpawnerState>) {
+fn on_enter_game_init(mut spawner: ResMut<EnemySpawnerState>) {
     *spawner = EnemySpawnerState::default();
 }
-fn on_exit_game_running(mut _commands: Commands) {}
 
 #[derive(Resource)]
 pub struct EnemySpawnerState {
@@ -148,9 +146,7 @@ pub fn update_spawning(
                 transform: spawn_transform,
                 ..default()
             },
-            ForState {
-                states: vec![AppState::GameRunning],
-            },
+            for_game_states(),
         ))
         .insert(Animator {
             animation_bank: create_enemy_anim_hashmap(enemy_type.frames()),

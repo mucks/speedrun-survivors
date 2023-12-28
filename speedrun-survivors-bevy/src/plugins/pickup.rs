@@ -4,7 +4,7 @@ use crate::plugins::coin_rewards::CoinAccumulated;
 use crate::plugins::gameplay_effects::{
     GameplayEffectPluginState, GameplayStat, GameplayStatsRecalculatedEvent,
 };
-use crate::state::{AppState, ForState};
+use crate::state::{for_game_states, AppState};
 use bevy::prelude::*;
 use rand::Rng;
 
@@ -14,8 +14,8 @@ const PICKUP_MOVE_SPEED: f32 = 500.;
 pub struct PickupPlugin;
 
 impl Plugin for PickupPlugin {
-    fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_systems(OnEnter(AppState::GameRunning), on_enter_game_running)
+    fn build(&self, app: &mut App) {
+        app.add_systems(OnEnter(AppState::GameInitializing), on_enter_game_init)
             .add_systems(
                 Update,
                 (on_update, pickup_magnet, pickup_consume).run_if(in_state(AppState::GameRunning)),
@@ -26,7 +26,7 @@ impl Plugin for PickupPlugin {
 }
 
 /// Reset plugin state to default values
-fn on_enter_game_running(mut pickup_state: ResMut<PickupPluginState>) {
+fn on_enter_game_init(mut pickup_state: ResMut<PickupPluginState>) {
     pickup_state.attract_distance = CONSUME_DISTANCE;
 }
 
@@ -139,9 +139,7 @@ fn spawn_pickup(
                 },
                 ..Default::default()
             },
-            ForState {
-                states: vec![AppState::GameRunning],
-            },
+            for_game_states(),
         ))
         .insert(Pickup { kind });
 }

@@ -1,11 +1,12 @@
 use bevy::prelude::*;
 
-use crate::plugins::{assets::GameAssets, menu::MenuGameConfig};
+use crate::plugins::assets::GameAssets;
 
 use super::{
     flame_thrower::spawn_flame_thrower, gun::spawn_gun, hammer::spawn_hammer, sword::spawn_sword,
 };
 
+use crate::menu::MenuGameConfig;
 use strum::EnumIter;
 
 #[derive(Debug, Clone, Copy, Hash, Default, Component, PartialEq, Eq, EnumIter)]

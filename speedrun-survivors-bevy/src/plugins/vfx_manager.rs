@@ -1,5 +1,5 @@
 use crate::animation::{Animation, Animator};
-use crate::state::{AppState, ForState};
+use crate::state::{for_game_states, AppState};
 use bevy::prelude::*;
 use std::collections::HashMap;
 use strum::{EnumIter, IntoEnumIterator};
@@ -44,9 +44,7 @@ fn event_reader(
                     },
                     ..Default::default()
                 },
-                ForState {
-                    states: vec![AppState::GameRunning],
-                },
+                for_game_states(),
             ))
             .insert(data.anim);
     }

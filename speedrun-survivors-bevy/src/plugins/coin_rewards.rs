@@ -7,7 +7,7 @@ pub struct CoinRewardsPlugin;
 impl Plugin for CoinRewardsPlugin {
     // TODO maybe merge this into Player Plugin? nothing else gains coins; (Debateable)
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(AppState::GameRunning), on_enter_game_running)
+        app.add_systems(OnEnter(AppState::GameInitializing), on_enter_game_init)
             .add_systems(Update, on_update.run_if(in_state(AppState::GameRunning)))
             .add_event::<CoinAccumulated>()
             .insert_resource(CoinAccumulator {
@@ -18,7 +18,7 @@ impl Plugin for CoinRewardsPlugin {
     }
 }
 
-fn on_enter_game_running(mut coin_accumulator: ResMut<CoinAccumulator>) {
+fn on_enter_game_init(mut coin_accumulator: ResMut<CoinAccumulator>) {
     coin_accumulator.total_coin = 0;
     coin_accumulator.timer.reset();
 }

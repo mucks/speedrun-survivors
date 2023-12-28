@@ -5,14 +5,14 @@ use leafwing_input_manager::action_state::ActionState;
 
 use crate::data::hero::HeroType;
 use crate::data::level::Level;
+use crate::menu::MenuGameConfig;
 use crate::plugins::assets::GameAssets;
 use crate::plugins::gameplay_effects::{
     GameplayEffectEvent, GameplayEffectPluginState, GameplayStat, GameplayStatsRecalculatedEvent,
 };
 use crate::plugins::health::{add_health_bar, Health};
-use crate::plugins::menu::MenuGameConfig;
 use crate::plugins::status_effect::{StatusEffect, StatusEffectController, StatusEffectType};
-use crate::state::{AppState, ForState};
+use crate::state::{for_game_states, AppState};
 use crate::weapon::hammer::HammerStomp;
 use crate::weapon::weapon_animation_effect::WeaponAnimationEffect;
 use crate::{
@@ -30,28 +30,21 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(
-            OnEnter(AppState::GameRunning),
-            (on_enter_game_running, spawn_player),
-        )
-        .add_systems(OnExit(AppState::GameRunning), on_exit_game_running)
-        .add_systems(
-            Update,
-            (
-                process_events,
-                move_player,
-                player_attach::attach_objects,
-                player_camera::sync_player_camera,
+        app.add_systems(OnEnter(AppState::GameInitializing), spawn_player)
+            .add_systems(
+                Update,
+                (
+                    process_events,
+                    move_player,
+                    player_attach::attach_objects,
+                    player_camera::sync_player_camera,
+                )
+                    .run_if(in_state(AppState::GameRunning)),
             )
-                .run_if(in_state(AppState::GameRunning)),
-        )
-        .add_event::<PlayerEvent>()
-        .insert_resource(PlayerState::default());
+            .add_event::<PlayerEvent>()
+            .insert_resource(PlayerState::default());
     }
 }
-
-fn on_enter_game_running(mut commands: Commands) {}
-fn on_exit_game_running(mut commands: Commands) {}
 
 pub fn process_events(
     mut rx_player: EventReader<PlayerEvent>,
@@ -191,8 +184,6 @@ pub fn spawn_player(
     game_config: Res<MenuGameConfig>,
     game_assets: Res<GameAssets>,
 ) {
-    // player
-
     let hero_type = game_config.hero.clone();
 
     let texture_atlas = hero_type.texture_atlas(&game_assets);
@@ -207,9 +198,7 @@ pub fn spawn_player(
                 transform: Transform::from_scale(Vec3::splat(hero_type.splat_scale())),
                 ..Default::default()
             },
-            ForState {
-                states: vec![AppState::GameRunning],
-            },
+            for_game_states(),
         ))
         .insert(animation::Animator {
             timer: 0.,
@@ -315,9 +304,7 @@ fn spawn_skull_on_player(commands: &mut Commands, position: Vec2, game_assets: &
                 },
                 ..Default::default()
             },
-            ForState {
-                states: vec![AppState::GameRunning],
-            },
+            for_game_states(),
         ))
         .insert(player_attach::PlayerAttach::new(Vec2::ZERO));
 }

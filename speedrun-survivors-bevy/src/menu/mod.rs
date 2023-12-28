@@ -1,6 +1,14 @@
+mod game_over;
+mod level_up;
+mod pause;
+mod splash_screen;
+
 use crate::data::hero::HeroType;
 use crate::data::item::ItemType;
 use crate::data::map::MapId;
+use crate::menu::game_over::menu_game_over;
+use crate::menu::level_up::menu_level_up;
+use crate::menu::splash_screen::menu_splash_screen;
 use crate::plugins::assets::UiAssets;
 use crate::plugins::gameplay_effects::GameplayEffectEvent;
 use crate::state::{AppState, ForState};
@@ -18,7 +26,6 @@ const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
 const BTN_BORDER_DEFAULT: Color = Color::INDIGO;
 const BTN_BORDER_HOVER: Color = Color::PINK;
 const BTN_BORDER_SELECTED: Color = Color::RED;
-const GAME_NAME: &str = "Speedrun Survivors";
 const MAX_NUM_NFT: usize = 6;
 
 #[derive(Component)]
@@ -28,8 +35,9 @@ pub struct MenuPlugin;
 impl Plugin for MenuPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(AppState::SplashScreen), menu_splash_screen)
-            .add_systems(OnEnter(AppState::GameCreate), menu_game_create)
-            .add_systems(OnExit(AppState::GameCreate), menu_game_create_complete)
+            .add_systems(OnEnter(AppState::GameMenuMain), menu_game_create)
+            .add_systems(OnExit(AppState::GameMenuMain), menu_game_create_complete)
+            .add_systems(OnEnter(AppState::GameLevelUp), menu_level_up)
             .add_systems(OnEnter(AppState::GameOver), menu_game_over)
             .add_systems(
                 Update,
@@ -49,57 +57,6 @@ pub struct MenuGameConfig {
     pub hero: HeroType,
     pub map: MapId,
     pub nft_list: Vec<String>,
-}
-
-fn menu_splash_screen(mut commands: Commands, assets: ResMut<UiAssets>) {
-    let font_color = Color::rgb_u8(0x92, 0xA6, 0x8A);
-
-    commands
-        .spawn((
-            NodeBundle {
-                style: Style {
-                    width: Val::Percent(100.0),
-                    height: Val::Percent(100.0),
-                    align_items: AlignItems::Center,
-                    justify_content: JustifyContent::Center,
-                    flex_direction: FlexDirection::Column,
-                    ..default()
-                },
-                ..default()
-            },
-            ForState {
-                states: vec![AppState::SplashScreen],
-            },
-        ))
-        .with_children(|parent| {
-            parent.spawn((TextBundle {
-                style: Style { ..default() },
-                text: Text::from_section(
-                    GAME_NAME,
-                    TextStyle {
-                        font: assets.font_expanse.clone(),
-                        font_size: 100.0,
-                        color: font_color,
-                    },
-                ),
-                ..default()
-            },));
-            parent.spawn((
-                TextBundle {
-                    style: Style { ..default() },
-                    text: Text::from_section(
-                        "enter",
-                        TextStyle {
-                            font: assets.font_expanse.clone(),
-                            font_size: 50.0,
-                            color: font_color,
-                        },
-                    ),
-                    ..default()
-                },
-                DrawBlinkTimer(Timer::from_seconds(0.5, TimerMode::Repeating)),
-            ));
-        });
 }
 
 #[derive(Component)]
@@ -168,7 +125,7 @@ fn on_button_interaction(
     for (interaction, mut action) in query_action_button.iter_mut() {
         match *interaction {
             Interaction::Pressed => match *action {
-                MenuButtonAction::Play => next_state.set(AppState::GameRunning),
+                MenuButtonAction::Play => next_state.set(AppState::GameInitializing),
                 MenuButtonAction::Quit => tx_exit.send(AppExit),
             },
             _ => {}
@@ -272,7 +229,7 @@ fn menu_game_create(
                 ..default()
             },
             ForState {
-                states: vec![AppState::GameCreate],
+                states: vec![AppState::GameMenuMain],
             },
         ))
         .with_children(|parent| {
@@ -810,56 +767,6 @@ fn spawn_nested_icon(
         });
 }
 
-/// This menu is displayed if the player looses the game
-fn menu_game_over(mut commands: Commands, assets: Res<UiAssets>) {
-    commands
-        .spawn((
-            NodeBundle {
-                style: Style {
-                    width: Val::Percent(100.0),
-                    height: Val::Percent(100.0),
-                    align_items: AlignItems::Center,
-                    justify_content: JustifyContent::Center,
-                    flex_direction: FlexDirection::Column,
-                    ..default()
-                },
-                ..default()
-            },
-            ForState {
-                states: vec![AppState::GameOver],
-            },
-        ))
-        .with_children(|parent| {
-            parent.spawn((TextBundle {
-                style: Style { ..default() },
-                text: Text::from_section(
-                    "Game Over",
-                    TextStyle {
-                        font: assets.font_expanse.clone(),
-                        font_size: 100.0,
-                        color: Color::rgb_u8(0xAA, 0x22, 0x22),
-                    },
-                ),
-                ..default()
-            },));
-            parent.spawn((
-                TextBundle {
-                    style: Style { ..default() },
-                    text: Text::from_section(
-                        "enter",
-                        TextStyle {
-                            font: assets.font_expanse.clone(),
-                            font_size: 50.0,
-                            color: Color::rgb_u8(0x88, 0x22, 0x22),
-                        },
-                    ),
-                    ..default()
-                },
-                DrawBlinkTimer(Timer::from_seconds(0.5, TimerMode::Repeating)),
-            ));
-        });
-}
-
 /// Flashes some text at a fixed interval
 fn menu_blink_system(
     mut commands: Commands,
@@ -894,13 +801,31 @@ fn menu_input_system(
         match state.get() {
             AppState::SplashScreen => {
                 if action.just_pressed(GameAction::Confirm) {
-                    next_state.set(AppState::GameCreate);
+                    next_state.set(AppState::GameMenuMain);
                 }
                 if action.just_pressed(GameAction::Cancel) {
                     tx_exit.send(AppExit);
                 }
             }
-            AppState::GameCreate => {
+            AppState::GameMenuMain => {
+                if action.just_pressed(GameAction::Confirm) {
+                    next_state.set(AppState::GameInitializing);
+                }
+            }
+            AppState::GameInitializing => {
+                next_state.set(AppState::GameRunning);
+            }
+            AppState::GameRunning => {
+                if action.just_pressed(GameAction::Pause) {
+                    next_state.set(AppState::GamePaused);
+                }
+            }
+            AppState::GamePaused => {
+                if action.just_pressed(GameAction::Pause) {
+                    next_state.set(AppState::GameRunning);
+                }
+            }
+            AppState::GameLevelUp => {
                 if action.just_pressed(GameAction::Confirm) {
                     next_state.set(AppState::GameRunning);
                 }
@@ -910,7 +835,6 @@ fn menu_input_system(
                     next_state.set(AppState::SplashScreen);
                 }
             }
-            AppState::GameRunning => {}
         }
     }
 }

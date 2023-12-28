@@ -112,12 +112,11 @@ Gold obtained can be traded for heroes, weapons and buffs of all kinds.
 ### TODO
 - Many passive attacks
 - Level up screen & choice
-- VFX plugin
-  - can spawn explosions and other effects in a given location
-  - send message to add VFX
+- Probably want a projectile plugin?
+  - all projectile logic is sort of the same
 - UI
   - TIME ELAPSED
-  - Total kills
+  - Total kills (currently counted only)
 - REPLAY / recording system
     - playback system
     - headless server playback

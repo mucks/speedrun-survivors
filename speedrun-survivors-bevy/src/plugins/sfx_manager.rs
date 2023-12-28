@@ -1,4 +1,4 @@
-use crate::state::{AppState, ForState};
+use crate::state::{for_game_states, AppState, ForState};
 use bevy::prelude::*;
 
 // TODO use this for spatial audio
@@ -13,8 +13,8 @@ pub struct SFXManagerPlugin;
 impl Plugin for SFXManagerPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_systems(Startup, setup)
-            .add_systems(OnEnter(AppState::GameRunning), on_enter_game_running)
-            .add_systems(OnExit(AppState::GameRunning), on_exit_game_running)
+            .add_systems(OnEnter(AppState::GameInitializing), on_enter_game_init)
+            .add_systems(OnEnter(AppState::GameOver), on_enter_game_over)
             .add_systems(Update, event_reader.run_if(in_state(AppState::GameRunning)))
             .add_event::<PlaySFX>();
     }
@@ -32,7 +32,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     });
 }
 
-fn on_enter_game_running(mut commands: Commands, assets: Res<SFXPluginAssets>) {
+fn on_enter_game_init(mut commands: Commands, assets: Res<SFXPluginAssets>) {
     // Play music when the maps starts
     commands.spawn((
         AudioBundle {
@@ -40,13 +40,11 @@ fn on_enter_game_running(mut commands: Commands, assets: Res<SFXPluginAssets>) {
             settings: PlaybackSettings::LOOP,
             ..default()
         },
-        ForState {
-            states: vec![AppState::GameRunning],
-        },
+        for_game_states(),
     ));
 }
 
-fn on_exit_game_running(mut commands: Commands, assets: Res<SFXPluginAssets>) {
+fn on_enter_game_over(mut commands: Commands, assets: Res<SFXPluginAssets>) {
     // Play the game over sound effect
     commands.spawn((
         AudioBundle {
@@ -72,9 +70,7 @@ fn event_reader(
                 settings: PlaybackSettings::DESPAWN,
                 ..default()
             },
-            ForState {
-                states: vec![AppState::GameRunning],
-            },
+            for_game_states(), //TODO not sure if this should play in level up menu
         ));
     }
 }

@@ -3,16 +3,16 @@ use std::collections::HashMap;
 use bevy::prelude::*;
 use leafwing_input_manager::action_state::ActionState;
 
+use crate::menu::MenuGameConfig;
 use crate::player::Player;
 use crate::plugins::assets::GameAssets;
 use crate::plugins::camera_shake::{CameraImpact, CameraImpactStrength};
 use crate::plugins::gameplay_effects::{GameplayEffectPluginState, GameplayTag};
-use crate::plugins::menu::MenuGameConfig;
 use crate::plugins::sfx_manager::{PlaySFX, SFX};
 use crate::plugins::status_effect::{
     StatusEffect, StatusEffectEvent, StatusEffectEventType, StatusEffectType,
 };
-use crate::state::{AppState, ForState};
+use crate::state::{for_game_states, AppState};
 use crate::{
     animation::{self, Animator},
     enemy::Enemy,
@@ -79,9 +79,7 @@ fn spawn_hammer_effect(
                 },
                 ..Default::default()
             },
-            ForState {
-                states: vec![AppState::GameRunning],
-            },
+            for_game_states(),
         ))
         .insert(animation::Animator {
             timer: 0.,
@@ -202,9 +200,7 @@ pub fn spawn_hammer(
                 transform: Transform::from_scale(Vec3::splat(3.5)),
                 ..Default::default()
             },
-            ForState {
-                states: vec![AppState::GameRunning],
-            },
+            for_game_states(),
         ))
         .insert(animation::Animator {
             timer: 0.,

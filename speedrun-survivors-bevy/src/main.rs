@@ -1,5 +1,6 @@
 use crate::enemy::enemy_spawner::SpawnEnemiesPlugin;
 use crate::enemy::EnemyPlugin;
+use crate::menu::MenuPlugin;
 use crate::passives::orca_chopper::OrcaChopperPlugin;
 use crate::passives::rug_pull::RugPullPlugin;
 use crate::passives::shitcoin::ShitcoinClusterPlugin;
@@ -10,11 +11,10 @@ use crate::plugins::camera_shake::CameraShakePlugin;
 use crate::plugins::coin_rewards::CoinRewardsPlugin;
 use crate::plugins::gameplay_effects::GameplayEffectsPlugin;
 use crate::plugins::hud::HudPlugin;
-use crate::plugins::menu::MenuPlugin;
 use crate::plugins::pickup::PickupPlugin;
 use crate::plugins::sfx_manager::SFXManagerPlugin;
 use crate::plugins::vfx_manager::VFXManagerPlugin;
-use crate::state::{AppState, ForState, StatesPlugin};
+use crate::state::{for_game_states, AppState, StatesPlugin};
 use actives::dash::DashPlugin;
 use bevy::audio::VolumeLevel;
 use bevy::prelude::*;
@@ -31,11 +31,14 @@ mod actives;
 mod animation;
 mod data;
 mod enemy;
+mod menu;
 mod passives;
 mod player;
 mod plugins;
 mod state;
 mod weapon;
+
+const GAME_NAME: &str = "Speedrun Survivors";
 
 #[derive(Actionlike, PartialEq, Eq, Hash, Clone, Copy, Debug, Reflect)]
 enum GameAction {
@@ -54,6 +57,7 @@ enum GameAction {
     Action3,
     Cancel,
     Confirm,
+    Pause,
 }
 
 fn main() {
@@ -65,7 +69,7 @@ fn main() {
                 .set(ImagePlugin::default_nearest())
                 .set(WindowPlugin {
                     primary_window: Some(Window {
-                        title: "Speedrun Survivors".to_string(),
+                        title: GAME_NAME.to_string(),
                         // resolution: WindowResolution::new(1024.0, 768.0),
                         ..default()
                     }),
@@ -102,13 +106,13 @@ fn main() {
         .add_systems(Startup, (setup_camera, setup_key_bindings))
         .add_systems(
             Update,
-            (animation::animate_sprite,).run_if(in_state(AppState::GameRunning)),
+            (animation::animate_sprite).run_if(in_state(AppState::GameRunning)), //TODO make an anim plugin to move logic there?
         )
         .add_systems(
-            OnEnter(AppState::GameRunning),
-            (on_enter_game_running, spawn_ldtk_map),
+            OnEnter(AppState::GameInitializing),
+            (on_enter_game_init, spawn_ldtk_map),
         )
-        .add_systems(OnExit(AppState::GameRunning), (on_exit_game_running,))
+        .add_systems(OnExit(AppState::GameOver), on_exit_game_over)
         .insert_resource(LdtkSettings {
             level_background: LevelBackground::Nonexistent, // Fixes an issue with Chrome not rendering the map
             ..default()
@@ -116,7 +120,7 @@ fn main() {
         .run();
 }
 
-fn on_enter_game_running(mut commands: Commands, mut volume: ResMut<GlobalVolume>) {
+fn on_enter_game_init(mut commands: Commands, mut volume: ResMut<GlobalVolume>) {
     #[cfg(feature = "dev")]
     {
         volume.volume = VolumeLevel::new(0.)
@@ -125,7 +129,7 @@ fn on_enter_game_running(mut commands: Commands, mut volume: ResMut<GlobalVolume
     commands.insert_resource(LevelSelection::Index(0));
 }
 
-fn on_exit_game_running(mut commands: Commands) {
+fn on_exit_game_over(mut commands: Commands) {
     commands.insert_resource(LevelSelection::Index(1));
 }
 
@@ -138,9 +142,7 @@ fn spawn_ldtk_map(game_assets: Res<GameAssets>, mut commands: Commands) {
             transform: map_id.get_map_transform(),
             ..Default::default()
         },
-        ForState {
-            states: vec![AppState::GameRunning],
-        },
+        for_game_states(),
     ));
 }
 
@@ -175,6 +177,8 @@ fn setup_key_bindings(mut commands: Commands) {
         (KeyCode::Space, GameAction::Action3),
         (KeyCode::Return, GameAction::Confirm),
         (KeyCode::Escape, GameAction::Cancel),
+        (KeyCode::P, GameAction::Pause),
+        (KeyCode::Pause, GameAction::Pause),
     ]);
 
     // Mouse bindings

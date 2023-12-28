@@ -6,7 +6,7 @@ use crate::plugins::gameplay_effects::{
 };
 use crate::plugins::health::{HealthUpdateEvent, TargetType};
 use crate::plugins::vfx_manager::{PlayVFX, VFX};
-use crate::state::{AppState, ForState};
+use crate::state::{for_game_states, AppState};
 use bevy::prelude::*;
 use rand::{thread_rng, Rng};
 
@@ -34,7 +34,7 @@ pub struct ShitcoinClusterPlugin;
 
 impl Plugin for ShitcoinClusterPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(AppState::GameRunning), on_enter_game_running)
+        app.add_systems(OnEnter(AppState::GameInitializing), on_enter_game_init)
             .add_systems(
                 Update,
                 (on_update, cluster_move, sub_munition_move)
@@ -45,7 +45,7 @@ impl Plugin for ShitcoinClusterPlugin {
 }
 
 /// Reset plugin state
-fn on_enter_game_running(mut shitcoin_state: ResMut<ShitcoinClusterPluginState>) {
+fn on_enter_game_init(mut shitcoin_state: ResMut<ShitcoinClusterPluginState>) {
     *shitcoin_state = Default::default();
 }
 
@@ -99,9 +99,7 @@ fn spawn_cluster_bomb(commands: &mut Commands, player_loc: Vec2, game_assets: &R
                 texture: game_assets.shitcoin.clone(),
                 ..Default::default()
             },
-            ForState {
-                states: vec![AppState::GameRunning],
-            },
+            for_game_states(),
         ))
         .insert(ShitcoinClusterBomb {
             heading: rng.gen_range(0.0..std::f32::consts::TAU),
@@ -184,9 +182,7 @@ fn spawn_sub_munitions(
                     texture: game_assets.shitcoin.clone(),
                     ..Default::default()
                 },
-                ForState {
-                    states: vec![AppState::GameRunning],
-                },
+                for_game_states(),
             ))
             .insert(ShitcoinSubMunition {
                 heading: rng.gen_range(0.0..std::f32::consts::TAU),
