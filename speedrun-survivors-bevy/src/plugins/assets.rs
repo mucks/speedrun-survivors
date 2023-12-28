@@ -11,6 +11,7 @@ use strum::IntoEnumIterator;
 #[derive(Resource)]
 pub struct UiAssets {
     pub font_primary: Handle<Font>,
+    pub font_secondary: Handle<Font>,
     pub buff_1: UiImage,
     pub checkbox_o: UiImage,
     pub checkbox_x: UiImage,
@@ -65,6 +66,7 @@ fn setup(
 
     commands.insert_resource(UiAssets {
         font_primary: asset_server.load("ui/crumbledpixels.ttf"),
+        font_secondary: asset_server.load("ui/jupiterc.ttf"),
         buff_1: asset_server.load("ui/buff_1.png").into(),
         checkbox_o: asset_server.load("ui/checkbox_o.png").into(),
         checkbox_x: asset_server.load("ui/checkbox_x.png").into(),

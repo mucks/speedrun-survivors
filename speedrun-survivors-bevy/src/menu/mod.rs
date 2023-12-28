@@ -7,7 +7,7 @@ use crate::data::hero::HeroType;
 use crate::data::item::ItemType;
 use crate::data::map::MapId;
 use crate::menu::game_over::menu_game_over;
-use crate::menu::level_up::menu_level_up;
+use crate::menu::level_up::{menu_level_up, on_level_up_menu_button_action};
 use crate::menu::pause::menu_pause;
 use crate::menu::splash_screen::menu_splash_screen;
 use crate::plugins::assets::UiAssets;
@@ -41,14 +41,27 @@ impl Plugin for MenuPlugin {
             .add_systems(OnEnter(AppState::GameLevelUp), menu_level_up)
             .add_systems(OnEnter(AppState::GamePaused), menu_pause)
             .add_systems(OnEnter(AppState::GameOver), menu_game_over)
+            .add_systems(Update, menu_input_system)
             .add_systems(
                 Update,
-                (
-                    mouse_scroll,
-                    on_button_interaction,
-                    menu_input_system,
-                    menu_blink_system,
-                ),
+                (on_main_menu_scroll, on_main_menu_button_action)
+                    .run_if(in_state(AppState::GameMenuMain)),
+            )
+            .add_systems(
+                Update,
+                menu_blink_system.run_if(in_state(AppState::SplashScreen)),
+            )
+            .add_systems(
+                Update,
+                menu_blink_system.run_if(in_state(AppState::GamePaused)),
+            )
+            .add_systems(
+                Update,
+                menu_blink_system.run_if(in_state(AppState::GameOver)),
+            )
+            .add_systems(
+                Update,
+                on_level_up_menu_button_action.run_if(in_state(AppState::GameLevelUp)),
             )
             .insert_resource(MenuGameConfig::default());
     }
@@ -88,7 +101,7 @@ struct MapSelectButton {
 #[derive(Component)]
 struct SelectedElement {}
 
-fn on_button_interaction(
+fn on_main_menu_button_action(
     mut commands: Commands,
     mut query_action_button: Query<(&Interaction, &mut MenuButtonAction), Changed<Interaction>>,
     mut query_btn: Query<
@@ -831,11 +844,7 @@ fn menu_input_system(
                     next_state.set(AppState::GameRunning);
                 }
             }
-            AppState::GameLevelUp => {
-                if action.just_pressed(GameAction::Confirm) {
-                    next_state.set(AppState::GameRunning);
-                }
-            }
+            AppState::GameLevelUp => {}
             AppState::GameOver => {
                 if action.just_pressed(GameAction::Confirm) {
                     next_state.set(AppState::SplashScreen);
@@ -846,7 +855,7 @@ fn menu_input_system(
 }
 
 /// Scroll handler for the cNFT list
-fn mouse_scroll(
+fn on_main_menu_scroll(
     mut rx_mouse: EventReader<MouseWheel>,
     mut query_list: Query<(&mut ScrollingList, &mut Style, &Parent, &Node)>,
     query_node: Query<&Node>,

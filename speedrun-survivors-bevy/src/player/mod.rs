@@ -118,6 +118,7 @@ pub fn process_events(
                 if let Some(new_level) = player_state.level.has_leveled_up(player_state.total_exp) {
                     player_state.level = new_level;
                     tx_gameplay.send(GameplayEffectEvent::LevelUp(new_level));
+                    next_state.set(AppState::GameLevelUp);
                     eprintln!("Player leveled up: {:?}", player_state.level);
                 }
 
