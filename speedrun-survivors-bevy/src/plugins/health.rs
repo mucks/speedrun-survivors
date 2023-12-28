@@ -172,7 +172,7 @@ pub fn update_health_bar(
     >,
     mut commands: Commands,
 ) {
-    for (health, entity, transform, player) in health_query.iter_mut() {
+    for (health, _entity, transform, _player) in health_query.iter_mut() {
         let health_percentage = health.current / health.maximum;
 
         //TODO refactored that a bit; but I think we should move the healthbar into the UI.. no need to update this bar as a separate component

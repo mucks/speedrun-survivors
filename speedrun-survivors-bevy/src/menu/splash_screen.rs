@@ -1,12 +1,10 @@
 use crate::menu::DrawBlinkTimer;
 use crate::plugins::assets::UiAssets;
 use crate::state::{AppState, ForState};
-use crate::GAME_NAME;
+use crate::{COLOR_SOL_DINO, COLOR_SOL_OCEAN, GAME_NAME};
 use bevy::prelude::*;
 
 pub fn menu_splash_screen(mut commands: Commands, assets: ResMut<UiAssets>) {
-    let font_color = Color::rgb_u8(0x92, 0xA6, 0x8A);
-
     commands
         .spawn((
             NodeBundle {
@@ -30,9 +28,9 @@ pub fn menu_splash_screen(mut commands: Commands, assets: ResMut<UiAssets>) {
                 text: Text::from_section(
                     GAME_NAME,
                     TextStyle {
-                        font: assets.font_expanse.clone(),
+                        font: assets.font_primary.clone(),
                         font_size: 100.0,
-                        color: font_color,
+                        color: COLOR_SOL_DINO,
                     },
                 ),
                 ..default()
@@ -41,11 +39,11 @@ pub fn menu_splash_screen(mut commands: Commands, assets: ResMut<UiAssets>) {
                 TextBundle {
                     style: Style { ..default() },
                     text: Text::from_section(
-                        "enter",
+                        "Press Enter",
                         TextStyle {
-                            font: assets.font_expanse.clone(),
+                            font: assets.font_primary.clone(),
                             font_size: 50.0,
-                            color: font_color,
+                            color: COLOR_SOL_OCEAN,
                         },
                     ),
                     ..default()

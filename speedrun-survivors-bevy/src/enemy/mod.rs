@@ -41,7 +41,7 @@ pub fn process_events(
     mut commands: Commands,
     mut rx_enemy: EventReader<EnemyEvent>,
     mut tx_pickup: EventWriter<PickupEvent>,
-    mut query_tf: Query<&Transform, With<Enemy>>,
+    query_tf: Query<&Transform, With<Enemy>>,
 ) {
     for ev in rx_enemy.iter() {
         match ev {

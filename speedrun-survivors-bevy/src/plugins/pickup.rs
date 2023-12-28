@@ -170,13 +170,3 @@ pub enum PickupType {
     Exp(u64),
     Coin(u64),
 }
-
-impl PickupType {
-    fn new_coin(coins: u64) -> Self {
-        PickupType::Coin(coins)
-    }
-
-    fn new_exp(exp: u64) -> Self {
-        PickupType::Exp(exp)
-    }
-}

@@ -90,7 +90,7 @@ fn on_update(
 /// Spawn a shitcoin cluster bomb
 fn spawn_cluster_bomb(commands: &mut Commands, player_loc: Vec2, game_assets: &Res<GameAssets>) {
     let mut rng = thread_rng();
-    let mut spawn_transform = Transform::from_translation((player_loc, 5.0).into());
+    let spawn_transform = Transform::from_translation((player_loc, 5.0).into());
 
     commands
         .spawn((
@@ -200,7 +200,6 @@ fn sub_munition_move(
         (Entity, &mut ShitcoinSubMunition, &mut Transform),
         (Without<ShitcoinClusterBomb>, Without<Enemy>),
     >,
-    game_assets: Res<GameAssets>,
     shitcoin_state: Res<ShitcoinClusterPluginState>,
     mut enemies: Query<
         (Entity, &Enemy, &Transform),

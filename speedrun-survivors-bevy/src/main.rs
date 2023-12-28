@@ -40,6 +40,10 @@ mod weapon;
 
 const GAME_NAME: &str = "Speedrun Survivors";
 
+const COLOR_SOL_SURGE: Color = Color::rgb(0.0, 1.0, 0.63921568627);
+const COLOR_SOL_OCEAN: Color = Color::rgb(0.01176470588, 0.88235294118, 1.0);
+const COLOR_SOL_DINO: Color = Color::rgb(0.86274509804, 0.12156862745, 1.0);
+
 #[derive(Actionlike, PartialEq, Eq, Hash, Clone, Copy, Debug, Reflect)]
 enum GameAction {
     MoveUp,

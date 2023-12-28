@@ -1,9 +1,10 @@
 use crate::menu::DrawBlinkTimer;
 use crate::plugins::assets::UiAssets;
 use crate::state::{AppState, ForState};
+use crate::COLOR_SOL_DINO;
 use bevy::prelude::*;
 
-pub fn menu_splash_screen(mut commands: Commands, assets: ResMut<UiAssets>) {
+pub fn menu_pause(mut commands: Commands, assets: ResMut<UiAssets>) {
     commands
         .spawn((
             NodeBundle {
@@ -26,11 +27,11 @@ pub fn menu_splash_screen(mut commands: Commands, assets: ResMut<UiAssets>) {
                 TextBundle {
                     style: Style { ..default() },
                     text: Text::from_section(
-                        "pause",
+                        "Paused",
                         TextStyle {
-                            font: assets.font_expanse.clone(),
+                            font: assets.font_primary.clone(),
                             font_size: 100.0,
-                            color: Color::rgb_u8(0xF8, 0xE4, 0x73),
+                            color: COLOR_SOL_DINO,
                         },
                     ),
                     ..default()

@@ -100,7 +100,7 @@ fn spawn_whale(commands: &mut Commands, location: Option<Vec2>, game_assets: &Re
     };
 
     let mut rng = thread_rng();
-    let mut spawn_transform = Transform::from_translation((location, 5.0).into());
+    let spawn_transform = Transform::from_translation((location, 5.0).into());
 
     commands
         .spawn((
@@ -138,7 +138,7 @@ fn whale_move(
 /// Compress the whales on impact and deal damage
 fn whale_impact(
     mut commands: Commands,
-    mut whales: Query<(Entity, &mut WhaleFlattens, &mut Transform), Without<Enemy>>,
+    mut whales: Query<(Entity, &WhaleFlattens, &mut Transform), Without<Enemy>>,
     mut enemies: Query<(Entity, &Enemy, &Transform), Without<WhaleFlattens>>,
     player: Query<&Transform, (With<Player>, Without<Enemy>, Without<WhaleFlattens>)>,
     mut tx_health: EventWriter<HealthUpdateEvent>,
@@ -149,7 +149,7 @@ fn whale_impact(
         return;
     };
 
-    for (entity, mut whale, mut whale_tf) in whales.iter_mut() {
+    for (entity, _whale, mut whale_tf) in whales.iter_mut() {
         whale_tf.scale.y -= WHALE_FLATTEN_AMOUNT;
 
         // Not time to explode just yet

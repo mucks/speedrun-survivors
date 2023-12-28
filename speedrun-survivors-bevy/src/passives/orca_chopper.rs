@@ -65,7 +65,7 @@ fn on_update(
     }
 
     // Spawn in the required number of orcas
-    for i in orca_state.total_spawned..expected {
+    for _ in orca_state.total_spawned..expected {
         orca_state.total_spawned += 1;
         spawn_orca_chopper(&mut commands, &player_location.translation, &game_assets);
     }
@@ -130,7 +130,7 @@ fn orca_move(
 
 /// Deal damage to enemies in contact
 fn orca_attack(
-    mut orcas: Query<(&OrcaChopper, &Transform)>,
+    orcas: Query<(&OrcaChopper, &Transform)>,
     mut enemies: Query<(Entity, &Enemy, &Transform)>,
     mut tx_health: EventWriter<HealthUpdateEvent>,
     orca_state: Res<OrcaChopperPluginState>,
@@ -160,7 +160,7 @@ fn spawn_orca_chopper(
 ) {
     let mut rng = rand::thread_rng();
 
-    let mut spawn_transform = Transform::from_translation(player_location.clone());
+    let spawn_transform = Transform::from_translation(player_location.clone());
 
     commands
         .spawn((

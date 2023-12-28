@@ -8,6 +8,7 @@ use crate::data::item::ItemType;
 use crate::data::map::MapId;
 use crate::menu::game_over::menu_game_over;
 use crate::menu::level_up::menu_level_up;
+use crate::menu::pause::menu_pause;
 use crate::menu::splash_screen::menu_splash_screen;
 use crate::plugins::assets::UiAssets;
 use crate::plugins::gameplay_effects::GameplayEffectEvent;
@@ -38,6 +39,7 @@ impl Plugin for MenuPlugin {
             .add_systems(OnEnter(AppState::GameMenuMain), menu_game_create)
             .add_systems(OnExit(AppState::GameMenuMain), menu_game_create_complete)
             .add_systems(OnEnter(AppState::GameLevelUp), menu_level_up)
+            .add_systems(OnEnter(AppState::GamePaused), menu_pause)
             .add_systems(OnEnter(AppState::GameOver), menu_game_over)
             .add_systems(
                 Update,

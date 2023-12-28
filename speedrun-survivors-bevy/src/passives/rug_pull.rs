@@ -107,10 +107,7 @@ fn rug_move(
     mut rugs: Query<(Entity, &mut Rug, &mut Transform), Without<Enemy>>,
     rug_state: Res<RugPullPluginState>,
     mut enemies: Query<(Entity, &Enemy, &Transform), (Without<Rug>, Without<RugPulled>)>,
-    mut rug_pulled: Query<
-        (Entity, &Enemy, &Transform, &RugPulled),
-        (Without<Rug>, With<RugPulled>),
-    >,
+    mut rug_pulled: Query<(Entity, &Enemy, &RugPulled), (Without<Rug>, With<RugPulled>)>,
 ) {
     let delta = time.delta_seconds();
     let move_by = rug_state.speed * delta;
@@ -126,7 +123,7 @@ fn rug_move(
         if rug.ttl < 0.0 {
             commands.entity(entity).despawn_recursive();
 
-            for (entity, mut enemy, enemy_tf, rug_pulled) in rug_pulled.iter_mut() {
+            for (entity, _enemy, rug_pulled) in rug_pulled.iter_mut() {
                 if rug.id == rug_pulled.rug_id {
                     commands.entity(entity).remove::<RugPulled>();
                 }
