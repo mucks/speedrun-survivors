@@ -342,6 +342,7 @@ fn wrapper_hero_selector(parent: &mut ChildBuilder, assets: &UiAssets) {
                 TextBundle::from_section(
                     "Hero Selection",
                     TextStyle {
+                        font: assets.font_primary.clone(),
                         font_size: 30.0,
                         color: TEXT_COLOR,
                         ..default()
@@ -396,6 +397,7 @@ fn wrapper_map_selector(parent: &mut ChildBuilder, assets: &UiAssets) {
                 TextBundle::from_section(
                     "Map Selection",
                     TextStyle {
+                        font: assets.font_primary.clone(),
                         font_size: 30.0,
                         color: TEXT_COLOR,
                         ..default()
@@ -533,6 +535,7 @@ fn wrapper_nft_list(parent: &mut ChildBuilder, assets: &UiAssets) {
                 TextBundle::from_section(
                     "Equip your cNFTs",
                     TextStyle {
+                        font: assets.font_primary.clone(),
                         font_size: 30.0,
                         color: TEXT_COLOR,
                         ..default()
@@ -647,6 +650,7 @@ fn wrapper_footer(parent: &mut ChildBuilder, assets: &UiAssets) {
         ..default()
     };
     let button_text_style = TextStyle {
+        font: assets.font_primary.clone(),
         font_size: 40.0,
         color: TEXT_COLOR,
         ..default()
@@ -709,7 +713,7 @@ fn wrapper_footer(parent: &mut ChildBuilder, assets: &UiAssets) {
                         image: icon,
                         ..default()
                     });
-                    parent.spawn(TextBundle::from_section("Play!", button_text_style));
+                    parent.spawn(TextBundle::from_section("Play", button_text_style));
                 });
         });
 }

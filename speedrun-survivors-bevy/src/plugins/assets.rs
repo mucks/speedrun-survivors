@@ -64,7 +64,7 @@ fn setup(
         .collect();
 
     commands.insert_resource(UiAssets {
-        font_primary: asset_server.load("ui/bitmgothic.otf"),
+        font_primary: asset_server.load("ui/crumbledpixels.ttf"),
         buff_1: asset_server.load("ui/buff_1.png").into(),
         checkbox_o: asset_server.load("ui/checkbox_o.png").into(),
         checkbox_x: asset_server.load("ui/checkbox_x.png").into(),
