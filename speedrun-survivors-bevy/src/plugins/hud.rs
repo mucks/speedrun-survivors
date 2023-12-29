@@ -68,6 +68,7 @@ fn on_enter_game_init(mut commands: Commands, assets: ResMut<UiAssets>) {
             NodeBundle {
                 style: Style {
                     width: Val::Percent(100.),
+                    height: Val::Percent(100.),
                     flex_direction: FlexDirection::Column,
                     align_items: AlignItems::Start,
                     ..Default::default()
@@ -77,62 +78,8 @@ fn on_enter_game_init(mut commands: Commands, assets: ResMut<UiAssets>) {
             for_game_states(),
         ))
         .with_children(|parent| {
-            parent.spawn(NodeBundle {
-                style: Style {
-                    flex_direction: FlexDirection::Row,
-                    margin: UiRect::top(Val::Px(5.)),
-                    ..Default::default()
-                },
-                ..Default::default()
-            });
-
-            parent
-                .spawn(
-                    TextBundle::from_section(
-                        "Coins:",
-                        TextStyle {
-                            font_size: 40.0,
-                            color: Color::rgb(0.5, 0.5, 1.0),
-                            ..default()
-                        },
-                    )
-                    .with_style(Style {
-                        position_type: PositionType::Absolute,
-                        top: Val::Px(5.0),
-                        right: Val::Px(100.0),
-                        ..default()
-                    }),
-                )
-                .insert(CoinText {});
-
-            parent
-                .spawn(NodeBundle {
-                    style: Style {
-                        width: Val::Px(250.),
-                        height: Val::Px(40.),
-                        flex_direction: FlexDirection::Row,
-                        position_type: PositionType::Absolute,
-                        border: UiRect::all(Val::Px(3.)),
-                        top: Val::Px(55.0),
-                        right: Val::Px(50.0),
-                        ..Default::default()
-                    },
-                    border_color: BorderColor(Color::INDIGO),
-                    ..Default::default()
-                })
-                .with_children(|parent| {
-                    parent
-                        .spawn(NodeBundle {
-                            style: Style {
-                                width: Val::Percent(0.),
-                                height: Val::Percent(100.),
-                                ..Default::default()
-                            },
-                            background_color: Color::PURPLE.into(),
-                            ..Default::default()
-                        })
-                        .insert(ExpBar {});
-                });
+            insert_coin_counter(parent);
+            insert_exp_bar(parent);
 
             parent
                 .spawn(NodeBundle {
@@ -161,7 +108,7 @@ fn on_enter_game_init(mut commands: Commands, assets: ResMut<UiAssets>) {
                             }
                         });
 
-                    // Buff slots
+                    // Ability slots TODO these will change over time - how to update this based on player state
                     parent
                         .spawn(NodeBundle {
                             style: Style {
@@ -171,20 +118,72 @@ fn on_enter_game_init(mut commands: Commands, assets: ResMut<UiAssets>) {
                             ..Default::default()
                         })
                         .with_children(|builder| {
-                            spawn_child_node(builder, img_buff.clone(), None);
-                            spawn_child_node(builder, img_buff.clone(), None);
-                            spawn_child_node(builder, img_buff.clone(), None);
+                            for (_, img) in &assets.abilities {
+                                spawn_child_node(builder, img.clone(), None);
+                            }
                         });
                 });
         });
 }
 
+fn insert_coin_counter(parent: &mut ChildBuilder) {
+    parent
+        .spawn(
+            TextBundle::from_section(
+                "Coins:",
+                TextStyle {
+                    font_size: 40.0,
+                    color: Color::rgb(0.5, 0.5, 1.0),
+                    ..default()
+                },
+            )
+            .with_style(Style {
+                position_type: PositionType::Absolute,
+                top: Val::Px(5.0),
+                right: Val::Px(100.0),
+                ..default()
+            }),
+        )
+        .insert(CoinText {});
+}
+
+fn insert_exp_bar(parent: &mut ChildBuilder) {
+    parent
+        .spawn(NodeBundle {
+            style: Style {
+                width: Val::Px(250.),
+                height: Val::Px(40.),
+                flex_direction: FlexDirection::Row,
+                position_type: PositionType::Absolute,
+                border: UiRect::all(Val::Px(3.)),
+                top: Val::Px(55.0),
+                right: Val::Px(50.0),
+                ..Default::default()
+            },
+            border_color: BorderColor(Color::INDIGO),
+            ..Default::default()
+        })
+        .with_children(|parent| {
+            parent
+                .spawn(NodeBundle {
+                    style: Style {
+                        width: Val::Percent(0.),
+                        height: Val::Percent(100.),
+                        ..Default::default()
+                    },
+                    background_color: Color::PURPLE.into(),
+                    ..Default::default()
+                })
+                .insert(ExpBar {});
+        });
+}
+
 fn spawn_child_node(
-    builder: &mut ChildBuilder,
+    parent: &mut ChildBuilder,
     ui_img: UiImage,
     weapon_type: Option<WeaponType>,
 ) -> Entity {
-    let mut node = builder.spawn(ButtonBundle {
+    let mut node = parent.spawn(ButtonBundle {
         style: Style {
             flex_direction: FlexDirection::Column,
             align_items: AlignItems::Center,
@@ -208,8 +207,8 @@ fn spawn_child_node(
     .id()
 }
 
-fn spawn_nested_icon(builder: &mut ChildBuilder, background_color: Color, ui_img: UiImage) {
-    builder
+fn spawn_nested_icon(parent: &mut ChildBuilder, background_color: Color, ui_img: UiImage) {
+    parent
         .spawn(NodeBundle {
             background_color: BackgroundColor(background_color),
             ..Default::default()

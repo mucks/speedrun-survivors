@@ -119,10 +119,12 @@ fn orca_move(
         // Bounce off of the screen edge
         if moving_away {
             if transform.translation.x < top_left.x || transform.translation.x > bottom_right.x {
-                orca.heading = std::f32::consts::PI - orca.heading;
+                let new = std::f32::consts::PI - orca.heading;
+                orca.set_new_heading(new)
             }
             if transform.translation.y > top_left.y || transform.translation.y < bottom_right.y {
-                orca.heading = std::f32::consts::TAU - orca.heading;
+                let new = std::f32::consts::TAU - orca.heading;
+                orca.set_new_heading(new)
             }
         }
     }
@@ -130,17 +132,18 @@ fn orca_move(
 
 /// Deal damage to enemies in contact
 fn orca_attack(
-    orcas: Query<(&OrcaChopper, &Transform)>,
+    mut orcas: Query<(&mut OrcaChopper, &Transform)>,
     mut enemies: Query<(Entity, &Enemy, &Transform)>,
     mut tx_health: EventWriter<HealthUpdateEvent>,
     orca_state: Res<OrcaChopperPluginState>,
 ) {
-    for (orca, orca_transform) in orcas.iter() {
+    for (mut orca, orca_transform) in orcas.iter_mut() {
         for (entity, enemy, transform) in enemies.iter_mut() {
             if Vec2::distance(
                 orca_transform.translation.truncate(),
                 transform.translation.truncate(),
             ) <= ORCA_HIT_DISTANCE
+                && orca.can_damage_entity(&entity)
             {
                 tx_health.send(HealthUpdateEvent {
                     entity,
@@ -171,9 +174,7 @@ fn spawn_orca_chopper(
             },
             for_game_states(),
         ))
-        .insert(OrcaChopper {
-            heading: rng.gen_range(0.0..std::f32::consts::TAU),
-        });
+        .insert(OrcaChopper::new(rng.gen_range(0.0..std::f32::consts::TAU)));
 }
 
 #[derive(Default, Resource)]
@@ -186,4 +187,27 @@ struct OrcaChopperPluginState {
 #[derive(Component)]
 pub struct OrcaChopper {
     heading: f32,
+    hit_list: Vec<Entity>,
+}
+
+impl OrcaChopper {
+    fn new(heading: f32) -> Self {
+        Self {
+            heading,
+            hit_list: vec![],
+        }
+    }
+    fn set_new_heading(&mut self, heading: f32) {
+        self.heading = heading;
+        self.hit_list = Vec::new();
+    }
+
+    fn can_damage_entity(&mut self, entity: &Entity) -> bool {
+        if !self.hit_list.contains(entity) {
+            self.hit_list.push(*entity);
+            true
+        } else {
+            false
+        }
+    }
 }

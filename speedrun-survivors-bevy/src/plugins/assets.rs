@@ -1,3 +1,4 @@
+use crate::data::abilities::AbilityType;
 use crate::data::hero::HeroType;
 use crate::data::map::MapId;
 use crate::enemy::enemy_type::EnemyType;
@@ -18,6 +19,7 @@ pub struct UiAssets {
     pub weapons: HashMap<WeaponType, UiImage>,
     pub heroes: HashMap<HeroType, UiImage>,
     pub maps: HashMap<MapId, UiImage>,
+    pub abilities: HashMap<AbilityType, UiImage>,
 }
 
 #[derive(Resource)]
@@ -49,6 +51,11 @@ fn setup(
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
 ) {
+    // Load ui image for each weapon
+    let weapons: HashMap<WeaponType, UiImage> = WeaponType::iter()
+        .map(|weapon| (weapon, asset_server.load(weapon.get_ui_image_name()).into()))
+        .collect();
+
     // Load ui image for each hero
     let heroes: HashMap<HeroType, UiImage> = HeroType::iter()
         .map(|hero| (hero, asset_server.load(hero.get_ui_image_name()).into()))
@@ -59,9 +66,14 @@ fn setup(
         .map(|map| (map, asset_server.load(map.get_ui_image_name()).into()))
         .collect();
 
-    // Load ui image for each weapon
-    let weapons: HashMap<WeaponType, UiImage> = WeaponType::iter()
-        .map(|weapon| (weapon, asset_server.load(weapon.get_ui_image_name()).into()))
+    // Load ui image for each ability
+    let abilities: HashMap<AbilityType, UiImage> = AbilityType::iter()
+        .map(|ability| {
+            (
+                ability,
+                asset_server.load(ability.get_ui_image_name()).into(),
+            )
+        })
         .collect();
 
     commands.insert_resource(UiAssets {
@@ -73,6 +85,7 @@ fn setup(
         weapons,
         heroes,
         maps,
+        abilities,
     });
 
     // Load sprite sheets for each hero

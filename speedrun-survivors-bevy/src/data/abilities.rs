@@ -21,6 +21,15 @@ impl AbilityType {
         ]
     }
 
+    pub fn get_ui_image_name(&self) -> &str {
+        match self {
+            AbilityType::OrcaChopper => "ui/abilities/orca.png",
+            AbilityType::RugPull => "ui/abilities/rug.png",
+            AbilityType::ShitcoinCluster => "ui/abilities/shitcoin.png",
+            AbilityType::WhaleDump => "ui/abilities/whale.png",
+        }
+    }
+
     pub fn get_gameplay_effects(&self, level: u8) -> Vec<GameplayEffect> {
         match self {
             AbilityType::OrcaChopper => Self::orca_chopper_effects(level),
