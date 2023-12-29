@@ -66,7 +66,7 @@ fn on_update(
     whale_state.time_last_spawn += time.delta_seconds();
 
     // Spawn if necessary
-    if whale_state.time_last_spawn > whale_state.interval {
+    if whale_state.interval > 0.0 && whale_state.time_last_spawn > whale_state.interval {
         whale_state.time_last_spawn = 0.0;
         spawn_whale(&mut commands, spawn_location(camera_query), &game_assets);
     }

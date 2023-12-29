@@ -15,9 +15,9 @@ const CLUSTER_BOMB_MOVE_SPEED: f32 = 700.0;
 /// Gravitational effect on cluster bomb
 const CLUSTER_BOMB_GRAVITY_MULTIPLIER: f32 = 0.7;
 /// The cluster bomb will not detonate before this much time passed
-const CLUSTER_MIN_TIME_TO_BOOM: f32 = 0.30;
+const CLUSTER_MIN_TIME_TO_BOOM: f32 = 0.18;
 /// The cluster bomb will detonate after no more than this time
-const CLUSTER_MAX_TIME_TO_BOOM: f32 = 1.3;
+const CLUSTER_MAX_TIME_TO_BOOM: f32 = 1.0;
 
 /// The scale for sub-munitions
 const SUB_MUNITION_SCALE: f32 = 0.3;
@@ -81,7 +81,7 @@ fn on_update(
     shitcoin_state.time_last_spawn += time.delta_seconds();
 
     // Spawn a new cluster bomb
-    if shitcoin_state.time_last_spawn > shitcoin_state.interval {
+    if shitcoin_state.interval > 0.0 && shitcoin_state.time_last_spawn > shitcoin_state.interval {
         shitcoin_state.time_last_spawn = 0.0;
         spawn_cluster_bomb(&mut commands, player_loc, &game_assets);
     }
@@ -141,7 +141,7 @@ fn cluster_move(
 
             // Spawn tiny explosion VFX?
             tx_vfx.send(PlayVFX {
-                vfx: VFX::ExplosionXL, //TODO small explosion xD
+                vfx: VFX::ExplosionXL,
                 location: transform.translation,
             });
 

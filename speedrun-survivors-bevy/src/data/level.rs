@@ -11,20 +11,8 @@ impl Level {
                 vec![
                     GameplayEffect::new_mul(GameplayStat::MovementSpeed, 1.1),
                     GameplayEffect::new_add(GameplayStat::HealthCap, 5.0),
-                    GameplayEffect::new_add(GameplayStat::HealthRegen, 1.0),
-                    GameplayEffect::new_add(GameplayStat::OrcaCount, 1.0),
-                    GameplayEffect::new_add(GameplayStat::OrcaSpeed, 50.0),
-                    GameplayEffect::new_add(GameplayStat::OrcaDamage, -0.1),
-                    GameplayEffect::new_add(GameplayStat::PickupDistance, 50.0),
-                    GameplayEffect::new_mul(GameplayStat::WhaleDamage, 1.1),
-                    GameplayEffect::new_div(GameplayStat::WhaleInterval, 1.05),
-                    GameplayEffect::new_mul(GameplayStat::WhaleArea, 1.1),
-                    GameplayEffect::new_sub(GameplayStat::ShitcoinInterval, 0.1),
-                    GameplayEffect::new_add(GameplayStat::ShitcoinMunitions, 1.0),
-                    GameplayEffect::new_add(GameplayStat::ShitcoinDamage, 0.1),
-                    GameplayEffect::new_sub(GameplayStat::RugPullInterval, 0.15),
-                    GameplayEffect::new_add(GameplayStat::RugPullSpeed, 5.0),
-                    GameplayEffect::new_add(GameplayStat::RugPullTTL, 0.08),
+                    GameplayEffect::new_add(GameplayStat::HealthRegen, 0.1),
+                    GameplayEffect::new_add(GameplayStat::PickupDistance, 40.0),
                 ]
             }
         }

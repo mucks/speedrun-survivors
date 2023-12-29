@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use bevy::prelude::*;
 use leafwing_input_manager::action_state::ActionState;
 
+use crate::data::abilities::AbilityType;
 use crate::data::hero::HeroType;
 use crate::data::level::Level;
 use crate::menu::MenuGameConfig;
@@ -30,7 +31,7 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(AppState::GameInitializing), spawn_player)
+        app.add_systems(OnEnter(AppState::GameInitializing), on_enter_game_init)
             .add_systems(
                 Update,
                 (
@@ -130,6 +131,16 @@ pub fn process_events(
             PlayerEvent::EnemyDefeated => {
                 player_state.total_kills += 1;
             }
+            PlayerEvent::AbilityUpgrade(ability) => {
+                // Insert or increment the current level for this ability
+                let new_level = player_state
+                    .abilities
+                    .entry(*ability)
+                    .and_modify(|lvl| *lvl += 1)
+                    .or_insert(1);
+
+                tx_gameplay.send(GameplayEffectEvent::AbilityLevelUp(*ability, *new_level));
+            }
         }
     }
 }
@@ -138,6 +149,7 @@ pub fn process_events(
 pub enum PlayerEvent {
     Died,
     ExpGained(u64),
+    AbilityUpgrade(AbilityType),
     EnemyDefeated,
 }
 
@@ -147,6 +159,7 @@ pub struct PlayerState {
     pub level: Level,
     pub level_progress: f32,
     pub total_kills: u64,
+    pub abilities: HashMap<AbilityType, u8>,
 }
 
 impl Default for PlayerState {
@@ -156,6 +169,7 @@ impl Default for PlayerState {
             level: Level(1),
             level_progress: 0.,
             total_kills: 0,
+            abilities: HashMap::new(),
         }
     }
 }
@@ -178,13 +192,16 @@ fn create_player_anim_hashmap(hero_type: HeroType) -> HashMap<String, animation:
     hash_map
 }
 
-pub fn spawn_player(
+pub fn on_enter_game_init(
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
+    mut player_state: ResMut<PlayerState>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
     game_config: Res<MenuGameConfig>,
     game_assets: Res<GameAssets>,
 ) {
+    // Reset player state
+    *player_state = PlayerState::default();
+
     let hero_type = game_config.hero.clone();
 
     let texture_atlas = hero_type.texture_atlas(&game_assets);

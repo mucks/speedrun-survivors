@@ -1,5 +1,6 @@
 use crate::data::abilities::AbilityType;
 use crate::menu::{BTN_BORDER_DEFAULT, BTN_BORDER_HOVER};
+use crate::player::PlayerEvent;
 use crate::plugins::assets::UiAssets;
 use crate::plugins::gameplay_effects::GameplayEffectEvent;
 use crate::state::{AppState, ForState};
@@ -119,7 +120,7 @@ pub fn on_level_up_menu_button_action(
         Changed<Interaction>,
     >,
     mut next_state: ResMut<NextState<AppState>>,
-    mut tx_gameplay: EventWriter<GameplayEffectEvent>,
+    mut tx_player: EventWriter<PlayerEvent>,
 ) {
     // Check for button interaction
     for (interaction, choice, mut border) in button_interaction.iter_mut() {
@@ -127,8 +128,7 @@ pub fn on_level_up_menu_button_action(
             Interaction::Pressed => {
                 // Resume the game
                 next_state.set(AppState::GameRunning);
-                // TODO actual implementation
-                eprintln!("Level up selection: {choice:?}");
+                tx_player.send(PlayerEvent::AbilityUpgrade(choice.option))
             }
             Interaction::Hovered => {
                 border.0 = BTN_BORDER_HOVER;

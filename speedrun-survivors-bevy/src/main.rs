@@ -62,6 +62,7 @@ enum GameAction {
     Cancel,
     Confirm,
     Pause,
+    HackLevelUp,
 }
 
 fn main() {
@@ -183,6 +184,7 @@ fn setup_key_bindings(mut commands: Commands) {
         (KeyCode::Escape, GameAction::Cancel),
         (KeyCode::P, GameAction::Pause),
         (KeyCode::Pause, GameAction::Pause),
+        (KeyCode::B, GameAction::HackLevelUp),
     ]);
 
     // Mouse bindings

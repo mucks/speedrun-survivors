@@ -1,3 +1,4 @@
+use crate::data::abilities::AbilityType;
 use crate::data::hero::HeroType;
 use crate::data::item::ItemType;
 use crate::data::level::Level;
@@ -11,7 +12,8 @@ pub struct GameplayEffectsPlugin;
 
 impl Plugin for GameplayEffectsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(AppState::GameInitializing), on_enter_game_init)
+        app.add_systems(OnEnter(AppState::GameMenuMain), on_enter_game_main_menu)
+            .add_systems(OnEnter(AppState::GameInitializing), on_enter_game_init)
             .add_systems(Update, on_update)
             .add_event::<GameplayEffectEvent>()
             .add_event::<GameplayStatsRecalculatedEvent>()
@@ -19,6 +21,12 @@ impl Plugin for GameplayEffectsPlugin {
     }
 }
 
+/// Reset all the data when we enter the main menu
+fn on_enter_game_main_menu(mut state: ResMut<GameplayEffectPluginState>) {
+    *state = GameplayEffectPluginState::default();
+}
+
+/// Runs when the game is initializing
 fn on_enter_game_init(mut state: ResMut<GameplayEffectPluginState>) {
     // If the menu was skipped, we do not have stats, so we call select hero here
     if state.player_effects.move_speed <= 0. {
@@ -57,6 +65,9 @@ fn on_update(
             GameplayEffectEvent::LevelUp(level) => {
                 state.player_effects.level_up(level.get_gameplay_effects())
             }
+            GameplayEffectEvent::AbilityLevelUp(ability, lvl) => state
+                .player_effects
+                .ability_level_up(ability.get_gameplay_effects(*lvl)),
         }
     }
     if debug_count > 0 {
@@ -80,6 +91,7 @@ pub enum GameplayEffectEvent {
     ItemEquipped(Entity, ItemType),
     ItemUnEquipped(Entity),
     LevelUp(Level),
+    AbilityLevelUp(AbilityType, u8),
 }
 
 #[derive(Event)]
@@ -208,8 +220,8 @@ pub struct GameplayEffectContainer {
     nfts: Vec<(String, GameplayEffect)>,
     /// Each equipped item has effects
     items: Vec<(Entity, GameplayEffect)>,
-    /// With each level up, additional effects can be added
-    levels: Vec<GameplayEffect>,
+    /// Effects gained for each player level as well as each ability upgrade
+    player_progression: Vec<GameplayEffect>,
     /// Temporary effects from abilities or shrines
     temporary: Vec<TemporaryGameplayEffectStack>,
 
@@ -277,7 +289,14 @@ impl GameplayEffectContainer {
 
     /// For every level up we may add additional effects
     pub fn level_up(&mut self, effects: Vec<GameplayEffect>) {
-        self.levels.extend(effects.into_iter());
+        self.player_progression.extend(effects.into_iter());
+
+        self.recalculate();
+    }
+
+    /// Every ability can be level up. This adds additional effects
+    pub fn ability_level_up(&mut self, effects: Vec<GameplayEffect>) {
+        self.player_progression.extend(effects.into_iter());
 
         self.recalculate();
     }
@@ -342,7 +361,7 @@ impl GameplayEffectContainer {
                 .and_modify(|e| effect.op.apply(e, effect.val));
         }
 
-        for effect in &self.levels {
+        for effect in &self.player_progression {
             self.flat_packed
                 .entry(effect.stat)
                 .and_modify(|e| effect.op.apply(e, effect.val));

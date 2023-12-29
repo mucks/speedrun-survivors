@@ -119,17 +119,7 @@ impl HeroType {
                     GameplayEffect::new_abs(GameplayStat::Damage, 5.0),
                     GameplayEffect::new_abs(GameplayStat::AttackRate, 5.0),
                     GameplayEffect::new_abs(GameplayStat::MovementSpeed, 100.0),
-                    GameplayEffect::new_abs(GameplayStat::OrcaSpeed, 400.0),
                     GameplayEffect::new_abs(GameplayStat::PickupDistance, 40.0),
-                    GameplayEffect::new_abs(GameplayStat::WhaleDamage, 1.0),
-                    GameplayEffect::new_abs(GameplayStat::WhaleInterval, 5.0),
-                    GameplayEffect::new_abs(GameplayStat::WhaleArea, 70.0),
-                    GameplayEffect::new_abs(GameplayStat::ShitcoinInterval, 7.0),
-                    GameplayEffect::new_abs(GameplayStat::ShitcoinMunitions, 2.0),
-                    GameplayEffect::new_abs(GameplayStat::ShitcoinDamage, 0.1),
-                    GameplayEffect::new_abs(GameplayStat::RugPullInterval, 6.0),
-                    GameplayEffect::new_abs(GameplayStat::RugPullSpeed, 280.0),
-                    GameplayEffect::new_abs(GameplayStat::RugPullTTL, 0.8),
                 ]
             }
             _ => {
@@ -139,17 +129,7 @@ impl HeroType {
                     GameplayEffect::new_abs(GameplayStat::Damage, 5.0),
                     GameplayEffect::new_abs(GameplayStat::AttackRate, 5.0),
                     GameplayEffect::new_abs(GameplayStat::MovementSpeed, 120.0),
-                    GameplayEffect::new_abs(GameplayStat::OrcaSpeed, 400.0),
                     GameplayEffect::new_abs(GameplayStat::PickupDistance, 40.0),
-                    GameplayEffect::new_abs(GameplayStat::WhaleDamage, 1.0),
-                    GameplayEffect::new_abs(GameplayStat::WhaleInterval, 5.0),
-                    GameplayEffect::new_abs(GameplayStat::WhaleArea, 70.0),
-                    GameplayEffect::new_abs(GameplayStat::ShitcoinInterval, 7.0),
-                    GameplayEffect::new_abs(GameplayStat::ShitcoinMunitions, 2.0),
-                    GameplayEffect::new_abs(GameplayStat::ShitcoinDamage, 0.1),
-                    GameplayEffect::new_abs(GameplayStat::RugPullInterval, 6.0),
-                    GameplayEffect::new_abs(GameplayStat::RugPullSpeed, 280.0),
-                    GameplayEffect::new_abs(GameplayStat::RugPullTTL, 0.8),
                 ]
             }
         }

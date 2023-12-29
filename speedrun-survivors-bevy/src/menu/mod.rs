@@ -838,6 +838,9 @@ fn menu_input_system(
                 if action.just_pressed(GameAction::Pause) {
                     next_state.set(AppState::GamePaused);
                 }
+                if action.just_pressed(GameAction::HackLevelUp) {
+                    next_state.set(AppState::GameLevelUp);
+                }
             }
             AppState::GamePaused => {
                 if action.just_pressed(GameAction::Pause) {

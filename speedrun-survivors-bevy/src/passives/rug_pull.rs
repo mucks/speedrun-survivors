@@ -62,7 +62,7 @@ fn on_update(
     rug_state.time_last_spawn += time.delta_seconds();
 
     // Spawn a new rug
-    if rug_state.time_last_spawn > rug_state.interval {
+    if rug_state.interval > 0.0 && rug_state.time_last_spawn > rug_state.interval {
         rug_state.time_last_spawn = 0.0;
         rug_state.rug_count += 1;
         spawn_rug(
