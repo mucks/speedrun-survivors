@@ -140,6 +140,11 @@ pub fn process_events(
                     .or_insert(1);
 
                 tx_gameplay.send(GameplayEffectEvent::AbilityLevelUp(*ability, *new_level));
+
+                // Also keep track of the order in which abilities were added
+                if !player_state.ability_order.contains(ability) {
+                    player_state.ability_order.push(*ability);
+                }
             }
         }
     }
@@ -160,6 +165,7 @@ pub struct PlayerState {
     pub level_progress: f32,
     pub total_kills: u64,
     pub abilities: HashMap<AbilityType, u8>,
+    pub ability_order: Vec<AbilityType>,
 }
 
 impl Default for PlayerState {
@@ -170,6 +176,7 @@ impl Default for PlayerState {
             level_progress: 0.,
             total_kills: 0,
             abilities: HashMap::new(),
+            ability_order: Vec::new(),
         }
     }
 }

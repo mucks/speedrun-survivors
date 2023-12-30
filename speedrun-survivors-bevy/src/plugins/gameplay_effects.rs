@@ -71,7 +71,11 @@ fn on_update(
                 state
                     .player_effects
                     .ability_level_up(ability.get_gameplay_effects(*lvl));
-                tx_hud.send(HudRedraw::AbilitySlots);
+
+                // Only redraw the hud if the ability is new
+                if *lvl == 1 {
+                    tx_hud.send(HudRedraw::AbilitySlots);
+                }
             }
         }
     }

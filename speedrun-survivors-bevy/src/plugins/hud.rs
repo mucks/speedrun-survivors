@@ -255,10 +255,11 @@ fn spawn_ability_slots(
 ) {
     // Ability slots
     let mut ability_slots: Vec<SlotType> = player_state
-        .abilities
+        .ability_order
         .iter()
-        .map(|(ability, _level)| SlotType::Ability(*ability))
+        .map(|ability| SlotType::Ability(*ability))
         .collect();
+
     ability_slots
         .extend((0..4i8.saturating_sub(ability_slots.len() as i8)).map(|_| SlotType::Empty));
 
