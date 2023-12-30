@@ -13,7 +13,7 @@ use strum::IntoEnumIterator;
 pub struct UiAssets {
     pub font_primary: Handle<Font>,
     pub font_secondary: Handle<Font>,
-    pub buff_1: UiImage,
+    pub empty_slot: UiImage,
     pub checkbox_o: UiImage,
     pub checkbox_x: UiImage,
     pub weapons: HashMap<WeaponType, UiImage>,
@@ -79,7 +79,7 @@ fn setup(
     commands.insert_resource(UiAssets {
         font_primary: asset_server.load("ui/crumbledpixels.ttf"),
         font_secondary: asset_server.load("ui/jupiterc.ttf"),
-        buff_1: asset_server.load("ui/buff_1.png").into(),
+        empty_slot: asset_server.load("ui/empty_slot.png").into(),
         checkbox_o: asset_server.load("ui/checkbox_o.png").into(),
         checkbox_x: asset_server.load("ui/checkbox_x.png").into(),
         weapons,

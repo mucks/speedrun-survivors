@@ -689,7 +689,7 @@ fn wrapper_footer(parent: &mut ChildBuilder, assets: &UiAssets) {
                     MenuButtonAction::Quit,
                 ))
                 .with_children(|parent| {
-                    let icon = assets.buff_1.clone();
+                    let icon = assets.empty_slot.clone();
                     parent.spawn(ImageBundle {
                         style: button_icon_style.clone(),
                         image: icon,
@@ -720,7 +720,7 @@ fn wrapper_footer(parent: &mut ChildBuilder, assets: &UiAssets) {
                     MenuButtonAction::Play,
                 ))
                 .with_children(|parent| {
-                    let icon = assets.buff_1.clone();
+                    let icon = assets.empty_slot.clone();
                     parent.spawn(ImageBundle {
                         style: button_icon_style,
                         image: icon,

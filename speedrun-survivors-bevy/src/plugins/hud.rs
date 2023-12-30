@@ -266,7 +266,7 @@ fn spawn_ability_slots(
     for slot in ability_slots {
         let img = match slot {
             SlotType::Ability(ability) => assets.abilities.get(&ability).unwrap().clone(),
-            _ => assets.buff_1.clone(),
+            _ => assets.empty_slot.clone(),
         };
         spawn_slot(parent, img, slot);
     }

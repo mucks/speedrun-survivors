@@ -13,7 +13,7 @@ impl ItemType {
     /// The path to the ui image for this item
     pub fn get_ui_image_name(&self) -> &str {
         match self {
-            _ => "ui/buff_1.png",
+            _ => "ui/empty_slot.png",
         }
     }
 
