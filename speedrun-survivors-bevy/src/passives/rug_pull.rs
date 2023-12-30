@@ -20,6 +20,10 @@ impl Plugin for RugPullPlugin {
                 Update,
                 (on_update, rug_move, rug_pull_enemies).run_if(in_state(AppState::GameRunning)),
             )
+            .add_systems(
+                Update,
+                on_stats_recalculated.run_if(on_event::<GameplayStatsRecalculatedEvent>())
+            )
             .insert_resource(RugPullPluginState::default());
     }
 }
@@ -28,31 +32,32 @@ fn on_enter_game_init(mut rug_state: ResMut<RugPullPluginState>) {
     *rug_state = Default::default();
 }
 
+/// Update the plugin state to reflect changes in the gameplay system state
+fn on_stats_recalculated(
+    mut rug_state: ResMut<RugPullPluginState>,
+    gameplay_state: Res<GameplayEffectPluginState>,
+) {
+    rug_state.interval = gameplay_state
+        .player_effects
+        .get_stat(GameplayStat::RugPullInterval) as f32;
+    rug_state.speed = gameplay_state
+        .player_effects
+        .get_stat(GameplayStat::RugPullSpeed) as f32;
+    rug_state.max_ttl = gameplay_state
+        .player_effects
+        .get_stat(GameplayStat::RugPullTTL) as f32;
+
+    //TODO see note below rug_state.damage = 0.1;
+}
+
 /// Update stats when required, spawn rugs
 fn on_update(
     time: Res<Time>,
     mut commands: Commands,
     mut rug_state: ResMut<RugPullPluginState>,
     game_assets: Res<GameAssets>,
-    mut rx_gameplay: EventReader<GameplayStatsRecalculatedEvent>,
-    gameplay_state: Res<GameplayEffectPluginState>,
     player: Query<&Transform, With<Player>>,
 ) {
-    // There was some recalculate event
-    if rx_gameplay.iter().len() > 0 {
-        rug_state.interval = gameplay_state
-            .player_effects
-            .get_stat(GameplayStat::RugPullInterval) as f32;
-        rug_state.speed = gameplay_state
-            .player_effects
-            .get_stat(GameplayStat::RugPullSpeed) as f32;
-        rug_state.max_ttl = gameplay_state
-            .player_effects
-            .get_stat(GameplayStat::RugPullTTL) as f32;
-
-        //TODO see note below rug_state.damage = 0.1;
-    }
-
     // Make sure we got a player
     let Ok(player_loc) = player.get_single().map(|tf| tf.translation.truncate()) else {
         return;

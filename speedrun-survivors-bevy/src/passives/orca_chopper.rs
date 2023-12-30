@@ -18,7 +18,11 @@ impl Plugin for OrcaChopperPlugin {
         app.add_systems(OnEnter(AppState::GameInitializing), on_enter_game_init)
             .add_systems(
                 Update,
-                (on_update, orca_move, orca_attack).run_if(in_state(AppState::GameRunning)),
+                (orca_move, orca_attack).run_if(in_state(AppState::GameRunning)),
+            )
+            .add_systems(
+                Update,
+                on_stats_recalculated.run_if(on_event::<GameplayStatsRecalculatedEvent>())
             )
             .insert_resource(OrcaChopperPluginState::default());
     }
@@ -28,19 +32,14 @@ fn on_enter_game_init(mut orca_state: ResMut<OrcaChopperPluginState>) {
     orca_state.total_spawned = 0;
 }
 
-fn on_update(
+/// Update the plugin state to reflect changes in the gameplay system state
+fn on_stats_recalculated(
     mut commands: Commands,
     mut orca_state: ResMut<OrcaChopperPluginState>,
     player: Query<&Transform, With<Player>>,
     game_assets: Res<GameAssets>,
-    mut rx_gameplay: EventReader<GameplayStatsRecalculatedEvent>,
     gameplay_state: Res<GameplayEffectPluginState>,
 ) {
-    // There was some recalculate event
-    if rx_gameplay.iter().len() < 1 {
-        return;
-    }
-
     // Make sure we got a player
     let Ok(player_location) = player.get_single() else {
         return;

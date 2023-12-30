@@ -30,6 +30,10 @@ impl Plugin for WhaleDumpPlugin {
                 Update,
                 (on_update, whale_move, whale_impact).run_if(in_state(AppState::GameRunning)),
             )
+            .add_systems(
+                Update,
+                on_stats_recalculated.run_if(on_event::<GameplayStatsRecalculatedEvent>())
+            )
             .insert_resource(WhaleDumpPluginState::default());
     }
 }
@@ -39,29 +43,30 @@ fn on_enter_game_init(mut whale_state: ResMut<WhaleDumpPluginState>) {
     *whale_state = Default::default();
 }
 
+/// Update the plugin state to reflect changes in the gameplay system state
+fn on_stats_recalculated(
+    mut whale_state: ResMut<WhaleDumpPluginState>,
+    gameplay_state: Res<GameplayEffectPluginState>,
+) {
+    whale_state.interval = gameplay_state
+        .player_effects
+        .get_stat(GameplayStat::WhaleInterval) as f32;
+    whale_state.damage = gameplay_state
+        .player_effects
+        .get_stat(GameplayStat::WhaleDamage) as f32;
+    whale_state.area = gameplay_state
+        .player_effects
+        .get_stat(GameplayStat::WhaleArea) as f32;
+}
+
 /// Update stats when required, spawn whales
 fn on_update(
     time: Res<Time>,
     mut commands: Commands,
     mut whale_state: ResMut<WhaleDumpPluginState>,
     game_assets: Res<GameAssets>,
-    mut rx_gameplay: EventReader<GameplayStatsRecalculatedEvent>,
-    gameplay_state: Res<GameplayEffectPluginState>,
     camera_query: Query<(&Camera, &GlobalTransform)>,
 ) {
-    // There was some recalculate event
-    if rx_gameplay.iter().len() > 0 {
-        whale_state.interval = gameplay_state
-            .player_effects
-            .get_stat(GameplayStat::WhaleInterval) as f32;
-        whale_state.damage = gameplay_state
-            .player_effects
-            .get_stat(GameplayStat::WhaleDamage) as f32;
-        whale_state.area = gameplay_state
-            .player_effects
-            .get_stat(GameplayStat::WhaleArea) as f32;
-    }
-
     // Update the time since last spawn
     whale_state.time_last_spawn += time.delta_seconds();
 

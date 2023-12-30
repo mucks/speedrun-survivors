@@ -40,6 +40,10 @@ impl Plugin for ShitcoinClusterPlugin {
                 (on_update, cluster_move, sub_munition_move)
                     .run_if(in_state(AppState::GameRunning)),
             )
+            .add_systems(
+                Update,
+                on_stats_recalculated.run_if(on_event::<GameplayStatsRecalculatedEvent>())
+            )
             .insert_resource(ShitcoinClusterPluginState::default());
     }
 }
@@ -49,29 +53,30 @@ fn on_enter_game_init(mut shitcoin_state: ResMut<ShitcoinClusterPluginState>) {
     *shitcoin_state = Default::default();
 }
 
+/// Update the plugin state to reflect changes in the gameplay system state
+fn on_stats_recalculated(
+    mut shitcoin_state: ResMut<ShitcoinClusterPluginState>,
+    gameplay_state: Res<GameplayEffectPluginState>,
+) {
+    shitcoin_state.interval = gameplay_state
+        .player_effects
+        .get_stat(GameplayStat::ShitcoinInterval) as f32;
+    shitcoin_state.munitions = gameplay_state
+        .player_effects
+        .get_stat(GameplayStat::ShitcoinMunitions) as u32;
+    shitcoin_state.damage = gameplay_state
+        .player_effects
+        .get_stat(GameplayStat::ShitcoinDamage) as f32;
+}
+
 /// Update stats when required, spawn shitcoin cluster bombs
 fn on_update(
     time: Res<Time>,
     mut commands: Commands,
     mut shitcoin_state: ResMut<ShitcoinClusterPluginState>,
     game_assets: Res<GameAssets>,
-    mut rx_gameplay: EventReader<GameplayStatsRecalculatedEvent>,
-    gameplay_state: Res<GameplayEffectPluginState>,
     player: Query<&Transform, With<Player>>,
 ) {
-    // There was some recalculate event
-    if rx_gameplay.iter().len() > 0 {
-        shitcoin_state.interval = gameplay_state
-            .player_effects
-            .get_stat(GameplayStat::ShitcoinInterval) as f32;
-        shitcoin_state.munitions = gameplay_state
-            .player_effects
-            .get_stat(GameplayStat::ShitcoinMunitions) as u32;
-        shitcoin_state.damage = gameplay_state
-            .player_effects
-            .get_stat(GameplayStat::ShitcoinDamage) as f32;
-    }
-
     // Make sure we got a player
     let Ok(player_loc) = player.get_single().map(|tf| tf.translation.truncate()) else {
         return;
