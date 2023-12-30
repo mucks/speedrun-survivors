@@ -71,7 +71,7 @@ fn on_update(
                 state
                     .player_effects
                     .ability_level_up(ability.get_gameplay_effects(*lvl));
-                tx_hud.send(HudRedraw {});
+                tx_hud.send(HudRedraw::AbilitySlots);
             }
         }
     }

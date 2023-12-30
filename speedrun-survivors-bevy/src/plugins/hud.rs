@@ -7,11 +7,6 @@ use bevy::prelude::*;
 
 use crate::state::{for_game_states, AppState};
 
-#[derive(Debug, Component)]
-pub struct WeaponButton {
-    weapon_type: WeaponType,
-}
-
 pub struct HudPlugin;
 
 const ITEMS_COLOR: Color = Color::BLACK;
@@ -28,8 +23,8 @@ impl Plugin for HudPlugin {
     }
 }
 
-pub fn on_enter_game_init(mut tx_hud: EventWriter<HudRedraw>) {
-    tx_hud.send(HudRedraw {});
+fn on_enter_game_init(mut tx_hud: EventWriter<HudRedraw>) {
+    tx_hud.send(HudRedraw::Root);
 }
 
 fn on_weapon_button_click(
@@ -68,22 +63,27 @@ fn on_update(
 }
 
 #[derive(Component)]
-pub struct HudRoot {}
+struct NodeRoot {}
 
 #[derive(Component)]
-pub struct CoinText {}
+struct NodeAbilitySlots {}
 
 #[derive(Component)]
-pub struct ExpBar {}
+struct CoinText {}
 
 #[derive(Component)]
-pub struct AbilityHudIcon {
-    slot: u8,
-    ability: Option<AbilityType>,
+struct ExpBar {}
+
+#[derive(Debug, Component)]
+struct WeaponButton {
+    weapon_type: WeaponType,
 }
 
 #[derive(Event)]
-pub struct HudRedraw {}
+pub enum HudRedraw {
+    Root,
+    AbilitySlots,
+}
 
 enum SlotType {
     Weapon(WeaponType),
@@ -95,14 +95,42 @@ fn on_hud_redraw(
     mut commands: Commands,
     assets: Res<UiAssets>,
     player_state: Res<PlayerState>,
-    hud: Query<Entity, With<HudRoot>>,
+    node_root: Query<Entity, With<NodeRoot>>,
+    node_abilities: Query<Entity, With<NodeAbilitySlots>>,
+    mut tx_hud: EventReader<HudRedraw>,
 ) {
-    // Remove any existing hud
-    if let Ok(entity) = hud.get_single() {
-        commands.entity(entity).despawn_recursive();
-        eprintln!("UNSPAWNH UD");
-    }
+    let Some(event) = tx_hud.iter().last() else {
+        return;
+    };
 
+    match event {
+        HudRedraw::Root => {
+            // Remove the existing hud
+            if let Ok(entity) = node_root.get_single() {
+                commands.entity(entity).despawn_recursive();
+            }
+
+            // Redraw the entire thing
+            hud_full_redraw(&mut commands, &assets, &player_state);
+        }
+        HudRedraw::AbilitySlots => {
+            if let Ok(entity) = node_abilities.get_single() {
+                commands.entity(entity).despawn_descendants();
+
+                commands
+                    .spawn(NodeBundle::default())
+                    .with_children(|parent| spawn_ability_slots(parent, &assets, &player_state))
+                    .set_parent(entity);
+            }
+        }
+    }
+}
+
+fn hud_full_redraw(
+    commands: &mut Commands,
+    assets: &Res<UiAssets>,
+    player_state: &Res<PlayerState>,
+) {
     commands
         .spawn((
             NodeBundle {
@@ -117,7 +145,7 @@ fn on_hud_redraw(
             },
             for_game_states(),
         ))
-        .insert(HudRoot {})
+        .insert(NodeRoot {})
         .with_children(|parent| {
             insert_coin_counter(parent);
             insert_exp_bar(parent);
@@ -203,21 +231,11 @@ fn insert_wrapper_slots(
                     },
                     ..Default::default()
                 })
-                .with_children(|builder| {
+                .with_children(|parent| {
                     for (weapon_type, img) in &assets.weapons {
-                        spawn_slot(builder, img.clone(), SlotType::Weapon(*weapon_type));
+                        spawn_slot(parent, img.clone(), SlotType::Weapon(*weapon_type));
                     }
                 });
-
-            // Ability slots
-            let mut ability_slots: Vec<SlotType> = player_state
-                .abilities
-                .iter()
-                .map(|(ability, _level)| SlotType::Ability(*ability))
-                .collect();
-            ability_slots.extend(
-                (0..4i8.saturating_sub(ability_slots.len() as i8)).map(|_| SlotType::Empty),
-            );
 
             parent
                 .spawn(NodeBundle {
@@ -227,18 +245,34 @@ fn insert_wrapper_slots(
                     },
                     ..Default::default()
                 })
-                .with_children(|builder| {
-                    for slot in ability_slots {
-                        let mut img = match slot {
-                            SlotType::Ability(ability) => {
-                                assets.abilities.get(&ability).unwrap().clone()
-                            }
-                            _ => assets.buff_1.clone(),
-                        };
-                        spawn_slot(builder, img, slot);
-                    }
+                .insert(NodeAbilitySlots {})
+                .with_children(|parent| {
+                    spawn_ability_slots(parent, assets, player_state);
                 });
         });
+}
+
+fn spawn_ability_slots(
+    parent: &mut ChildBuilder,
+    assets: &Res<UiAssets>,
+    player_state: &Res<PlayerState>,
+) {
+    // Ability slots
+    let mut ability_slots: Vec<SlotType> = player_state
+        .abilities
+        .iter()
+        .map(|(ability, _level)| SlotType::Ability(*ability))
+        .collect();
+    ability_slots
+        .extend((0..4i8.saturating_sub(ability_slots.len() as i8)).map(|_| SlotType::Empty));
+
+    for slot in ability_slots {
+        let mut img = match slot {
+            SlotType::Ability(ability) => assets.abilities.get(&ability).unwrap().clone(),
+            _ => assets.buff_1.clone(),
+        };
+        spawn_slot(parent, img, slot);
+    }
 }
 
 fn spawn_slot(parent: &mut ChildBuilder, ui_img: UiImage, slot_type: SlotType) {
