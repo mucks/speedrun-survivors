@@ -3,6 +3,7 @@ use crate::data::hero::HeroType;
 use crate::data::item::ItemType;
 use crate::data::level::Level;
 use crate::data::map::MapId;
+use crate::plugins::hud::HudRedraw;
 use crate::state::AppState;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
@@ -41,6 +42,7 @@ fn on_update(
     mut state: ResMut<GameplayEffectPluginState>,
     mut rx_gameplay: EventReader<GameplayEffectEvent>,
     mut tx_recalculated: EventWriter<GameplayStatsRecalculatedEvent>,
+    mut tx_hud: EventWriter<HudRedraw>,
 ) {
     let mut debug_count = 0;
     for ev in rx_gameplay.iter() {
@@ -65,9 +67,12 @@ fn on_update(
             GameplayEffectEvent::LevelUp(level) => {
                 state.player_effects.level_up(level.get_gameplay_effects())
             }
-            GameplayEffectEvent::AbilityLevelUp(ability, lvl) => state
-                .player_effects
-                .ability_level_up(ability.get_gameplay_effects(*lvl)),
+            GameplayEffectEvent::AbilityLevelUp(ability, lvl) => {
+                state
+                    .player_effects
+                    .ability_level_up(ability.get_gameplay_effects(*lvl));
+                tx_hud.send(HudRedraw {});
+            }
         }
     }
     if debug_count > 0 {

@@ -32,7 +32,7 @@ impl Plugin for WhaleDumpPlugin {
             )
             .add_systems(
                 Update,
-                on_stats_recalculated.run_if(on_event::<GameplayStatsRecalculatedEvent>())
+                on_stats_recalculated.run_if(on_event::<GameplayStatsRecalculatedEvent>()),
             )
             .insert_resource(WhaleDumpPluginState::default());
     }

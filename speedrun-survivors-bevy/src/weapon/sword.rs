@@ -110,19 +110,22 @@ fn spawn_sword_swing_effect(
     flip_x: bool,
 ) {
     commands
-        .spawn(SpriteSheetBundle {
-            texture_atlas: game_assets
-                .weapon_animation_effects
-                .get(&WeaponAnimationEffect::SwordSwing)
-                .unwrap()
-                .clone(),
-            transform: Transform {
-                scale: Vec3::splat(5.),
-                translation,
+        .spawn((
+            SpriteSheetBundle {
+                texture_atlas: game_assets
+                    .weapon_animation_effects
+                    .get(&WeaponAnimationEffect::SwordSwing)
+                    .unwrap()
+                    .clone(),
+                transform: Transform {
+                    scale: Vec3::splat(5.),
+                    translation,
+                    ..Default::default()
+                },
                 ..Default::default()
             },
-            ..Default::default()
-        })
+            for_game_states(),
+        ))
         .insert(animation::Animator {
             timer: 0.,
             cooldown: 10.,
