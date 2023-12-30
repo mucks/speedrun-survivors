@@ -2,14 +2,11 @@ use crate::data::abilities::AbilityType;
 use crate::menu::{BTN_BORDER_DEFAULT, BTN_BORDER_HOVER};
 use crate::player::PlayerEvent;
 use crate::plugins::assets::UiAssets;
-use crate::plugins::gameplay_effects::GameplayEffectEvent;
 use crate::state::{AppState, ForState};
 use crate::{COLOR_SOL_OCEAN, COLOR_SOL_SURGE};
 use bevy::prelude::*;
 
 pub fn menu_level_up(mut commands: Commands, assets: ResMut<UiAssets>) {
-    let img_buff = assets.buff_1.clone();
-
     commands
         .spawn((
             NodeBundle {

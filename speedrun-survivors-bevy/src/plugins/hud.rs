@@ -56,10 +56,6 @@ fn on_update(
     if let Ok(mut text) = query_exp.get_single_mut() {
         text.width = Val::Percent(100. * player_state.level_progress);
     }
-
-    // Attemot to delete something
-    //TODO could then have empty ability icons and delete them
-    // or just "redraw" use         player_state: Res<PlayerState>,
 }
 
 #[derive(Component)]
@@ -267,7 +263,7 @@ fn spawn_ability_slots(
         .extend((0..4i8.saturating_sub(ability_slots.len() as i8)).map(|_| SlotType::Empty));
 
     for slot in ability_slots {
-        let mut img = match slot {
+        let img = match slot {
             SlotType::Ability(ability) => assets.abilities.get(&ability).unwrap().clone(),
             _ => assets.buff_1.clone(),
         };
@@ -294,10 +290,7 @@ fn spawn_slot(parent: &mut ChildBuilder, ui_img: UiImage, slot_type: SlotType) {
         SlotType::Weapon(weapon_type) => {
             node.insert(WeaponButton { weapon_type });
         }
-        SlotType::Ability(ability_type) => {
-            //TODO
-        }
-        SlotType::Empty => {}
+        _ => {}
     }
 
     node.with_children(|parent| {

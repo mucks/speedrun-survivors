@@ -67,7 +67,6 @@ fn on_switch_weapon(
     mut commands: Commands,
     mut rx_switch: EventReader<SwitchWeaponEvent>,
     mut weapon_query: Query<(&mut Transform, Entity), With<WeaponType>>,
-    asset_server: Res<AssetServer>,
     game_config: Res<MenuGameConfig>,
     game_assets: Res<GameAssets>,
 ) {
