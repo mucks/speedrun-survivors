@@ -44,13 +44,18 @@ fn on_weapon_button_click(
 }
 
 fn on_update(
-    mut query_coin: Query<&mut Text, (With<CoinText>, Without<ExpBar>)>,
+    mut query_coin: Query<&mut Text, (With<CoinText>, Without<KillsText>, Without<ExpBar>)>,
+    mut query_kill: Query<&mut Text, (With<KillsText>, Without<CoinText>, Without<ExpBar>)>,
+    mut query_exp: Query<&mut Style, (With<ExpBar>, Without<CoinText>, Without<KillsText>)>,
     coin_accumulator: Res<CoinAccumulator>,
-    mut query_exp: Query<&mut Style, (With<ExpBar>, Without<CoinText>)>,
     player_state: Res<PlayerState>,
 ) {
     if let Ok(mut text) = query_coin.get_single_mut() {
         text.sections[0].value = format!("Coins: {}", coin_accumulator.total_coin);
+    }
+
+    if let Ok(mut text) = query_kill.get_single_mut() {
+        text.sections[0].value = format!("Kills: {}", player_state.total_kills);
     }
 
     if let Ok(mut text) = query_exp.get_single_mut() {
@@ -66,6 +71,9 @@ struct NodeAbilitySlots {}
 
 #[derive(Component)]
 struct CoinText {}
+
+#[derive(Component)]
+struct KillsText {}
 
 #[derive(Component)]
 struct ExpBar {}
@@ -133,7 +141,7 @@ fn hud_full_redraw(
                 style: Style {
                     width: Val::Percent(100.),
                     height: Val::Percent(100.),
-                    flex_direction: FlexDirection::Column,
+                    flex_direction: FlexDirection::Row,
                     align_items: AlignItems::Start,
                     ..Default::default()
                 },
@@ -143,10 +151,36 @@ fn hud_full_redraw(
         ))
         .insert(NodeRoot {})
         .with_children(|parent| {
-            insert_coin_counter(parent);
-            insert_exp_bar(parent);
+            parent
+                .spawn(NodeBundle {
+                    style: Style {
+                        width: Val::Percent(60.),
+                        height: Val::Percent(100.),
+                        flex_direction: FlexDirection::Column,
+                        align_items: AlignItems::Start,
+                        ..Default::default()
+                    },
+                    ..Default::default()
+                })
+                .with_children(|parent| insert_wrapper_slots(parent, &assets, &player_state));
 
-            insert_wrapper_slots(parent, &assets, &player_state);
+            parent
+                .spawn(NodeBundle {
+                    style: Style {
+                        width: Val::Percent(40.),
+                        height: Val::Percent(100.),
+                        flex_direction: FlexDirection::Column,
+                        align_items: AlignItems::End,
+                        margin: UiRect::all(Val::Px(25.)),
+                        ..Default::default()
+                    },
+                    ..Default::default()
+                })
+                .with_children(|parent| {
+                    insert_coin_counter(parent);
+                    insert_kill_counter(parent);
+                    insert_exp_bar(parent);
+                });
         });
 }
 
@@ -162,13 +196,30 @@ fn insert_coin_counter(parent: &mut ChildBuilder) {
                 },
             )
             .with_style(Style {
-                position_type: PositionType::Absolute,
-                top: Val::Px(5.0),
-                right: Val::Px(100.0),
+                margin: UiRect::all(Val::Px(5.)),
                 ..default()
             }),
         )
         .insert(CoinText {});
+}
+
+fn insert_kill_counter(parent: &mut ChildBuilder) {
+    parent
+        .spawn(
+            TextBundle::from_section(
+                "Kills:",
+                TextStyle {
+                    font_size: 40.0,
+                    color: Color::rgb(0.5, 0.5, 1.0),
+                    ..default()
+                },
+            )
+            .with_style(Style {
+                margin: UiRect::all(Val::Px(5.)),
+                ..default()
+            }),
+        )
+        .insert(KillsText {});
 }
 
 fn insert_exp_bar(parent: &mut ChildBuilder) {
@@ -178,10 +229,8 @@ fn insert_exp_bar(parent: &mut ChildBuilder) {
                 width: Val::Px(250.),
                 height: Val::Px(40.),
                 flex_direction: FlexDirection::Row,
-                position_type: PositionType::Absolute,
                 border: UiRect::all(Val::Px(3.)),
-                top: Val::Px(55.0),
-                right: Val::Px(50.0),
+                margin: UiRect::all(Val::Px(5.)),
                 ..Default::default()
             },
             border_color: BorderColor(Color::INDIGO),
