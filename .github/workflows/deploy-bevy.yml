@@ -55,3 +55,11 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+      - name: wait-job
+        run: sleep 20s
+        shell: bash
+      - name: Deploy Stage
+        uses: fjogeleit/http-request-action@v1
+        with:
+          url: "http://31.14.17.154:8000/reload-solana-speedrun/${{ secrets.DEPLOY_KEY }}"
+          method: "GET"
