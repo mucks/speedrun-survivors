@@ -12,6 +12,7 @@ use crate::plugins::sfx_manager::{PlaySFX, SFX};
 use crate::plugins::status_effect::{
     StatusEffect, StatusEffectEvent, StatusEffectEventType, StatusEffectType,
 };
+use crate::plugins::vfx_manager::{PlayVFX, VFX};
 use crate::state::{for_game_states, AppState};
 use crate::{
     animation::{self, Animator},
@@ -24,23 +25,18 @@ use super::weapon_animation_effect::WeaponAnimationEffect;
 use super::weapon_type::WeaponType;
 
 const HAMMER_KNOCKBACK: f32 = 1000.;
-const HAMMER_DAMAGE: f32 = 1.;
 const HAMMER_HITBOX: f32 = 100.;
 
 pub struct HammerPlugin;
 
 impl Plugin for HammerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<HammerStomp>();
-        app.add_systems(
-            Update,
-            (
-                hammer_controls,
-                player_attach::attach_objects,
-                on_hammer_stomp,
+        app.add_event::<HammerStomp>()
+            .add_systems(
+                Update,
+                hammer_controls.run_if(in_state(AppState::GameRunning)),
             )
-                .run_if(in_state(AppState::GameRunning)),
-        );
+            .add_systems(Update, on_hammer_stomp.run_if(on_event::<HammerStomp>()));
     }
 }
 
@@ -59,55 +55,19 @@ pub struct HammerController {
     pub is_stomping: bool,
 }
 
-fn spawn_hammer_effect(
-    commands: &mut Commands,
-    asset_server: &Res<AssetServer>,
-    texture_atlases: &mut ResMut<Assets<TextureAtlas>>,
-    translation: Vec3,
-) {
-    let texture_atlas = WeaponAnimationEffect::HammerStomp.texture_atlas(&asset_server);
-    let texture_atlas = texture_atlases.add(texture_atlas);
-
-    commands
-        .spawn((
-            SpriteSheetBundle {
-                texture_atlas: texture_atlas,
-                transform: Transform {
-                    translation,
-                    scale: Vec3::splat(3.5),
-                    ..Default::default()
-                },
-                ..Default::default()
-            },
-            for_game_states(),
-        ))
-        .insert(animation::Animator {
-            timer: 0.,
-            cooldown: 10.,
-            last_animation: "Stomp".to_string(),
-            current_animation: "Stomp".to_string(),
-            animation_bank: create_hammer_effect_anim_hashmap(),
-            destroy_on_end: true,
-        });
-}
-
 fn on_hammer_stomp(
     mut rx_stomp: EventReader<HammerStomp>,
     mut enemy_query: Query<(&Transform, Entity), (With<Enemy>, Without<Player>)>,
     mut tx_status: EventWriter<StatusEffectEvent>,
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+    mut tx_vfx: EventWriter<PlayVFX>,
     mut tx_impact: EventWriter<CameraImpact>,
     mut tx_sfx: EventWriter<PlaySFX>,
 ) {
     for ev in rx_stomp.iter() {
-        spawn_hammer_effect(
-            &mut commands,
-            &asset_server,
-            &mut texture_atlases,
-            ev.translation,
-        );
+        tx_vfx.send(PlayVFX {
+            vfx: VFX::HammerImpact,
+            location: ev.translation,
+        });
 
         let mut hit_count = 0;
         for (transform, ent) in enemy_query.iter_mut() {
@@ -145,20 +105,6 @@ fn on_hammer_stomp(
             })
         }
     }
-}
-
-fn create_hammer_effect_anim_hashmap() -> HashMap<String, animation::Animation> {
-    let mut hash_map = HashMap::new();
-    hash_map.insert(
-        "Stomp".to_string(),
-        animation::Animation {
-            start: 1,
-            end: 10,
-            looping: false,
-            cooldown: 0.1,
-        },
-    );
-    hash_map
 }
 
 fn create_hammer_anim_hashmap() -> HashMap<String, animation::Animation> {

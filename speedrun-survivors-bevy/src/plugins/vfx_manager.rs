@@ -62,6 +62,7 @@ pub struct PlayVFX {
 pub enum VFX {
     ExplosionXS,
     ExplosionXL,
+    HammerImpact,
 }
 
 impl VFX {
@@ -87,12 +88,21 @@ impl VFX {
                 None,
                 None,
             )),
+            VFX::HammerImpact => texture_atlases.add(TextureAtlas::from_grid(
+                asset_server.load("sprites/vfx/hammer_impact.png"),
+                Vec2::new(32., 32.),
+                10,
+                1,
+                Some(Vec2::new(1., 1.)),
+                None,
+            )),
         }
     }
     fn make_scale(&self) -> Vec3 {
         match self {
-            VFX::ExplosionXS => Vec3::splat(1.0),
             VFX::ExplosionXL => Vec3::splat(1.5),
+            VFX::HammerImpact => Vec3::splat(3.5),
+            _ => Vec3::splat(1.0),
         }
     }
 
@@ -124,6 +134,26 @@ impl VFX {
                     Animation {
                         start: 1,
                         end: 20,
+                        looping: false,
+                        cooldown: 0.1,
+                    },
+                )]);
+
+                Animator {
+                    timer: 0.,
+                    cooldown: 10.,
+                    last_animation: "xplode".to_string(),
+                    current_animation: "xplode".to_string(),
+                    animation_bank,
+                    destroy_on_end: true,
+                }
+            }
+            VFX::HammerImpact => {
+                let animation_bank = HashMap::from([(
+                    "xplode".to_string(),
+                    Animation {
+                        start: 1,
+                        end: 10,
                         looping: false,
                         cooldown: 0.1,
                     },
