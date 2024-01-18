@@ -66,6 +66,9 @@ enum GameAction {
 }
 
 fn main() {
+    #[cfg(feature = "wasm")]
+    wasm_logger::init(wasm_logger::Config::default().module_prefix("speedrun_survivors_bevy"));
+
     App::new()
         .add_state::<AppState>()
         .insert_resource(ClearColor(Color::rgb_u8(0, 0, 0)))
@@ -107,6 +110,8 @@ fn main() {
             RugPullPlugin,
             PickupPlugin,
             VFXManagerPlugin,
+            #[cfg(feature = "wasm")]
+            crate::plugins::wallet::WalletPlugin,
         ))
         .add_systems(Startup, (setup_camera, setup_key_bindings))
         .add_systems(

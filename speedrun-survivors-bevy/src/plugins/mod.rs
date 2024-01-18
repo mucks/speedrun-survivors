@@ -9,3 +9,5 @@ pub mod pickup;
 pub mod sfx_manager;
 pub mod status_effect;
 pub mod vfx_manager;
+#[cfg(feature = "wasm")]
+pub mod wallet;

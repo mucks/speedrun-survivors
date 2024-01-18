@@ -853,6 +853,7 @@ fn menu_input_system(
                     next_state.set(AppState::SplashScreen);
                 }
             }
+            _ => {}
         }
     }
 }

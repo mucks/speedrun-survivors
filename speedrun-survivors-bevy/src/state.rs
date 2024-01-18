@@ -19,10 +19,11 @@ pub fn for_game_states() -> ForState<AppState> {
 /// Possible Game States
 #[derive(States, Debug, Copy, Clone, Hash, Eq, PartialEq, Default)]
 pub enum AppState {
-    #[cfg_attr(not(feature = "dev"), default)]
     SplashScreen,
-    GameMenuMain,
+    #[cfg_attr(not(feature = "dev"), default)]
     #[cfg_attr(feature = "dev", default)]
+    WalletMenu,
+    GameMenuMain,
     GameInitializing,
     GameRunning,
     GameLevelUp,
