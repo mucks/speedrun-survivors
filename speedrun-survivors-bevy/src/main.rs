@@ -16,7 +16,7 @@ use crate::plugins::sfx_manager::SFXManagerPlugin;
 use crate::plugins::vfx_manager::VFXManagerPlugin;
 use crate::state::{for_game_states, AppState, StatesPlugin};
 use actives::dash::DashPlugin;
-use bevy::audio::VolumeLevel;
+use bevy::log::{Level, LogPlugin};
 use bevy::prelude::*;
 use bevy_ecs_ldtk::prelude::*;
 use leafwing_input_manager::prelude::*;
@@ -66,14 +66,15 @@ enum GameAction {
 }
 
 fn main() {
-    #[cfg(feature = "wasm")]
-    wasm_logger::init(wasm_logger::Config::default().module_prefix("speedrun_survivors_bevy"));
-
     App::new()
         .add_state::<AppState>()
         .insert_resource(ClearColor(Color::rgb_u8(0, 0, 0)))
         .add_plugins(
             DefaultPlugins
+                .set(LogPlugin {
+                    level: Level::DEBUG,
+                    ..default()
+                })
                 .set(ImagePlugin::default_nearest())
                 .set(WindowPlugin {
                     primary_window: Some(Window {
@@ -130,10 +131,10 @@ fn main() {
         .run();
 }
 
-fn on_enter_game_init(mut commands: Commands, mut volume: ResMut<GlobalVolume>) {
+fn on_enter_game_init(mut commands: Commands, mut _volume: ResMut<GlobalVolume>) {
     #[cfg(feature = "dev")]
     {
-        volume.volume = VolumeLevel::new(0.)
+        _volume.volume = bevy::audio::VolumeLevel::new(0.)
     }
 
     commands.insert_resource(LevelSelection::Index(0));

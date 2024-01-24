@@ -1,9 +1,7 @@
+use std::sync::{Arc, OnceLock, RwLock, RwLockWriteGuard};
+
 use anyhow::{anyhow, Context, Result};
-use bevy::{
-    prelude::*,
-    tasks::{AsyncComputeTaskPool, Task},
-};
-use futures_lite::future;
+use bevy::prelude::*;
 use wasm_bindgen::JsValue;
 
 use crate::state::AppState;
@@ -15,10 +13,16 @@ pub struct WalletPlugin;
 impl Plugin for WalletPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<WalletEvent>();
+        app.insert_resource(Wallet { info: None });
         app.add_systems(OnEnter(AppState::WalletMenu), setup_wallet_menu);
         app.add_systems(
             Update,
-            (wallet_menu_system, wallet_event_system, wallet_task_system)
+            (
+                wallet_menu_interaction_system,
+                wallet_event_system,
+                wallet_menu_system,
+                async_wallet_event_system,
+            )
                 .run_if(in_state(AppState::WalletMenu)),
         );
     }
@@ -30,8 +34,43 @@ fn reflect_get(target: &JsValue, key: &JsValue) -> Result<JsValue> {
     Ok(result)
 }
 
-#[derive(Debug, Component)]
+static ASYNC_WALLET_EVENT_QUEUE: OnceLock<Arc<RwLock<Vec<AsyncWalletEvent>>>> = OnceLock::new();
+
+struct AsyncWalletEventQueue;
+
+impl AsyncWalletEventQueue {
+    fn get_rw_lock() -> Result<RwLockWriteGuard<'static, Vec<AsyncWalletEvent>>> {
+        ASYNC_WALLET_EVENT_QUEUE
+            .get_or_init(|| Arc::new(RwLock::new(vec![])))
+            .write()
+            .map_err(|err| anyhow!("{:?}", err))
+    }
+
+    fn push(event: AsyncWalletEvent) -> Result<()> {
+        let mut wallet_event_queue = Self::get_rw_lock()?;
+        wallet_event_queue.push(event);
+        Ok(())
+    }
+
+    fn pop() -> Result<Option<AsyncWalletEvent>> {
+        let mut wallet_event_queue = Self::get_rw_lock()?;
+        Ok(wallet_event_queue.pop())
+    }
+
+    fn clear() -> Result<()> {
+        let mut wallet_event_queue = Self::get_rw_lock()?;
+        wallet_event_queue.clear();
+        Ok(())
+    }
+}
+
+#[derive(Debug, Resource)]
 pub struct Wallet {
+    pub info: Option<WalletInfo>,
+}
+
+#[derive(Debug)]
+pub struct WalletInfo {
     pub amount: u32,
     pub address: String,
 }
@@ -39,6 +78,13 @@ pub struct Wallet {
 #[derive(Debug, Event)]
 pub enum WalletEvent {
     ConnectBtnClick,
+    DisconnectBtnClick,
+    Connected,
+    Disconnected,
+}
+
+pub enum AsyncWalletEvent {
+    ConnectionCompleted(Result<String>),
 }
 
 #[derive(Debug, Component)]
@@ -54,13 +100,51 @@ const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
 const HOVERED_BUTTON: Color = Color::rgb(0.25, 0.25, 0.25);
 const PRESSED_BUTTON: Color = Color::rgb(0.35, 0.75, 0.35);
 
-#[derive(Component)]
-struct WalletTask(Task<()>);
+fn async_wallet_event_system(mut ev_writer: EventWriter<WalletEvent>, mut wallet: ResMut<Wallet>) {
+    if let Ok(Some(event)) = AsyncWalletEventQueue::pop() {
+        match event {
+            AsyncWalletEvent::ConnectionCompleted(result) => match result {
+                Ok(address) => {
+                    debug!("WalletEvent::ConnectionCompleted: {:?}", address);
+                    wallet.info = Some(WalletInfo { amount: 0, address });
+                    ev_writer.send(WalletEvent::Connected);
+                }
+                Err(err) => {
+                    debug!("WalletEvent::ConnectionCompleted: {:?}", err);
+                }
+            },
+        }
+    }
+}
 
-fn wallet_task_system(mut tasks: Query<&mut WalletTask>) {
-    for mut task in &mut tasks {
-        if let Some(_) = future::block_on(future::poll_once(&mut task.0)) {
-            debug!("wallet task finished");
+fn wallet_menu_system(
+    mut ev_reader: EventReader<WalletEvent>,
+    mut wallet_menu_query: Query<&mut Text, (With<WalletMenu>, Without<ConnectDisconnectBtnText>)>,
+    mut wallet: ResMut<Wallet>,
+    mut toggle_connect_btn: Query<&mut WalletButtonType, With<WalletButtonType>>,
+    mut toggle_connect_btn_text: Query<
+        &mut Text,
+        (With<ConnectDisconnectBtnText>, Without<WalletMenu>),
+    >,
+) {
+    for event in ev_reader.iter() {
+        match event {
+            WalletEvent::Connected => {
+                debug!("WalletEvent::Connected");
+                if let Some(info) = &wallet.info {
+                    wallet_menu_query.single_mut().sections[0].value = info.address.clone();
+                }
+                toggle_connect_btn_text.single_mut().sections[0].value = "Disconnect".to_string();
+                *toggle_connect_btn.single_mut() = WalletButtonType::Disconnect;
+            }
+            WalletEvent::DisconnectBtnClick => {
+                debug!("WalletEvent::DisconnectBtnClick");
+                wallet.info = None;
+                wallet_menu_query.single_mut().sections[0].value = String::new();
+                toggle_connect_btn_text.single_mut().sections[0].value = "Connect".to_string();
+                *toggle_connect_btn.single_mut() = WalletButtonType::Connect;
+            }
+            _ => {}
         }
     }
 }
@@ -69,18 +153,21 @@ fn wallet_event_system(
     mut commands: Commands,
     mut state: ResMut<State<AppState>>,
     mut ev_reader: EventReader<WalletEvent>,
+    mut wallet: ResMut<Wallet>,
 ) {
-    let thread_pool = AsyncComputeTaskPool::get();
     for event in ev_reader.iter() {
         match event {
             WalletEvent::ConnectBtnClick => {
                 debug!("WalletEvent::ConnectBtnClick");
 
                 wasm_bindgen_futures::spawn_local(async move {
-                    let pubkey = connect_to_phantom().await;
-                    println!("pubkey: {:?}", pubkey);
+                    AsyncWalletEventQueue::push(AsyncWalletEvent::ConnectionCompleted(
+                        connect_to_phantom().await,
+                    ))
+                    .unwrap();
                 });
             }
+            _ => {}
         }
     }
 }
@@ -95,7 +182,7 @@ async fn connect_to_phantom() -> Result<String> {
             let connect_str = wasm_bindgen::JsValue::from_str("connect");
             let connect: js_sys::Function = reflect_get(&*solana, &connect_str)?.into();
 
-            log::debug!("{:?}", connect.to_string());
+            debug!("{:?}", connect.to_string());
 
             let resp = connect.call0(&solana).map_err(|err| anyhow!("{err:?}"))?;
             let promise = js_sys::Promise::resolve(&resp);
@@ -104,7 +191,7 @@ async fn connect_to_phantom() -> Result<String> {
                 .await
                 .map_err(|err| anyhow!("{err:?}"))?;
 
-            log::debug!("{:?}", result);
+            debug!("{:?}", result);
 
             let pubkey_str = wasm_bindgen::JsValue::from_str("publicKey");
             let pubkey_obj: js_sys::Object = reflect_get(&result, &pubkey_str)?.into();
@@ -112,7 +199,7 @@ async fn connect_to_phantom() -> Result<String> {
             let bn_str = wasm_bindgen::JsValue::from_str("toString");
             let to_string_fn: js_sys::Function = reflect_get(&pubkey_obj, &bn_str)?.into();
 
-            log::debug!("pubkey_obj: {:?}", to_string_fn.call0(&pubkey_obj));
+            debug!("pubkey_obj: {:?}", to_string_fn.call0(&pubkey_obj));
 
             let pubkey = to_string_fn
                 .call0(&pubkey_obj)
@@ -122,7 +209,7 @@ async fn connect_to_phantom() -> Result<String> {
                 .as_string()
                 .context("could not convert pubkey to string")?;
 
-            log::debug!("pubkey: {:?}", public_key);
+            debug!("pubkey: {:?}", public_key);
 
             return Ok(public_key);
         }
@@ -133,7 +220,7 @@ async fn connect_to_phantom() -> Result<String> {
     Err(anyhow!("could not connect to wallet"))
 }
 
-pub fn wallet_menu_system(
+pub fn wallet_menu_interaction_system(
     mut interaction_query: Query<
         (
             &Interaction,
@@ -171,6 +258,7 @@ pub fn wallet_menu_system(
                 }
                 WalletButtonType::Disconnect => {
                     println!("Disconnect button clicked");
+                    ev_writer.send(WalletEvent::DisconnectBtnClick);
                 }
             },
             Interaction::Hovered => {
@@ -182,12 +270,10 @@ pub fn wallet_menu_system(
     }
 }
 
-pub fn setup_wallet_menu(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    assets: Res<UiAssets>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
-) {
+#[derive(Debug, Component)]
+pub struct ConnectDisconnectBtnText;
+
+pub fn setup_wallet_menu(mut commands: Commands, assets: Res<UiAssets>) {
     // setup connect button
     commands
         .spawn(NodeBundle {
@@ -201,6 +287,19 @@ pub fn setup_wallet_menu(
             ..default()
         })
         .with_children(|parent| {
+            // spawn text view for wallet
+            parent
+                .spawn(TextBundle::from_section(
+                    "",
+                    TextStyle {
+                        font: assets.font_primary.clone(),
+                        font_size: 40.0,
+                        color: Color::rgb(0.9, 0.9, 0.9),
+                    },
+                ))
+                .insert(WalletMenu);
+
+            // spawn connect button
             parent
                 .spawn(ButtonBundle {
                     style: Style {
@@ -218,14 +317,16 @@ pub fn setup_wallet_menu(
                     ..default()
                 })
                 .with_children(|parent| {
-                    parent.spawn(TextBundle::from_section(
-                        "Connect",
-                        TextStyle {
-                            font: assets.font_primary.clone(),
-                            font_size: 40.0,
-                            color: Color::rgb(0.9, 0.9, 0.9),
-                        },
-                    ));
+                    parent
+                        .spawn(TextBundle::from_section(
+                            "Connect",
+                            TextStyle {
+                                font: assets.font_primary.clone(),
+                                font_size: 40.0,
+                                color: Color::rgb(0.9, 0.9, 0.9),
+                            },
+                        ))
+                        .insert(ConnectDisconnectBtnText);
                 })
                 .insert(WalletButtonType::Connect);
         });

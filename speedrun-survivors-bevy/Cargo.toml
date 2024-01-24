@@ -14,11 +14,8 @@ rand.workspace = true
 strum.workspace = true
 wasm-bindgen = { version = "0.2", optional = true }
 wasm-bindgen-futures = { version = "0.4", optional = true }
-wasm-logger = { version = "0.2", optional = true }
 web-sys = { version = "0.3.64", optional = true }
 js-sys = { version = "0.3.54", optional = true }
-log = "0.4"
-futures-lite = "2.2"
 
 [features]
 dev = ["bevy/dynamic_linking", "bevy_editor_pls"]
@@ -28,5 +25,4 @@ wasm = [
     "web-sys",
     "js-sys",
     "web-sys/Window",
-    "wasm-logger",
 ]
