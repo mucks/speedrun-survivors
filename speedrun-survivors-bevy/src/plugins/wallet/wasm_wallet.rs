@@ -29,7 +29,7 @@ impl Plugin for WasmWalletPlugin {
 }
 
 fn reflect_get(target: &JsValue, key: &JsValue) -> Result<JsValue> {
-    let result = js_sys::Reflect::get(target, key).map_err(|e| anyhow!("{:?}", e))?;
+    let result = unsafe { js_sys::Reflect::get(target, key).map_err(|e| anyhow!("{:?}", e))? };
     debug!("reflect_get: {:?}", result);
     Ok(result)
 }

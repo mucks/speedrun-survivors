@@ -3,3 +3,4 @@
 dist
 target/
 speedrun-survivors-bevy/dist/
+speedrun-survivors-bevy/.env
