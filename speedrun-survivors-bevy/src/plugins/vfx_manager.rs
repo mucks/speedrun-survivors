@@ -32,21 +32,31 @@ fn event_reader(
 ) {
     for event in rx_vfx.iter() {
         let data = assets.get_data_for_vfx(&event.vfx);
+        let scale = if event.scale.is_some() {
+            data.scale * event.scale.unwrap()
+        } else {
+            data.scale
+        };
 
-        commands
+        let entity = commands
             .spawn((
                 SpriteSheetBundle {
                     texture_atlas: data.atlas,
                     transform: Transform {
                         translation: event.location,
-                        scale: data.scale,
+                        scale,
                         ..Default::default()
                     },
                     ..Default::default()
                 },
                 for_game_states(),
             ))
-            .insert(data.anim);
+            .insert(data.anim)
+            .id();
+
+        if event.entity.is_some() {
+            commands.entity(event.entity.unwrap()).add_child(entity);
+        }
     }
 }
 
@@ -56,6 +66,10 @@ pub struct PlayVFX {
     pub vfx: VFX,
     /// The location at which to spawn the effect
     pub location: Vec3,
+    /// Allows the user to modify the scale
+    pub scale: Option<Vec3>,
+    /// Allows the user to attach the effect to some other entity
+    pub entity: Option<Entity>,
 }
 
 #[derive(Clone, EnumIter, Eq, Hash, PartialEq)]
@@ -63,6 +77,7 @@ pub enum VFX {
     ExplosionXS,
     ExplosionXL,
     HammerImpact,
+    SwordShockwave,
 }
 
 impl VFX {
@@ -96,12 +111,21 @@ impl VFX {
                 Some(Vec2::new(1., 1.)),
                 None,
             )),
+            VFX::SwordShockwave => texture_atlases.add(TextureAtlas::from_grid(
+                asset_server.load("sprites/vfx/sword_shockwave.png"),
+                Vec2::new(32., 32.),
+                4,
+                1,
+                Some(Vec2::new(1., 1.)),
+                None,
+            )),
         }
     }
     fn make_scale(&self) -> Vec3 {
         match self {
             VFX::ExplosionXL => Vec3::splat(1.5),
             VFX::HammerImpact => Vec3::splat(3.5),
+            VFX::SwordShockwave => Vec3::splat(5.0),
             _ => Vec3::splat(1.0),
         }
     }
@@ -164,6 +188,26 @@ impl VFX {
                     cooldown: 10.,
                     last_animation: "xplode".to_string(),
                     current_animation: "xplode".to_string(),
+                    animation_bank,
+                    destroy_on_end: true,
+                }
+            }
+            VFX::SwordShockwave => {
+                let animation_bank = HashMap::from([(
+                    "anim1".to_string(),
+                    Animation {
+                        start: 1,
+                        end: 4,
+                        looping: false,
+                        cooldown: 0.1,
+                    },
+                )]);
+
+                Animator {
+                    timer: 0.,
+                    cooldown: 10.,
+                    last_animation: "anim1".to_string(),
+                    current_animation: "anim1".to_string(),
                     animation_bank,
                     destroy_on_end: true,
                 }

@@ -148,6 +148,8 @@ fn cluster_move(
             tx_vfx.send(PlayVFX {
                 vfx: VFX::ExplosionXL,
                 location: transform.translation,
+                scale: None,
+                entity: None,
             });
 
             // No need to update location and heading
@@ -245,6 +247,8 @@ fn sub_munition_move(
             tx_vfx.send(PlayVFX {
                 vfx: VFX::ExplosionXS,
                 location: munition_tf.translation,
+                scale: None,
+                entity: None,
             });
 
             // No need to update location

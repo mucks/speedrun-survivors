@@ -67,6 +67,8 @@ fn on_hammer_stomp(
         tx_vfx.send(PlayVFX {
             vfx: VFX::HammerImpact,
             location: ev.translation,
+            scale: None,
+            entity: None,
         });
 
         let mut hit_count = 0;
