@@ -76,6 +76,7 @@ fn create_sword_anim_hashmap() -> HashMap<String, animation::Animation> {
 pub struct SwordEffect {
     pub time_to_live: f32,
     pub direction: Vec3,
+    pub hit_list: Vec<Entity>,
 }
 
 fn move_sword_swing_effect(
@@ -123,6 +124,7 @@ fn spawn_sword_swing_effect(
                 } else {
                     Vec3::new(1., 0., 0.)
                 },
+                hit_list: vec![],
             },
             for_game_states(),
         ))
@@ -215,26 +217,32 @@ pub fn sword_controls(
     }
 }
 fn update_sword_effect_hits(
-    sword_effect_query: Query<
-        (&Transform, Entity, &SwordEffect),
-        (With<SwordEffect>, Without<Enemy>),
-    >,
+    mut sword_effect_query: Query<(&Transform, Entity, &mut SwordEffect), Without<Enemy>>,
     mut enemy_query: Query<(&Enemy, &mut Transform, Entity), Without<SwordEffect>>,
     mut tx_health: EventWriter<health::HealthUpdateEvent>,
 ) {
-    if let Some((transform, _, sword_effect)) = sword_effect_query.iter().next() {
-        let s = Vec2::new(transform.translation.x, transform.translation.y);
+    for (transform, _, mut sword_effect) in sword_effect_query.iter_mut() {
+        let eff_loc = transform.translation.truncate();
 
-        for (enemy, transform, ent) in enemy_query.iter_mut() {
-            let x = Vec2::distance(s, transform.translation.truncate());
-            if Vec2::distance(s, transform.translation.truncate()) <= SWORD_EFFECT_HIT_DISTANCE {
+        for (enemy, enemy_loc, entity) in enemy_query.iter_mut() {
+            // Skip enemy if already hit
+            if sword_effect.hit_list.contains(&entity) {
+                continue;
+            }
+
+            // Within hit distance?
+            if Vec2::distance(eff_loc, enemy_loc.translation.truncate())
+                <= SWORD_EFFECT_HIT_DISTANCE
+            {
+                // Mark as hit
+                sword_effect.hit_list.push(entity);
+
                 tx_health.send(health::HealthUpdateEvent {
-                    entity: ent,
+                    entity,
                     health_change: -SWORD_DAMAGE,
                     target_type: health::TargetType::Enemy(enemy.kind),
                 });
             }
         }
     }
-    //TODO this needs to keep a list of enemies already hit - otherwise we can hit them in multiple ticks - damage then depends on frame rate
 }
